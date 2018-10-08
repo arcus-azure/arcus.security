@@ -1,5 +1,4 @@
 # Arcus - Security
-[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.All?includePreReleases=true)](https://www.nuget.org/packages/Arcus.Security.All/)
 
 Security for Azure development in a breeze.
 
