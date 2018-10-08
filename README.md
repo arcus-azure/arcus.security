@@ -1,4 +1,5 @@
 # Arcus - Security
+[![Build status](https://dev.azure.com/codit/Arcus/_apis/build/status/Commit%20builds/CI%20-%20Arcus.Security)](https://dev.azure.com/codit/Arcus/_build/latest?definitionId=514)
 
 Security for Azure development in a breeze.
 
