@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.All", "Arcus.Security.All\Arcus.Security.All.csproj", "{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.All", "Arcus.Security.All\Arcus.Security.All.csproooopsj", "{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
