@@ -1,4 +1,4 @@
-repository: arcus-azure/arcus.eventgrid
+repository: arcus-azure/arcus.security
 theme: jekyll-theme-slate
 logo: https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png
 title: Arcus Security
