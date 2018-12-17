@@ -1,18 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using GuardNet;
 
 namespace Arcus.Security.Core.Exceptions
 {
     /// <summary>
     /// Exception, thrown when no secret was found, using the given name.
     /// </summary>
+    [Serializable]
     public class SecretNotFoundException : Exception
     {
-        public string Name { get;  }
-        public SecretNotFoundException(string name) : base($"The secret {name} was not found.")
+        public SecretNotFoundException(string name) : this(name, null)
         {
+        }
+
+        public SecretNotFoundException(string name, Exception innerException) : base($"The secret {name} was not found.", innerException)
+        {
+            Guard.NotNullOrEmpty(name, nameof(name));
             Name = name;
         }
+
+        public string Name { get; }
     }
 }

@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Core\" />
+    <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
   </ItemGroup>
 
 </Project>

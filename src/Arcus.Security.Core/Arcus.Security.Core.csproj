@@ -14,4 +14,8 @@
     <PackageTags>Azure;Key Vault;Security</PackageTags>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Guard.Net" Version="1.2.0" />
+  </ItemGroup>
+
 </Project>
