@@ -32,6 +32,9 @@ namespace Arcus.Security.Core.Exceptions
             Name = name;
         }
 
+        /// <summary>
+        /// Name of the missing key
+        /// </summary>
         public string Name { get; }
     }
 }
