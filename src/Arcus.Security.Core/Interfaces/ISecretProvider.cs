@@ -17,6 +17,6 @@ namespace Arcus.Security.Core.Interfaces
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        Task<string> GetAsync(string name);
+        Task<string> Get(string name);
     }
 }
