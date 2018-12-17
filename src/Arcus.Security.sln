@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Core", "Arcu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Tests.Unit", "Arcus.Security.Tests.Unit\Arcus.Security.Tests.Unit.csproj", "{DACBC3C6-2894-4961-B327-746BC29229CC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.KeyVault", "Arcus.Security.KeyVault\Arcus.Security.KeyVault.csproj", "{362910EB-F5D6-4A8E-991D-92B6AC306E20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{DACBC3C6-2894-4961-B327-746BC29229CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DACBC3C6-2894-4961-B327-746BC29229CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DACBC3C6-2894-4961-B327-746BC29229CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{362910EB-F5D6-4A8E-991D-92B6AC306E20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{362910EB-F5D6-4A8E-991D-92B6AC306E20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{362910EB-F5D6-4A8E-991D-92B6AC306E20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{362910EB-F5D6-4A8E-991D-92B6AC306E20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
