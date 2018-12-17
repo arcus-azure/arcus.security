@@ -16,4 +16,8 @@
     <Description>Provides capabilities to easily build secure applications running in Azure.</Description>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
+  </ItemGroup>
+
 </Project>
