@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Arcus</Authors>
+    <Company>Arcus</Company>
+    <Description>Contains core functionality for Arcus.Security</Description>
+    <Copyright>Copyright (c) Arcus</Copyright>
+    <PackageLicenseUrl>https://github.com/arcus-azure/arcus.security/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/arcus-azure/arcus.security</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/arcus-azure/arcus.security</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>Azure;Key Vault;Security</PackageTags>
   </PropertyGroup>
 
 </Project>
