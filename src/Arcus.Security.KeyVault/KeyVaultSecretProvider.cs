@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
+﻿using System.Net;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Exceptions;
 using Arcus.Security.Core.Interfaces;
 using Arcus.Security.KeyVault.Factories;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.KeyVault.Core;
 using Microsoft.Azure.KeyVault.Models;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Arcus.Security.KeyVault
 {
@@ -19,9 +14,13 @@ namespace Arcus.Security.KeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private readonly string _keyVaultUri;
         private readonly KeyVaultClientFactory _keyVaultClientFactory;
         private KeyVaultClient _keyVaultClient;
+        
+        /// <summary>
+        /// Uri of the vault
+        /// </summary>
+        public string VaultUri { get; }
 
         /// <summary>
         /// Creates an Azure KeyVault Secret provider, connected to a specific Azure Key Vault
@@ -32,14 +31,10 @@ namespace Arcus.Security.KeyVault
         {
             Guard.NotNullOrEmpty(keyVaultUri, nameof(keyVaultUri));
             Guard.NotNull(keyVaultClientFactory, nameof(keyVaultClientFactory));
-            _keyVaultUri = keyVaultUri;
+
+            VaultUri = keyVaultUri;
             _keyVaultClientFactory = keyVaultClientFactory;
         }
-
-        // Moving this implementation here, as KeyVaultClient cannot be mocked (https://github.com/Azure/azure-sdk-for-java/issues/1552)
-        // Therefore, constructor will not try to create the client 
-        private KeyVaultClient KeyVaultClient => 
-            _keyVaultClient ?? (_keyVaultClient = _keyVaultClientFactory.CreateClient().Result);
 
         /// <summary>
         /// Gets the secret from KeyVault, using the right secret name
@@ -52,7 +47,8 @@ namespace Arcus.Security.KeyVault
             Guard.NotNullOrEmpty(name, nameof(name));
             try
             {
-                SecretBundle secretBundle = await KeyVaultClient.GetSecretAsync(_keyVaultUri, name);
+                var keyVaultClient = await GetClientAsync();
+                SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, name);
                 return secretBundle?.Value;
             }
             catch (KeyVaultErrorException kvException)
@@ -64,6 +60,16 @@ namespace Arcus.Security.KeyVault
 
                 throw;
             }
+        }
+
+        private async Task<KeyVaultClient> GetClientAsync()
+        {
+            if (_keyVaultClient == null)
+            {
+                _keyVaultClient = await _keyVaultClientFactory.CreateClient();
+            }
+
+            return _keyVaultClient;
         }
     }
 }
