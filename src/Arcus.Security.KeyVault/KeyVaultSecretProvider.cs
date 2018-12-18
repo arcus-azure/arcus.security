@@ -18,20 +18,36 @@ namespace Arcus.Security.KeyVault
     public class KeyVaultSecretProvider : ISecretProvider
     {
         private readonly string _keyVaultUri;
-        private readonly KeyVaultClient _keyVaultClient;
+        private readonly KeyVaultClientFactory _keyVaultClientFactory;
+        private KeyVaultClient _keyVaultClient;
 
+        /// <summary>
+        /// Creates an Azure KeyVault Secret provider, connected to a specific Azure Key Vault
+        /// </summary>
+        /// <param name="keyVaultClientFactory">A <see cref="KeyVaultClientFactory"/> implementation that will be used to generate the KeyVaultClient</param>
+        /// <param name="keyVaultUri">The Uri of the Azure KeyVault you want to connect to.  <example>https://{vaultname}nebulus-iot.vault.azure.net/</example></param>
         public KeyVaultSecretProvider(KeyVaultClientFactory keyVaultClientFactory, string keyVaultUri)
         {
             Guard.NotNullOrEmpty(keyVaultUri, nameof(keyVaultUri));
             Guard.NotNull(keyVaultClientFactory, nameof(keyVaultClientFactory));
             _keyVaultUri = keyVaultUri;
-            _keyVaultClient = keyVaultClientFactory.CreateClient().Result;
+            _keyVaultClientFactory = keyVaultClientFactory;
         }
 
+        // Moving this implementation here, as KeyVaultClient cannot be mocked (https://github.com/Azure/azure-sdk-for-java/issues/1552)
+        // Therefore, constructor will not try to create the client 
+        private KeyVaultClient KeyVaultClient => 
+            _keyVaultClient ?? (_keyVaultClient = _keyVaultClientFactory.CreateClient().Result);
+
+        /// <summary>
+        /// Gets the secret from KeyVault, using the right secret name
+        /// </summary>
+        /// <param name="name">The secret name</param>
+        /// <returns>The value, stored in KeyVault</returns>
         public async Task<string> Get(string name)
         {
             Guard.NotNullOrEmpty(name, nameof(name));
-            SecretBundle secretBundle = await _keyVaultClient.GetSecretAsync(_keyVaultUri, name);
+            SecretBundle secretBundle = await KeyVaultClient.GetSecretAsync(_keyVaultUri, name);
             return secretBundle?.Value;
         }
     }

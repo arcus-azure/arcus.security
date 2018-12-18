@@ -6,6 +6,9 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Arcus.Security.KeyVault.Factories
 {
+    /// <summary>
+    /// <see cref="KeyVaultClientFactory"/> implementation using Azure Managed Service Identity
+    /// </summary>        
     public class ServicePrincipalKeyVaultClientFactory : KeyVaultClientFactory
     {
         private readonly string _clientId;
@@ -25,6 +28,10 @@ namespace Arcus.Security.KeyVault.Factories
             _clientKey = clientKey;
         }
 
+        /// <summary>
+        /// Creates a <see cref="KeyVaultClient"/>, using the AzureServiceTokenProvider
+        /// </summary>
+        /// <returns>A generated KeyVaultClient</returns>
         public override Task<KeyVaultClient> CreateClient()
         {
             var keyVaultClient = new KeyVaultClient(GetToken);
