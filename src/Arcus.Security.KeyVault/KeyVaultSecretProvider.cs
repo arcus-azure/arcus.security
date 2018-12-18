@@ -51,11 +51,11 @@ namespace Arcus.Security.KeyVault
                 SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, name);
                 return secretBundle?.Value;
             }
-            catch (KeyVaultErrorException kvException)
+            catch (KeyVaultErrorException keyVaultErrorException)
             {
-                if (kvException.Response.StatusCode == HttpStatusCode.NotFound)
+                if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new SecretNotFoundException(name, kvException);
+                    throw new SecretNotFoundException(name, keyVaultErrorException);
                 }
 
                 throw;
