@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Arcus.Security.Core.Exceptions;
 using Arcus.Security.KeyVault;
-using Arcus.Security.KeyVault.Factories;
-using Microsoft.Azure.KeyVault;
+using Arcus.Security.Tests.Unit.KeyVault.Stubs;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.KeyVault
@@ -13,16 +8,33 @@ namespace Arcus.Security.Tests.Unit.KeyVault
     public class KeyVaultSecretProviderTests
     {
         [Fact]
-        public void KeyVaultSecretProvider_CreateWithEmptyArgument_ShouldFailWithargumentException()
+        public void KeyVaultSecretProvider_CreateWithEmptyUri_ShouldFailWithArgumentException()
+        {
+            // Arrange
+            string uri = string.Empty;
+
+            // Act & Assert
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), uri));
+        }
+
+        [Fact]
+        public void KeyVaultSecretProvider_CreateWithoutUri_ShouldFailWithArgumentException()
+        {
+            // Arrange
+            string uri = null;
+
+            // Act & Assert
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), uri));
+        }
+
+        [Fact]
+        public void KeyVaultSecretProvider_CreateWithoutClientFactory_ShouldFailWithArgumentException()
         {
             // Arrange
             string uri = Guid.NewGuid().ToString("N");
 
             // Act & Assert
             Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, uri));
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, null));
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new TestKeyVaultClientFactory(), null));
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new TestKeyVaultClientFactory(), string.Empty));
         }
 
         [Fact]
@@ -32,16 +44,8 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = Guid.NewGuid().ToString("N");
 
             // Act & Assert
-            var secretProvider = new KeyVaultSecretProvider(new TestKeyVaultClientFactory(), uri);
+            var secretProvider = new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), uri);
             Assert.NotNull(secretProvider);
-        }
-
-        private class TestKeyVaultClientFactory : KeyVaultClientFactory
-        {
-            public override Task<KeyVaultClient> CreateClient()
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }
