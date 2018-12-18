@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 namespace Arcus.Security.KeyVault.Factories
 {
     /// <summary>
-    /// <see cref="KeyVaultClientFactory"/> implementation using Azure Managed Service Identity
+    /// <see cref="KeyVaultClientFactory"/> implementation using a service principle
     /// </summary>        
     public class ServicePrincipalKeyVaultClientFactory : KeyVaultClientFactory
     {
