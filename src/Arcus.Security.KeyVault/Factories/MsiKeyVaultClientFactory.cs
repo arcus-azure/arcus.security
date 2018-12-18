@@ -17,7 +17,10 @@ namespace Arcus.Security.KeyVault.Factories
         public override Task<KeyVaultClient> CreateClient()
         {
             var tokenProvider = new AzureServiceTokenProvider();
-            return Task.FromResult(new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback)));
+            var authenticationCallback = new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback);
+            var keyVaultClient = new KeyVaultClient(authenticationCallback);
+
+            return Task.FromResult(keyVaultClient);
         }
     }
 }
