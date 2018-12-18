@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Arcus.Security.Core.Exceptions;
 using Arcus.Security.Core.Interfaces;
 using Arcus.Security.KeyVault.Factories;
 using GuardNet;
@@ -44,11 +46,24 @@ namespace Arcus.Security.KeyVault
         /// </summary>
         /// <param name="name">The secret name</param>
         /// <returns>The value, stored in KeyVault</returns>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> Get(string name)
         {
             Guard.NotNullOrEmpty(name, nameof(name));
-            SecretBundle secretBundle = await KeyVaultClient.GetSecretAsync(_keyVaultUri, name);
-            return secretBundle?.Value;
+            try
+            {
+                SecretBundle secretBundle = await KeyVaultClient.GetSecretAsync(_keyVaultUri, name);
+                return secretBundle?.Value;
+            }
+            catch (KeyVaultErrorException kvException)
+            {
+                if (kvException.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    throw new SecretNotFoundException(name, kvException);
+                }
+
+                throw;
+            }
         }
     }
 }
