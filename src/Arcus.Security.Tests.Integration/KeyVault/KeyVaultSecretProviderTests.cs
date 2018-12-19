@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Exceptions;
 using Arcus.Security.KeyVault;
@@ -22,9 +23,15 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             _testLogger = new XunitTestLogger(testOutput);
 
+            string testConfigFile = "appsettings.test.json"; // This file can be used locally and will not be overwritten, when exists.  Also excluded from git
+            if (!File.Exists(testConfigFile))
+            {
+                File.Copy("appsettings.json", testConfigFile);
+            }
+
             Configuration = new ConfigurationBuilder()
                 .AddEnvironmentVariables()
-                .AddJsonFile(path: "appsettings.json")
+                .AddJsonFile(path: testConfigFile)
                 .Build();
         }
 
@@ -37,9 +44,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
-            var clientKey = Configuration.GetValue<string>("Arcus:Security:KeyVault:ClientKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:Security:KeyVault:KeyVaultUri");
-            var keyName = Configuration.GetValue<string>("Arcus:Security:KeyVault:TestKeyName");
+            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             // Act
             KeyVaultSecretProvider keyVaultSecretProvider = new KeyVaultSecretProvider(
@@ -55,9 +62,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_GetNonExistingKey_ThrowsKeyNotFoundException()
         {
             // Arrange
-            var clientId = Configuration.GetValue<string>("Arcus:Security:KeyVault:ClientId");
-            var clientKey = Configuration.GetValue<string>("Arcus:Security:KeyVault:ClientKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:Security:KeyVault:KeyVaultUri");
+            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var keyName = Guid.NewGuid().ToString("N");
 
             // Act
