@@ -23,15 +23,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             _testLogger = new XunitTestLogger(testOutput);
 
-            string testConfigFile = "appsettings.test.json"; // This file can be used locally and will not be overwritten, when exists.  Also excluded from git
-            if (!File.Exists(testConfigFile))
-            {
-                File.Copy("appsettings.json", testConfigFile);
-            }
-
+            // The appsettings.local.json allows users to override (gitignored) settings locally for testing purposes
             Configuration = new ConfigurationBuilder()
                 .AddEnvironmentVariables()
-                .AddJsonFile(path: testConfigFile)
+                .AddJsonFile(path: "appsettings.json")
+                .AddJsonFile(path: "appsettings.local.json", optional: true)
                 .Build();
         }
 
