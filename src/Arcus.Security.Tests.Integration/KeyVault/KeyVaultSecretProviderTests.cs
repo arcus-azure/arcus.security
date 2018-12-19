@@ -36,7 +36,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_Get_Succeeds()
         {
             // Arrange
-            var clientId = Configuration.GetValue<string>("Arcus:Security:KeyVault:ClientId");
+            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
             var clientKey = Configuration.GetValue<string>("Arcus:Security:KeyVault:ClientKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:Security:KeyVault:KeyVaultUri");
             var keyName = Configuration.GetValue<string>("Arcus:Security:KeyVault:TestKeyName");
