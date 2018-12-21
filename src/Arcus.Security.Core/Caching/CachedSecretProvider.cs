@@ -13,7 +13,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A Secret Provider that will cache secrets in memory, to improve performance
     /// </summary>
-    public class CachedSecretProvider : ISecretProvider
+    public class CachedSecretProvider : ICachedSecretProvider
     {
         private readonly ISecretProvider _secretProvider;
         private readonly IMemoryCache _memoryCache;
@@ -29,10 +29,9 @@ namespace Arcus.Security.Core.Caching
         public CachedSecretProvider(ISecretProvider secretProvider, TimeSpan cacheDuration, IMemoryCache memoryCache)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
-            Guard.NotNull(memoryCache, nameof(memoryCache));
 
             _secretProvider = secretProvider;
-            _memoryCache = memoryCache;
+            _memoryCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
             _cacheDuration = cacheDuration;
         }
 
@@ -43,6 +42,11 @@ namespace Arcus.Security.Core.Caching
         /// <returns>The secret value</returns>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> Get(string name)
+        {
+            return await Get(name, false);
+        }
+
+        public async Task<string> Get(string name, bool bypassCache)
         {
             string secretValue;
             // Look for cache key.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
+using Arcus.Security.Core.Interfaces;
 using Arcus.Security.KeyVault;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Arcus.Security.Tests.Unit.KeyVault.Stubs;
@@ -11,54 +12,18 @@ using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
 {
-    public class CachedSecretProviderTests
+    public class SecretProviderCachingExtensionsTests
     {
         [Fact]
-        public void CachedSecretProvider_CreateWithoutSecretProvider_ShouldFailWithArgumentNullException()
-        {
-            // Arrange
-            string secretKeyValue = Guid.NewGuid().ToString("N");
-            var memCache = new MemoryCache(new MemoryCacheOptions());
-
-            // Act & Assert
-            Assert.ThrowsAny<ArgumentNullException>(() => new CachedSecretProvider(null, TimeSpan.MaxValue, memCache));
-        }
-
-        [Fact]
-        public void CachedSecretProvider_CreateWithoutCache_ShouldSucceed()
+        public async Task SecretProviderCachingExtensions_TwoCallsWithinCacheInterval_ShouldGetSameValueTwice()
         {
             // Arrange
             string secretKeyValue = Guid.NewGuid().ToString("N");
             var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
-
-            // Act & Assert
-            new CachedSecretProvider(testSecretProvider, TimeSpan.MaxValue, null);
-        }
-
-        [Fact]
-        public void CachedSecretProvider_CreateWithCorrectArguments_ShouldSucceed()
-        {
-            // Arrange
-            string secretKeyValue = Guid.NewGuid().ToString("N");
-            var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
-            var memCache = new MemoryCache(new MemoryCacheOptions());
-
-            // Act & Assert
-            var cachedSecretProvider = new CachedSecretProvider(testSecretProvider, TimeSpan.MaxValue, memCache);
-            Assert.NotNull(cachedSecretProvider);
-        }
-
-        [Fact]
-        public async Task CachedSecretProvider_TwoCallsWithinCacheInterval_ShouldGetSameValueTwice()
-        {
-            // Arrange
-            string secretKeyValue = Guid.NewGuid().ToString("N");
-            var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
-            var memCache = new MemoryCache(new MemoryCacheOptions());
             string keyName = "MyValue";
 
             // Act 
-            var cachedSecretProvider = new CachedSecretProvider(testSecretProvider, TimeSpan.FromSeconds(3), memCache);
+            ICachedSecretProvider cachedSecretProvider = testSecretProvider.WithCaching(TimeSpan.FromSeconds(3));
             var firstValue = await cachedSecretProvider.Get(keyName);
             testSecretProvider.SecretValue = Guid.NewGuid().ToString("N"); // Change actual value on the internal secret provider !
             var secondValue = await cachedSecretProvider.Get(keyName);
@@ -69,7 +34,7 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
-        public async Task CachedSecretProvider_TwoCallsOutsideCacheInterval_ShouldGetDifferentValue()
+        public async Task SecretProviderCachingExtensions_TwoCallsOutsideCacheInterval_ShouldGetDifferentValue()
         {
             // Arrange
             string secretKeyValue = Guid.NewGuid().ToString("N");
@@ -78,7 +43,7 @@ namespace Arcus.Security.Tests.Unit.Core
             string keyName = "MyValue";
 
             // Act 
-            var cachedSecretProvider = new CachedSecretProvider(testSecretProvider, TimeSpan.FromMilliseconds(100), memCache);
+            ICachedSecretProvider cachedSecretProvider = testSecretProvider.WithCaching(TimeSpan.FromMilliseconds(100));
             var firstValue = await cachedSecretProvider.Get(keyName);
             await Task.Delay(TimeSpan.FromMilliseconds(150));
             string newSecretValue = Guid.NewGuid().ToString("N");
