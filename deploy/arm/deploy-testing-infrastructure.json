@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "KeyVault.Vault.Name": {
+            "defaultValue": "arcus-testing-key-vault",
+            "type": "string"
+        },
+        "KeyVault.Secret.Name": {
+            "defaultValue": "ArcusTestSecret",
+            "type": "string"
+        },
+        "AD.Tenant.Id": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "AD.ServicePrincipal.ObjectId": {
+            "defaultValue": "",
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "comments": "Arcus test resource for key vault",
+            "type": "Microsoft.KeyVault/vaults",
+            "name": "[parameters('KeyVault.Vault.Name')]",
+            "apiVersion": "2016-10-01",
+            "location": "westeurope",
+            "tags": {},
+            "scale": null,
+            "properties": {
+                "sku": {
+                    "family": "A",
+                    "name": "Standard"
+                },
+                "tenantId": "[parameters('AD.Tenant.Id')]",
+                "accessPolicies": [
+                    {
+                        "tenantId": "[parameters('AD.Tenant.Id')]",
+                        "objectId": "[parameters('AD.ServicePrincipal.ObjectId')]",
+                        "permissions": {
+                            "keys": [],
+                            "secrets": [
+                                "Get",
+                                "List"
+                            ],
+                            "certificates": []
+                        }
+                    }
+                ],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false
+            },
+            "dependsOn": []
+        },
+        {
+            "comments": "",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "name": "[concat(parameters('KeyVault.Vault.Name'), '/', parameters('KeyVault.Secret.Name'))]",
+            "apiVersion": "2016-10-01",
+            "location": "westeurope",
+            "scale": null,
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('KeyVault.Vault.Name'))]"
+            ]
+        }
+    ]
+}
