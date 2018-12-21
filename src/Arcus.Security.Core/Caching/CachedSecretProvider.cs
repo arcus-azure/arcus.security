@@ -46,7 +46,14 @@ namespace Arcus.Security.Core.Caching
             return await Get(name, false);
         }
 
-        public async Task<string> Get(string name, bool bypassCache)
+        /// <summary>
+        /// Retrieves the secret value from the cache (when available) or from the internal ISecretProvider
+        /// </summary>
+        /// <param name="name">The name of the secret value to be retrieved</param>
+        /// <param name="skipCache">Indicates to skip the cache and force an update of the secret value</param>
+        /// <returns>The secret value</returns>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        public async Task<string> Get(string name, bool skipCache)
         {
             string secretValue;
             // Look for cache key.
