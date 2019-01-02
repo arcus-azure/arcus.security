@@ -124,7 +124,7 @@ namespace Arcus.Security.Tests.Unit.Core
             string keyName = "MyValue";
 
             // Act 
-            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(testSecretProvider, TimeSpan.FromMilliseconds(100), memCache);
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(testSecretProvider, TimeSpan.FromSeconds(100), memCache);
             var firstValue = await cachedSecretProvider.Get(keyName);
             await Task.Delay(TimeSpan.FromMilliseconds(150));
             string newSecretValue = Guid.NewGuid().ToString("N");

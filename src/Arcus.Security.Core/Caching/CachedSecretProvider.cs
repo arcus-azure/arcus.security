@@ -76,7 +76,7 @@ namespace Arcus.Security.Core.Caching
         {
             string secretValue;
             // Look for cache key.
-            if (!_memoryCache.TryGetValue(name, out secretValue))
+            if (skipCache || !_memoryCache.TryGetValue(name, out secretValue))
             {
                 // Key not in cache, so get data.
                 secretValue = await _secretProvider.Get(name);
