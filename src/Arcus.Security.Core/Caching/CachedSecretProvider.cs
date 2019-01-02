@@ -74,9 +74,8 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> Get(string secretName, bool ignoreCache)
         {
-            string secretValue;
-            // Look for cache key.
-            if (!_memoryCache.TryGetValue(name, out secretValue))
+            // Look-up the cached secret
+            if (ignoreCache == false && _memoryCache.TryGetValue(secretName, out string cachedSecret))
             {
                 return cachedSecret;
             }
