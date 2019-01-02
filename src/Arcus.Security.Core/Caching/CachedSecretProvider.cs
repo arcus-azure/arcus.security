@@ -29,10 +29,29 @@ namespace Arcus.Security.Core.Caching
         public CachedSecretProvider(ISecretProvider secretProvider, TimeSpan cacheDuration, IMemoryCache memoryCache)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
+            Guard.NotNull(memoryCache, nameof(memoryCache));
 
             _secretProvider = secretProvider;
-            _memoryCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
+            _memoryCache = memoryCache;
             _cacheDuration = cacheDuration;
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Creating a new CachedSecretProvider with a standard generated MemoryCache
+        /// </summary>
+        public CachedSecretProvider(ISecretProvider secretProvider, TimeSpan cacheDuration) :
+            this(secretProvider, cacheDuration, new MemoryCache(new MemoryCacheOptions()))
+        {
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Creating a new CachedSecretProvider with a standard generated MemoryCache and default TimeSpan of 5 minutes
+        /// </summary>
+        public CachedSecretProvider(ISecretProvider secretProvider) :
+            this(secretProvider, TimeSpan.FromMinutes(5), new MemoryCache(new MemoryCacheOptions()))
+        {
         }
 
         /// <summary>

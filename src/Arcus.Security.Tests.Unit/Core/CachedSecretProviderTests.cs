@@ -26,6 +26,28 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
+        public void CachedSecretProvider_CreateWithNullCache_ShouldFailWithNullArgument()
+        {
+            // Arrange
+            string secretKeyValue = Guid.NewGuid().ToString("N");
+            var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
+
+            // Act & Assert
+            Assert.ThrowsAny<ArgumentNullException>(() => new CachedSecretProvider(testSecretProvider, TimeSpan.MaxValue, null));
+        }
+
+        [Fact]
+        public void CachedSecretProvider_CreateWithOnlySecretProvider_ShouldSucceed()
+        {
+            // Arrange
+            string secretKeyValue = Guid.NewGuid().ToString("N");
+            var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
+
+            // Act & Assert
+            var cachedSecretProvider = new CachedSecretProvider(testSecretProvider);
+        }
+
+        [Fact]
         public void CachedSecretProvider_CreateWithoutCache_ShouldSucceed()
         {
             // Arrange
@@ -33,7 +55,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
 
             // Act & Assert
-            new CachedSecretProvider(testSecretProvider, TimeSpan.MaxValue, null);
+            new CachedSecretProvider(testSecretProvider, TimeSpan.MaxValue);
         }
 
         [Fact]
