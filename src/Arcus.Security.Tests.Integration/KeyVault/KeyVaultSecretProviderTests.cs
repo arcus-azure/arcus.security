@@ -20,7 +20,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_Get_Succeeds()
+        public async Task KeyVaultSecretProvider_GetSecret_Succeeds()
         {
             // Arrange
             var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
@@ -39,7 +39,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_GetNonExistingKey_ThrowsKeyNotFoundException()
+        public async Task KeyVaultSecretProvider_GetNonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
             var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
