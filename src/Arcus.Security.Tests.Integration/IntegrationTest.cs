@@ -1,0 +1,24 @@
+﻿using Arcus.Security.Tests.Integration.Logging;
+using Microsoft.Extensions.Configuration;
+using Xunit.Abstractions;
+
+namespace Arcus.Security.Tests.Integration
+{
+    public class IntegrationTest
+    {
+        protected IConfiguration Configuration { get; }
+        protected XunitTestLogger Logger { get; }
+
+        public IntegrationTest(ITestOutputHelper testOutput)
+        {
+            Logger = new XunitTestLogger(testOutput);
+
+            // The appsettings.local.json allows users to override (gitignored) settings locally for testing purposes
+            Configuration = new ConfigurationBuilder()
+                .AddEnvironmentVariables()
+                .AddJsonFile(path: "appsettings.json")
+                .AddJsonFile(path: "appsettings.local.json", optional: true)
+                .Build();
+        }
+    }
+}

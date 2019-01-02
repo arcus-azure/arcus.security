@@ -39,23 +39,23 @@ namespace Arcus.Security.KeyVault
         /// <summary>
         /// Gets the secret from Key Vault, using the right secret name
         /// </summary>
-        /// <param name="name">The secret name</param>
+        /// <param name="secretName">The secret name</param>
         /// <returns>The value, stored in Key Vault</returns>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<string> Get(string name)
+        public async Task<string> Get(string secretName)
         {
-            Guard.NotNullOrEmpty(name, nameof(name));
+            Guard.NotNullOrEmpty(secretName, nameof(secretName));
             try
             {
                 var keyVaultClient = await GetClientAsync();
-                SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, name);
+                SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
                 return secretBundle?.Value;
             }
             catch (KeyVaultErrorException keyVaultErrorException)
             {
                 if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new SecretNotFoundException(name, keyVaultErrorException);
+                    throw new SecretNotFoundException(secretName, keyVaultErrorException);
                 }
 
                 throw;
