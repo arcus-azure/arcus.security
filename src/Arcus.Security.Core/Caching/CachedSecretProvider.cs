@@ -57,40 +57,41 @@ namespace Arcus.Security.Core.Caching
         /// <summary>
         /// Retrieves the secret value from the cache (when available) or from the internal ISecretProvider
         /// </summary>
-        /// <param name="name">The name of the secret value to be retrieved</param>
+        /// <param name="secretName">The name of the secret value to be retrieved</param>
         /// <returns>The secret value</returns>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<string> Get(string name)
+        public async Task<string> Get(string secretName)
         {
-            return await Get(name, false);
+            return await Get(secretName, ignoreCache: false);
         }
 
         /// <summary>
         /// Retrieves the secret value from the cache (when available) or from the internal ISecretProvider
         /// </summary>
-        /// <param name="name">The name of the secret value to be retrieved</param>
-        /// <param name="skipCache">Indicates to skip the cache and force an update of the secret value</param>
+        /// <param name="secretName">The name of the secret value to be retrieved</param>
+        /// <param name="ignoreCache">Indicates whether or not the cache should be skipped in order to force an update of the secret value</param>
         /// <returns>The secret value</returns>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<string> Get(string name, bool skipCache)
+        public async Task<string> Get(string secretName, bool ignoreCache)
         {
-            string secretValue;
-            // Look for cache key.
-            if (!_memoryCache.TryGetValue(name, out secretValue))
+            // Look-up the cached secret
+            if (ignoreCache == false && _memoryCache.TryGetValue(secretName, out string cachedSecret))
             {
-                // Key not in cache, so get data.
-                secretValue = await _secretProvider.Get(name);
-
-                // Set cache options.
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    // Keep in cache for this time, reset time if accessed.
-                    .SetSlidingExpiration(_cacheDuration);
-
-                // Save data in cache.
-                _memoryCache.Set(name, secretValue, cacheEntryOptions);
+                return cachedSecret;
             }
 
-            return secretValue;
+            // Read secret from provider
+            var secret = await _secretProvider.Get(secretName);
+
+            // Set cache options.
+            var cacheEntryOptions = new MemoryCacheEntryOptions()
+                                            // Keep in cache for this time, reset time if accessed.
+                                            .SetSlidingExpiration(_cacheDuration);
+
+            // Save data in cache.
+            _memoryCache.Set(secretName, secret, cacheEntryOptions);
+
+            return secret;
         }
     }
 }

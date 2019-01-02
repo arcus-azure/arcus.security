@@ -15,7 +15,7 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
 
         public int CallsMadeSinceCreation { get; private set; }
 
-        public async Task<string> Get(string name)
+        public async Task<string> Get(string secretName)
         {
             ++CallsMadeSinceCreation;
             return SecretValue;
