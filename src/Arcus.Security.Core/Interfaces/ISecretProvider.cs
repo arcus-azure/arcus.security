@@ -12,11 +12,11 @@ namespace Arcus.Security.Core.Interfaces
         /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
-        /// <param name="name">The name of the secret key</param>
+        /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns a <see cref="Task{string}"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        Task<string> Get(string name);
+        Task<string> Get(string secretName);
     }
 }
