@@ -1,10 +1,8 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Exceptions;
 using Arcus.Security.KeyVault;
 using Arcus.Security.KeyVault.Factories;
-using Arcus.Security.Tests.Integration.Logging;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
@@ -12,31 +10,17 @@ using Xunit.Abstractions;
 namespace Arcus.Security.Tests.Integration.KeyVault
 {
     [Trait(name: "Category", value: "Integration")]
-    public class KeyVaultSecretProviderTests
+    public class KeyVaultSecretProviderTests : IntegrationTest
     {
         // The same tests should be tested with different KeyVaultClientFactories 
         // What's the best approach for this ?
 
-        private readonly XunitTestLogger _testLogger;
-
-        public KeyVaultSecretProviderTests(ITestOutputHelper testOutput)
+        public KeyVaultSecretProviderTests(ITestOutputHelper testOutput) : base(testOutput)
         {
-            _testLogger = new XunitTestLogger(testOutput);
-
-            // The appsettings.local.json allows users to override (gitignored) settings locally for testing purposes
-            Configuration = new ConfigurationBuilder()
-                .AddEnvironmentVariables()
-                .AddJsonFile(path: "appsettings.json")
-                .AddJsonFile(path: "appsettings.local.json", optional: true)
-                .Build();
         }
 
-
-        protected IConfiguration Configuration { get; }
-
-        
         [Fact]
-        public async Task KeyVaultSecretProvider_Get_Succeeds()
+        public async Task KeyVaultSecretProvider_GetSecret_Succeeds()
         {
             // Arrange
             var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
@@ -55,7 +39,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_GetNonExistingKey_ThrowsKeyNotFoundException()
+        public async Task KeyVaultSecretProvider_GetNonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
             var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
