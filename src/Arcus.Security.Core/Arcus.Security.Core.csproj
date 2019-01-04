@@ -4,21 +4,20 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Arcus</Authors>
     <Company>Arcus</Company>
-    <PackageId>Arcus.Security.All</PackageId>
+    <Description>Contains core functionality for Arcus.Security</Description>
     <Copyright>Copyright (c) Arcus</Copyright>
     <PackageLicenseUrl>https://github.com/arcus-azure/arcus.security/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/arcus-azure/arcus.security</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/arcus-azure/arcus.security</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>Azure;Key Vault;Security</PackageTags>
+    <PackageTags>Azure;Security</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Provides capabilities to easily build secure applications running in Azure.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
-    <ProjectReference Include="..\Arcus.Security.KeyVault\Arcus.Security.KeyVault.csproj" />
+    <PackageReference Include="Guard.Net" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
   </ItemGroup>
 
 </Project>

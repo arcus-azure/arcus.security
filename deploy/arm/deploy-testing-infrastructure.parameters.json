@@ -1,0 +1,18 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "KeyVault.Vault.Name": {
+            "value": "arcus-testing-key-vault"
+        },
+        "KeyVault.Secret.Name": {
+            "value": "ArcusTestSecret"
+        },
+        "AD.Tenant.Id": {
+            "value": "7517bc42-bcf8-4916-a677-b5753051f846"
+        },
+        "AD.ServicePrincipal.ObjectId": {
+            "value": ""
+        }        
+    }
+}

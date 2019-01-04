@@ -3,22 +3,28 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Arcus</Authors>
-    <Company>Arcus</Company>
-    <PackageId>Arcus.Security.All</PackageId>
+    <Description>Provides support for Azure Key Vault</Description>
     <Copyright>Copyright (c) Arcus</Copyright>
     <PackageLicenseUrl>https://github.com/arcus-azure/arcus.security/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/arcus-azure/arcus.security</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/arcus-azure/arcus.security</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>Azure;Key Vault;Security</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Provides capabilities to easily build secure applications running in Azure.</Description>
+    <PackageTags>Azure;Key Vault;Security</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Guard.Net" Version="1.2.0" />
+    <PackageReference Include="Microsoft.Azure.KeyVault" Version="3.0.2" />
+    <PackageReference Include="Microsoft.Azure.KeyVault.Core" Version="3.0.1" />
+    <PackageReference Include="Microsoft.Azure.KeyVault.WebKey" Version="3.0.2" />
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.0.3" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="4.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
-    <ProjectReference Include="..\Arcus.Security.KeyVault\Arcus.Security.KeyVault.csproj" />
   </ItemGroup>
 
 </Project>
