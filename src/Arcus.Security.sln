@@ -5,13 +5,23 @@ VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.All", "Arcus.Security.All\Arcus.Security.All.csproj", "{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Core", "Arcus.Security.Core\Arcus.Security.Core.csproj", "{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Secrets.Core", "Arcus.Security.Secrets.Core\Arcus.Security.Secrets.Core.csproj", "{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Tests.Unit", "Arcus.Security.Tests.Unit\Arcus.Security.Tests.Unit.csproj", "{DACBC3C6-2894-4961-B327-746BC29229CC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.KeyVault", "Arcus.Security.KeyVault\Arcus.Security.KeyVault.csproj", "{362910EB-F5D6-4A8E-991D-92B6AC306E20}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Secrets.Providers.AzureKeyVault", "Arcus.Security.Secrets.Providers.AzureKeyVault\Arcus.Security.Secrets.Providers.AzureKeyVault.csproj", "{362910EB-F5D6-4A8E-991D-92B6AC306E20}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arcus.Security.Tests.Integration", "Arcus.Security.Tests.Integration\Arcus.Security.Tests.Integration.csproj", "{D185D73E-D617-4846-9CAB-12884C1266C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Tests.Integration", "Arcus.Security.Tests.Integration\Arcus.Security.Tests.Integration.csproj", "{D185D73E-D617-4846-9CAB-12884C1266C5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Providers.AzureKeyVault", "Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj", "{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C42FDAC3-5A31-4F39-BD92-C57C2CDAB2D2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Secrets", "Secrets", "{26FD7AFD-F12E-4F1F-965E-379065340D47}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packaging", "Packaging", "{CDDDC3E1-1543-4123-A224-071F4F09AD35}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,9 +49,21 @@ Global
 		{D185D73E-D617-4846-9CAB-12884C1266C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D185D73E-D617-4846-9CAB-12884C1266C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D185D73E-D617-4846-9CAB-12884C1266C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D} = {CDDDC3E1-1543-4123-A224-071F4F09AD35}
+		{A179BD58-7555-4F74-8EAF-CBD4F7BD689E} = {26FD7AFD-F12E-4F1F-965E-379065340D47}
+		{DACBC3C6-2894-4961-B327-746BC29229CC} = {C42FDAC3-5A31-4F39-BD92-C57C2CDAB2D2}
+		{362910EB-F5D6-4A8E-991D-92B6AC306E20} = {26FD7AFD-F12E-4F1F-965E-379065340D47}
+		{D185D73E-D617-4846-9CAB-12884C1266C5} = {C42FDAC3-5A31-4F39-BD92-C57C2CDAB2D2}
+		{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D3310D31-C37D-47F4-A6D3-325EE3806698}

@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Interfaces;
-using Arcus.Security.KeyVault;
+using Arcus.Security.Secrets.Core.Caching;
+using Arcus.Security.Secrets.Core.Interfaces;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Arcus.Security.Tests.Unit.KeyVault.Stubs;
 using Microsoft.Extensions.Caching.Memory;

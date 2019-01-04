@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Arcus.Security.Core.Exceptions;
+using Arcus.Security.Secrets.Core.Exceptions;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core

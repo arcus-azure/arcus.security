@@ -4,7 +4,7 @@ using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
-namespace Arcus.Security.KeyVault.Factories
+namespace Arcus.Security.Providers.AzureKeyVault.Factories
 {
     /// <summary>
     /// <see cref="KeyVaultClientFactory"/> implementation using a service principle

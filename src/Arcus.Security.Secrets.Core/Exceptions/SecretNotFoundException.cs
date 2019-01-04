@@ -1,7 +1,7 @@
 ﻿using System;
 using GuardNet;
 
-namespace Arcus.Security.Core.Exceptions
+namespace Arcus.Security.Secrets.Core.Exceptions
 {
     /// <summary>
     /// Exception, thrown when no secret was found, using the given name.

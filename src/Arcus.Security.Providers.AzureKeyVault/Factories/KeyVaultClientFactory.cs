@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Azure.KeyVault;
 
-namespace Arcus.Security.KeyVault.Factories
+namespace Arcus.Security.Providers.AzureKeyVault.Factories
 {
     /// <summary>
     /// Abstract class to create <see cref="KeyVaultClient"/> object
