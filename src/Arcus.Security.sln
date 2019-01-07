@@ -3,15 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.All", "Arcus.Security.All\Arcus.Security.All.csproj", "{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Core", "Arcus.Security.Core\Arcus.Security.Core.csproj", "{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Tests.Unit", "Arcus.Security.Tests.Unit\Arcus.Security.Tests.Unit.csproj", "{DACBC3C6-2894-4961-B327-746BC29229CC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.KeyVault", "Arcus.Security.KeyVault\Arcus.Security.KeyVault.csproj", "{362910EB-F5D6-4A8E-991D-92B6AC306E20}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arcus.Security.Tests.Integration", "Arcus.Security.Tests.Integration\Arcus.Security.Tests.Integration.csproj", "{D185D73E-D617-4846-9CAB-12884C1266C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Tests.Integration", "Arcus.Security.Tests.Integration\Arcus.Security.Tests.Integration.csproj", "{D185D73E-D617-4846-9CAB-12884C1266C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E0E95A49-77AE-4B0B-83A7-8D6FF6FD285D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}.Release|Any CPU.ActiveCfg = Release|Any CPU
