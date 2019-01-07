@@ -1,9 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
 
-namespace Arcus.Security.KeyVault.Factories
+namespace Arcus.Security.Providers.AzureKeyVault.Factories
 {
     /// <summary>
     /// <see cref="KeyVaultClientFactory"/> implementation using Azure Managed Service Identity

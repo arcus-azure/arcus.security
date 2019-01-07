@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using Arcus.Security.Core.Exceptions;
-using Arcus.Security.Core.Interfaces;
+using Arcus.Security.Secrets.Core.Exceptions;
+using Arcus.Security.Secrets.Core.Interfaces;
 using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Arcus.Security.Core.Caching
+namespace Arcus.Security.Secrets.Core.Caching
 {
     /// <inheritdoc cref="ISecretProvider"/>
     /// <summary>

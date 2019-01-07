@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Arcus.Security.Core.Interfaces;
+using Arcus.Security.Secrets.Core.Interfaces;
 
 namespace Arcus.Security.Tests.Unit.Core.Stubs
 {

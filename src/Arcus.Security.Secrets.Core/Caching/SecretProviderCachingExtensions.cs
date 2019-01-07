@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Arcus.Security.Core.Interfaces;
+using Arcus.Security.Secrets.Core.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Arcus.Security.Core.Caching
+namespace Arcus.Security.Secrets.Core.Caching
 {
     public static class SecretProviderCachingExtensions
     {

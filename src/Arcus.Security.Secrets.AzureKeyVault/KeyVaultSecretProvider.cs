@@ -1,13 +1,13 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using Arcus.Security.Core.Exceptions;
-using Arcus.Security.Core.Interfaces;
-using Arcus.Security.KeyVault.Factories;
+using Arcus.Security.Providers.AzureKeyVault.Factories;
+using Arcus.Security.Secrets.Core.Exceptions;
+using Arcus.Security.Secrets.Core.Interfaces;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 
-namespace Arcus.Security.KeyVault
+namespace Arcus.Security.Secrets.AzureKeyVault
 {
     /// <summary>
     /// Secret key provider that connects to Azure Key Vault
