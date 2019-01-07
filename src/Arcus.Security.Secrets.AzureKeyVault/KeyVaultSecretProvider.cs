@@ -7,7 +7,7 @@ using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 
-namespace Arcus.Security.Secrets.Providers.AzureKeyVault
+namespace Arcus.Security.Secrets.AzureKeyVault
 {
     /// <summary>
     /// Secret key provider that connects to Azure Key Vault

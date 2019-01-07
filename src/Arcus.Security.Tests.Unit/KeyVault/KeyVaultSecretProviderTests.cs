@@ -1,5 +1,5 @@
 ﻿using System;
-using Arcus.Security.Secrets.Providers.AzureKeyVault;
+using Arcus.Security.Secrets.AzureKeyVault;
 using Arcus.Security.Tests.Unit.KeyVault.Stubs;
 using Xunit;
 

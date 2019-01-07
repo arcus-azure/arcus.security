@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Arcus.Security.Secrets.Core.Exceptions;
-using Arcus.Security.Secrets.Providers.AzureKeyVault;
+using Arcus.Security.Secrets.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Factories;
 using Microsoft.Extensions.Configuration;
 using Xunit;
