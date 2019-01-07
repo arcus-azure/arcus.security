@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arcus.Security.Core.Caching.Configuration;
+using Arcus.Security.Core.Caching.Configuration.Interfaces;
 using Arcus.Security.Secrets.Core.Exceptions;
 using Arcus.Security.Secrets.Core.Interfaces;
 using GuardNet;
@@ -15,31 +17,32 @@ namespace Arcus.Security.Secrets.Core.Caching
     {
         private readonly ISecretProvider _secretProvider;
         private readonly IMemoryCache _memoryCache;
-        private readonly TimeSpan _cacheDuration;
+        private readonly ICacheConfiguration _cacheConfiguration;
 
         /// <summary>
         /// Creating a new CachedSecretProvider with all required information
         /// </summary>
         /// <param name="secretProvider">The internal <see cref="ISecretProvider"/> used to retrieve the actual Secret Value, when not cached</param>
-        /// <param name="cacheDuration">The <see cref="TimeSpan"/> for which a retrieved value should be cached</param>
+        /// <param name="cacheConfiguration">The <see cref="ICacheConfiguration"/> which defines how the cache works</param>
         /// <param name="memoryCache">A <see cref="IMemoryCache"/> implementation that can cache data in memory.</param>
         /// <exception cref="ArgumentNullException">The secretProvider and memoryCache parameters must not be null</exception>
-        public CachedSecretProvider(ISecretProvider secretProvider, TimeSpan cacheDuration, IMemoryCache memoryCache)
+        public CachedSecretProvider(ISecretProvider secretProvider, ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
             Guard.NotNull(memoryCache, nameof(memoryCache));
+            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration));
 
             _secretProvider = secretProvider;
             _memoryCache = memoryCache;
-            _cacheDuration = cacheDuration;
+            _cacheConfiguration = cacheConfiguration;
         }
 
         /// <inheritdoc />
         /// <summary>
         /// Creating a new CachedSecretProvider with a standard generated MemoryCache
         /// </summary>
-        public CachedSecretProvider(ISecretProvider secretProvider, TimeSpan cacheDuration) :
-            this(secretProvider, cacheDuration, new MemoryCache(new MemoryCacheOptions()))
+        public CachedSecretProvider(ISecretProvider secretProvider, ICacheConfiguration cacheConfiguration) :
+            this(secretProvider, cacheConfiguration, new MemoryCache(new MemoryCacheOptions()))
         {
         }
 
@@ -48,7 +51,7 @@ namespace Arcus.Security.Secrets.Core.Caching
         /// Creating a new CachedSecretProvider with a standard generated MemoryCache and default TimeSpan of 5 minutes
         /// </summary>
         public CachedSecretProvider(ISecretProvider secretProvider) :
-            this(secretProvider, TimeSpan.FromMinutes(5), new MemoryCache(new MemoryCacheOptions()))
+            this(secretProvider, new CacheConfiguration(), new MemoryCache(new MemoryCacheOptions()))
         {
         }
 
@@ -84,7 +87,7 @@ namespace Arcus.Security.Secrets.Core.Caching
             // Set cache options.
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                                             // Keep in cache for this time, reset time if accessed.
-                                            .SetSlidingExpiration(_cacheDuration);
+                                            .SetSlidingExpiration(_cacheConfiguration.Duration);
 
             // Save data in cache.
             _memoryCache.Set(secretName, secret, cacheEntryOptions);
