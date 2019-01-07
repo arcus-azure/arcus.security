@@ -9,13 +9,23 @@ namespace Arcus.Security.Tests.Unit.KeyVault
     public class KeyVaultSecretProviderTests
     {
         [Fact]
-        public void KeyVaultSecretProvider_CreateWithEmptyUri_ShouldFailWithArgumentException()
+        public void KeyVaultSecretProvider_CreateWithEmptyUri_ShouldFailWithUriFormatException()
         {
             // Arrange
             string uri = string.Empty;
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri)));
+        }
+
+        [Fact]
+        public void KeyVaultSecretProvider_CreateWithHttpScheme_ShouldFailWithUriFormatException()
+        {
+            // Arrange
+            string uri = $"http://{Guid.NewGuid():N}.vault.azure.net/";
+
+            // Act & Assert
+            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -32,7 +42,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         public void KeyVaultSecretProvider_CreateWithoutClientFactory_ShouldFailWithArgumentException()
         {
             // Arrange
-            string uri = Guid.NewGuid().ToString("N");
+            string uri = $"https://{Guid.NewGuid():N}.vault.azure.net/";
 
             // Act & Assert
             Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
@@ -42,7 +52,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         public void KeyVaultSecretProvider_CreateWithValidArguments_ShouldSucceed()
         {
             // Arrange
-            string uri = Guid.NewGuid().ToString("N");
+            string uri = $"https://{Guid.NewGuid():N}.vault.azure.net/";
 
             // Act & Assert
             var secretProvider = new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri));
