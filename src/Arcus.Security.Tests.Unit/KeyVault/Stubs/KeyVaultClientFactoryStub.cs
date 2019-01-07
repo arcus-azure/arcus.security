@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Factories;
+using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Microsoft.Azure.KeyVault;
 
 namespace Arcus.Security.Tests.Unit.KeyVault.Stubs
 {
-    internal class KeyVaultClientFactoryStub : KeyVaultClientFactory
+    internal class KeyVaultClientFactoryStub : IKeyVaultAuthenticator
     {
-        public override Task<KeyVaultClient> CreateClient()
+        public Task<KeyVaultClient> Authenticate()
         {
             throw new NotImplementedException();
         }

@@ -1,19 +1,20 @@
 ﻿using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
 
-namespace Arcus.Security.Providers.AzureKeyVault.Factories
+namespace Arcus.Security.Providers.AzureKeyVault.Authentication
 {
     /// <summary>
-    /// <see cref="KeyVaultClientFactory"/> implementation using Azure Managed Service Identity
+    ///     Azure Key Vault authentication by using Azure Managed Service Identity
     /// </summary>
-    public class MsiKeyVaultClientFactory : KeyVaultClientFactory
+    public class ManagedServiceIdentityAuthenticator : IKeyVaultAuthenticator
     {
         /// <summary>
-        /// Creates a <see cref="KeyVaultClient"/>, using the AzureServiceTokenProvider
+        /// Authenticates with Azure Key Vault
         /// </summary>
-        /// <returns>A generated KeyVaultClient</returns>
-        public override Task<KeyVaultClient> CreateClient()
+        /// <returns>A <see cref="KeyVaultClient"/> client to use for interaction with the vault</returns>
+        public Task<KeyVaultClient> Authenticate()
         {
             var tokenProvider = new AzureServiceTokenProvider();
             var authenticationCallback = new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback);

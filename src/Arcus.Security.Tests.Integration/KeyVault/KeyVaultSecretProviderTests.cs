@@ -1,8 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault.Authentication;
+using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Secrets.Core.Exceptions;
 using Arcus.Security.Secrets.AzureKeyVault;
-using Arcus.Security.Providers.AzureKeyVault.Factories;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
@@ -30,7 +31,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             // Act
             KeyVaultSecretProvider keyVaultSecretProvider = new KeyVaultSecretProvider(
-                new ServicePrincipalKeyVaultClientFactory(clientId, clientKey), keyVaultUri
+                new ServicePrincipalAuthenticator(clientId, clientKey), new KeyVaultConfiguration(keyVaultUri)
                 );
             string secretValue = await keyVaultSecretProvider.Get(keyName);
 
@@ -49,7 +50,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             // Act
             KeyVaultSecretProvider keyVaultSecretProvider = new KeyVaultSecretProvider(
-                new ServicePrincipalKeyVaultClientFactory(clientId, clientKey), keyVaultUri
+                new ServicePrincipalAuthenticator(clientId, clientKey), new KeyVaultConfiguration(keyVaultUri)
             );
 
             // Assert

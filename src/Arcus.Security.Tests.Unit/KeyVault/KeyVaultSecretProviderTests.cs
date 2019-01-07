@@ -1,4 +1,5 @@
 ﻿using System;
+using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Secrets.AzureKeyVault;
 using Arcus.Security.Tests.Unit.KeyVault.Stubs;
 using Xunit;
@@ -14,7 +15,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = string.Empty;
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), uri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -24,7 +25,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = null;
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), uri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -34,7 +35,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = Guid.NewGuid().ToString("N");
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, uri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -44,7 +45,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = Guid.NewGuid().ToString("N");
 
             // Act & Assert
-            var secretProvider = new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), uri);
+            var secretProvider = new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri));
             Assert.NotNull(secretProvider);
         }
     }

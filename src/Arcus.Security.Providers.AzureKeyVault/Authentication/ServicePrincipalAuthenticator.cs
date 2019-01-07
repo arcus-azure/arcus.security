@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
-namespace Arcus.Security.Providers.AzureKeyVault.Factories
+namespace Arcus.Security.Providers.AzureKeyVault.Authentication
 {
-    /// <summary>
-    /// <see cref="KeyVaultClientFactory"/> implementation using a service principle
-    /// </summary>        
-    public class ServicePrincipalKeyVaultClientFactory : KeyVaultClientFactory
+    public class ServicePrincipalAuthenticator: IKeyVaultAuthenticator
     {
         private readonly string _clientId;
         private readonly string _clientKey;
@@ -19,7 +17,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Factories
         /// </summary>
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
-        public ServicePrincipalKeyVaultClientFactory(string clientId, string clientKey)
+        public ServicePrincipalAuthenticator(string clientId, string clientKey)
         {
             Guard.NotNullOrEmpty(clientId, nameof(clientId));
             Guard.NotNullOrEmpty(clientKey, nameof(clientKey));
@@ -27,12 +25,12 @@ namespace Arcus.Security.Providers.AzureKeyVault.Factories
             _clientId = clientId;
             _clientKey = clientKey;
         }
-
+        
         /// <summary>
-        /// Creates a <see cref="KeyVaultClient"/>, using the AzureServiceTokenProvider
+        /// Authenticates with Azure Key Vault
         /// </summary>
-        /// <returns>A generated KeyVaultClient</returns>
-        public override Task<KeyVaultClient> CreateClient()
+        /// <returns>A <see cref="KeyVaultClient"/> client to use for interaction with the vault</returns>
+        public Task<KeyVaultClient> Authenticate()
         {
             var keyVaultClient = new KeyVaultClient(GetToken);
             return Task.FromResult(keyVaultClient);
@@ -41,8 +39,8 @@ namespace Arcus.Security.Providers.AzureKeyVault.Factories
         private async Task<string> GetToken(string authority, string resource, string scope)
         {
             var authContext = new AuthenticationContext(authority);
-            ClientCredential clientCred = new ClientCredential(_clientId, _clientKey);
-            AuthenticationResult result = await authContext.AcquireTokenAsync(resource, clientCred);
+            var clientCred = new ClientCredential(_clientId, _clientKey);
+            var result = await authContext.AcquireTokenAsync(resource, clientCred);
 
             if (result == null)
             {
