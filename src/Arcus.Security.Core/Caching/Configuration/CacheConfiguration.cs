@@ -15,6 +15,7 @@ namespace Arcus.Security.Core.Caching.Configuration
         ///     Constructor
         /// </summary>
         /// <param name="duration">Duration for which an entry should be cached</param>
+        /// <exception cref="ArgumentException">Exception thrown when default timespan is specified as cache duration</exception>
         public CacheConfiguration(TimeSpan duration)
         {
             Guard.For<ArgumentException>(() => duration == default(TimeSpan));
@@ -23,7 +24,7 @@ namespace Arcus.Security.Core.Caching.Configuration
         }
 
         /// <summary>
-        ///     Constructor
+        ///     Constructor with default cache entry of 5 minutes
         /// </summary>
         public CacheConfiguration()
         {
