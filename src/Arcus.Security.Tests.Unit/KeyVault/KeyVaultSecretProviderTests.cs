@@ -1,7 +1,7 @@
 ﻿using System;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Secrets.AzureKeyVault;
-using Arcus.Security.Tests.Unit.KeyVault.Stubs;
+using Arcus.Security.Tests.Unit.KeyVault.Dummies;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.KeyVault
@@ -15,7 +15,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = string.Empty;
 
             // Act & Assert
-            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(new AzureKeyVaultAuthenticatorDummy(), new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -35,7 +35,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = null;
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(new AzureKeyVaultAuthenticatorDummy(), new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -55,7 +55,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = $"https://{Guid.NewGuid():N}.vault.azure.net/";
 
             // Act & Assert
-            var secretProvider = new KeyVaultSecretProvider(new KeyVaultClientFactoryStub(), new KeyVaultConfiguration(uri));
+            var secretProvider = new KeyVaultSecretProvider(new AzureKeyVaultAuthenticatorDummy(), new KeyVaultConfiguration(uri));
             Assert.NotNull(secretProvider);
         }
     }
