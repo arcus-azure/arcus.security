@@ -16,7 +16,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private readonly IKeyVaultAuthenticator authenticator;
+        private readonly IKeyVaultAuthenticator _authenticator;
         private readonly IKeyVaultConfiguration _vaultConfiguration;
         private KeyVaultClient _keyVaultClient;
         
@@ -38,7 +38,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
 
             _vaultConfiguration = vaultConfiguration;
-            this.authenticator = authenticator;
+            _authenticator = authenticator;
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         {
             if (_keyVaultClient == null)
             {
-                _keyVaultClient = await authenticator.Authenticate();
+                _keyVaultClient = await _authenticator.Authenticate();
             }
 
             return _keyVaultClient;
