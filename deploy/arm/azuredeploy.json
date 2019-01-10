@@ -3,12 +3,14 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "KeyVault.Vault.Name": {
-            "defaultValue": "arcus-testing-key-vault",
-            "type": "string"
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 24,
+            "defaultValue": "arcus-security-dev-we"
         },
         "KeyVault.Secret.Name": {
-            "defaultValue": "ArcusTestSecret",
-            "type": "string"
+            "type": "string",
+            "defaultValue": "ArcusTestSecret"
         },
         "AD.Tenant.Id": {
             "defaultValue": "",
@@ -22,13 +24,10 @@
     "variables": {},
     "resources": [
         {
-            "comments": "Arcus test resource for key vault",
             "type": "Microsoft.KeyVault/vaults",
             "name": "[parameters('KeyVault.Vault.Name')]",
             "apiVersion": "2016-10-01",
             "location": "westeurope",
-            "tags": {},
-            "scale": null,
             "properties": {
                 "sku": {
                     "family": "A",
@@ -60,8 +59,8 @@
             "name": "[concat(parameters('KeyVault.Vault.Name'), '/', parameters('KeyVault.Secret.Name'))]",
             "apiVersion": "2016-10-01",
             "location": "westeurope",
-            "scale": null,
             "properties": {
+                "value": "[guid(subscription().subscriptionId, resourceGroup().id, deployment().name)]",
                 "attributes": {
                     "enabled": true
                 }
