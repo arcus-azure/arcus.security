@@ -6,19 +6,31 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 24,
-            "defaultValue": "arcus-security-dev-we"
+            "defaultValue": "arcus-security-dev-we",
+            "metadata": {
+                "description": "Name of the vault"
+            }
         },
         "KeyVault.Secret.Name": {
             "type": "string",
-            "defaultValue": "ArcusTestSecret"
+            "defaultValue": "ArcusTestSecret",
+            "metadata": {
+                "description": "Name of the secret"
+            }
         },
-        "AD.Tenant.Id": {
+        "ActiveDirectory.Tenant.Id": {
             "defaultValue": "",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Tenant id of the Azure AD Application"
+            }
         },
-        "AD.ServicePrincipal.ObjectId": {
+        "ActiveDirectory.ServicePrincipal.ObjectId": {
             "defaultValue": "",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Object id of the Azure AD Application"
+            }
         }
     },
     "variables": {},
@@ -33,11 +45,11 @@
                     "family": "A",
                     "name": "standard"
                 },
-                "tenantId": "[parameters('AD.Tenant.Id')]",
+                "tenantId": "[parameters('ActiveDirectory.Tenant.Id')]",
                 "accessPolicies": [
                     {
-                        "tenantId": "[parameters('AD.Tenant.Id')]",
-                        "objectId": "[parameters('AD.ServicePrincipal.ObjectId')]",
+                        "tenantId": "[parameters('ActiveDirectory.Tenant.Id')]",
+                        "objectId": "[parameters('ActiveDirectory.ServicePrincipal.ObjectId')]",
                         "permissions": {
                             "keys": [],
                             "secrets": [
