@@ -1,6 +1,8 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Factories;
+using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
+using Arcus.Security.Providers.AzureKeyVault.Configuration.Interfaces;
 using Arcus.Security.Secrets.Core.Exceptions;
 using Arcus.Security.Secrets.Core.Interfaces;
 using GuardNet;
@@ -14,7 +16,8 @@ namespace Arcus.Security.Secrets.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private readonly KeyVaultClientFactory _keyVaultClientFactory;
+        private readonly IKeyVaultAuthenticator _authenticator;
+        private readonly IKeyVaultConfiguration _vaultConfiguration;
         private KeyVaultClient _keyVaultClient;
         
         /// <summary>
@@ -25,15 +28,17 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// <summary>
         /// Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
         /// </summary>
-        /// <param name="keyVaultClientFactory">A <see cref="KeyVaultClientFactory"/> implementation that will be used to generate the Key VaultClient</param>
-        /// <param name="keyVaultUri">The Uri of the Azure Key Vault you want to connect to.  <example>https://{vaultname}.vault.azure.net/</example></param>
-        public KeyVaultSecretProvider(KeyVaultClientFactory keyVaultClientFactory, string keyVaultUri)
+        /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
+        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        public KeyVaultSecretProvider(IKeyVaultAuthenticator authenticator, IKeyVaultConfiguration vaultConfiguration)
         {
-            Guard.NotNullOrEmpty(keyVaultUri, nameof(keyVaultUri));
-            Guard.NotNull(keyVaultClientFactory, nameof(keyVaultClientFactory));
+            Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration));
+            Guard.NotNull(authenticator, nameof(authenticator));
 
-            VaultUri = keyVaultUri;
-            _keyVaultClientFactory = keyVaultClientFactory;
+            VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
+
+            _vaultConfiguration = vaultConfiguration;
+            _authenticator = authenticator;
         }
 
         /// <summary>
@@ -48,7 +53,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             try
             {
                 var keyVaultClient = await GetClientAsync();
-                SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
+                var secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
                 return secretBundle?.Value;
             }
             catch (KeyVaultErrorException keyVaultErrorException)
@@ -66,7 +71,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         {
             if (_keyVaultClient == null)
             {
-                _keyVaultClient = await _keyVaultClientFactory.CreateClient();
+                _keyVaultClient = await _authenticator.Authenticate();
             }
 
             return _keyVaultClient;
