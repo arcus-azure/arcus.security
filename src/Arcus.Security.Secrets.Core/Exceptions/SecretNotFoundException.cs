@@ -12,6 +12,13 @@ namespace Arcus.Security.Secrets.Core.Exceptions
         /// <summary>
         /// Creates <see cref="SecretNotFoundException"/> , using the given name
         /// </summary>
+        public SecretNotFoundException() : base("The secret was not found.")
+        {
+        }
+
+        /// <summary>
+        /// Creates <see cref="SecretNotFoundException"/> , using the given name
+        /// </summary>
         /// <param name="name">Name of the secret that is missing</param>
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
