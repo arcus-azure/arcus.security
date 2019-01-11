@@ -53,7 +53,7 @@ namespace Arcus.Security.Secrets.Core.Exceptions
         /// <summary>
         /// Name of the missing key
         /// </summary>
-        public string Name { get; }
+        public string Name { get; } = "undefined";
 
         /// <summary>
         /// When overridden in a derived class, sets the <see cref="T:SerializationInfo"></see> with information about the exception.
