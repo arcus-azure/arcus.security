@@ -3,42 +3,53 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "KeyVault.Vault.Name": {
-            "defaultValue": "arcus-testing-key-vault",
-            "type": "string"
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 24,
+            "defaultValue": "arcus-security-dev-we",
+            "metadata": {
+                "description": "Name of the vault"
+            }
         },
         "KeyVault.Secret.Name": {
+            "type": "string",
             "defaultValue": "ArcusTestSecret",
-            "type": "string"
+            "metadata": {
+                "description": "Name of the secret"
+            }
         },
-        "AD.Tenant.Id": {
+        "ActiveDirectory.Tenant.Id": {
             "defaultValue": "",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Tenant id of the Azure AD Application"
+            }
         },
-        "AD.ServicePrincipal.ObjectId": {
+        "ActiveDirectory.ServicePrincipal.ObjectId": {
             "defaultValue": "",
-            "type": "string"
+            "type": "string",
+            "metadata": {
+                "description": "Object id of the Azure AD Application"
+            }
         }
     },
     "variables": {},
     "resources": [
         {
-            "comments": "Arcus test resource for key vault",
             "type": "Microsoft.KeyVault/vaults",
             "name": "[parameters('KeyVault.Vault.Name')]",
             "apiVersion": "2016-10-01",
             "location": "westeurope",
-            "tags": {},
-            "scale": null,
             "properties": {
                 "sku": {
                     "family": "A",
                     "name": "standard"
                 },
-                "tenantId": "[parameters('AD.Tenant.Id')]",
+                "tenantId": "[parameters('ActiveDirectory.Tenant.Id')]",
                 "accessPolicies": [
                     {
-                        "tenantId": "[parameters('AD.Tenant.Id')]",
-                        "objectId": "[parameters('AD.ServicePrincipal.ObjectId')]",
+                        "tenantId": "[parameters('ActiveDirectory.Tenant.Id')]",
+                        "objectId": "[parameters('ActiveDirectory.ServicePrincipal.ObjectId')]",
                         "permissions": {
                             "keys": [],
                             "secrets": [
@@ -60,8 +71,8 @@
             "name": "[concat(parameters('KeyVault.Vault.Name'), '/', parameters('KeyVault.Secret.Name'))]",
             "apiVersion": "2016-10-01",
             "location": "westeurope",
-            "scale": null,
             "properties": {
+                "value": "[guid(subscription().subscriptionId, resourceGroup().id, deployment().name)]",
                 "attributes": {
                     "enabled": true
                 }
