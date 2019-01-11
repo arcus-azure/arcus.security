@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 using GuardNet;
 
 namespace Arcus.Security.Secrets.Core.Exceptions
@@ -10,12 +11,12 @@ namespace Arcus.Security.Secrets.Core.Exceptions
     public class SecretNotFoundException : Exception
     {
         /// <summary>
-        /// Creates <see cref="SecretNotFoundException"/> , using the given name
+        /// Creates <see cref="SecretNotFoundException"/> 
         /// </summary>
         public SecretNotFoundException() : base("The secret was not found.")
         {
         }
-
+        
         /// <summary>
         /// Creates <see cref="SecretNotFoundException"/> , using the given name
         /// </summary>
@@ -40,8 +41,31 @@ namespace Arcus.Security.Secrets.Core.Exceptions
         }
 
         /// <summary>
+        /// Creates <see cref="SecretNotFoundException"/> used for serialization.
+        /// </summary>
+        /// <param name="info">The <see cref="T:SerializationInfo"></see> that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The <see cref="T:StreamingContext"></see> that contains contextual information about the source or destination.</param>
+        protected SecretNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+            Name = info.GetString(nameof(Name));
+        }
+
+        /// <summary>
         /// Name of the missing key
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// When overridden in a derived class, sets the <see cref="T:SerializationInfo"></see> with information about the exception.
+        /// </summary>
+        /// <param name="info">The <see cref="T:SerializationInfo"></see> that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The <see cref="T:StreamingContext"></see> that contains contextual information about the source or destination.</param>
+        /// <exception cref="T:ArgumentNullException">The <paramref name="info">info</paramref> parameter is a null reference (Nothing in Visual Basic).</exception>
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            info.AddValue(nameof(Name), Name);
+        }
     }
 }
