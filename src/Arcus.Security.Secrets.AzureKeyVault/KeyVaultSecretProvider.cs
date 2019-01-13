@@ -48,7 +48,11 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             try
             {
                 var keyVaultClient = await GetClientAsync();
-                SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
+                SecretBundle secretBundle = 
+                    await Policy.Handle<KeyVaultErrorException>(ex => ex.Response.StatusCode == HttpStatusCode.TooManyRequests)
+                                .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)))
+                                .ExecuteAsync(() => keyVaultClient.GetSecretAsync(VaultUri, secretName));
+                
                 return secretBundle?.Value;
             }
             catch (KeyVaultErrorException keyVaultErrorException)
