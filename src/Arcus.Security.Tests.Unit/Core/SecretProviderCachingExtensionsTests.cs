@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Arcus.Security.Secrets.Core.Caching;
 using Arcus.Security.Secrets.Core.Interfaces;
 using Arcus.Security.Tests.Unit.Core.Stubs;
-using Arcus.Security.Tests.Unit.KeyVault.Stubs;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
