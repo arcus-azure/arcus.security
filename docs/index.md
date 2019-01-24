@@ -9,7 +9,7 @@ redirect_from:
 # Installation
 
 ```shell
-PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
+PM > Install-Package Arcus.Security.Secrets.AzureKeyVault -Version 0.1.0-alpha
 ```
 
 # Features
