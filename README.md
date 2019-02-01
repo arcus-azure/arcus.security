@@ -9,7 +9,7 @@ Security for Azure development in a breeze.
 Soon you will be able to install it via NuGet:
 
 ```shell
-PM > Install-Package Arcus.Security.All
+PM > Install-Package Arcus.Security.Secrets.AzureKeyVault -Version 0.1.0-alpha
 ```
 
 # Documentation
