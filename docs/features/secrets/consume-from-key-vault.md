@@ -4,7 +4,7 @@ layout: default
 ---
 
 ## Consuming Azure Key Vault secrets
-You can easily create a Key Vaul secret provider - The only thing you need to do is specify how you want to configure and to what vault.
+You can easily create a Key Vault secret provider - The only thing you need to do is specify how you want to configure and to what vault.
 
 ```csharp
 var vaultAuthenticator = new ManagedServiceIdentityAuthenticator();

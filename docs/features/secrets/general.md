@@ -6,7 +6,7 @@ layout: default
 ## Consuming secrets
 Every provider implements `ISecretProvider` which makes it easy to use a consistent flow, regardless of the provider.
 
-You can easily retrieve secrets as following
+You can easily retrieve secrets as following:
 
 ```csharp
 var secret = await secretProvider.Get("EventGrid-AuthKey");

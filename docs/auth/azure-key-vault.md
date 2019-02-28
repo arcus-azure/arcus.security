@@ -16,7 +16,7 @@ var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
 ```
 
-This is the recommended approach to interact with Azure Key Vault
+This is the recommended approach to interact with Azure Key Vault.
 
 ### Service Principle
 Authentication via username and password is supported with the `ServicePrincipalAuthenticator`.
