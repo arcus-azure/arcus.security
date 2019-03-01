@@ -40,7 +40,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
         {
             // Arrange
             string vaultUri = $"http://{Guid.NewGuid():N}.vault.azure.net/";
-            var expectedVaultUri = new Uri(vaultUri);
 
             // Act & Assert
             Assert.Throws<UriFormatException>(() => new KeyVaultConfiguration(vaultUri));
