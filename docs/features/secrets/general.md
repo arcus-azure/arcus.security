@@ -31,7 +31,7 @@ var secret = await cachedSecretProvider.Get("EventGrid-AuthKey");
 ```
 
 ### Configuring the cache
-By default we only keep them around for 5 minutes, but you can configure this yourself.
+By default we only keep them around for **5 minutes**, but you can configure this yourself.
 
 ```csharp
 var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(10)); // Optional: Default is 5 min
