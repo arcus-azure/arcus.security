@@ -67,7 +67,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
                     await ThrottleTooManyRequests(
                         () => keyVaultClient.GetSecretAsync(VaultUri, secretName));
                 
-                // TODO: should we allow to return 'null'?
                 return secretBundle?.Value;
             }
             catch (KeyVaultErrorException keyVaultErrorException)
@@ -77,7 +76,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
                     throw new SecretNotFoundException(secretName, keyVaultErrorException);
                 }
 
-                // TODO: are there other HTTP status codes that we can relate to secret exceptions?
                 throw;
             }
         }
@@ -102,7 +100,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             }
         }
 
-        private static Task<SecretBundle> ThrottleTooManyRequests(Func<Task<SecretBundle>> getSecret)
+        private static Task<SecretBundle> ThrottleTooManyRequests(Func<Task<SecretBundle>> secretOperation)
         {
             /** Client-side throttling using exponential back-off when Key Vault service limit exceeds:
              * 1. Wait 1 second, retry request
@@ -113,7 +111,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
 
             return Policy.Handle<KeyVaultErrorException>(ex => (int) ex.Response.StatusCode == 429)
                          .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)))
-                         .ExecuteAsync(getSecret);
+                         .ExecuteAsync(secretOperation);
         }
     }
 }
