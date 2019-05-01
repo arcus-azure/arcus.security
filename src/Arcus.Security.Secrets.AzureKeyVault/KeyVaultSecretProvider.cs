@@ -95,7 +95,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             {
                 if (_keyVaultClient == null)
                 {
-                    // TODO: why is this factory not returning an interface (the 'Microsoft.Azure.KeyVault.IKeyVaultClient' interface)?
                     _keyVaultClient = await _authenticator.Authenticate();
                 }
 
