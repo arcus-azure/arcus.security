@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Microsoft.Azure.KeyVault;
 
-namespace Arcus.Security.Tests.Unit.KeyVault.Dummies
+namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
 {
-    internal class AzureKeyVaultAuthenticatorDummy : IKeyVaultAuthenticator
+    internal class AzureKeyVaultAuthenticatorDummy : IKeyVaultAuthentication
     {
-        public Task<KeyVaultClient> Authenticate()
+        public Task<IKeyVaultClient> Authenticate()
         {
             throw new NotImplementedException();
         }

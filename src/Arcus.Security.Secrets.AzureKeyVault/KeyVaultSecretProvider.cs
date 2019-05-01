@@ -18,10 +18,10 @@ namespace Arcus.Security.Secrets.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private readonly IKeyVaultAuthenticator _authenticator;
+        private readonly IKeyVaultAuthentication _authenticator;
         private readonly IKeyVaultConfiguration _vaultConfiguration;
 
-        private KeyVaultClient _keyVaultClient;
+        private IKeyVaultClient _keyVaultClient;
 
         private static readonly SemaphoreSlim LockCreateKeyVaultClient = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
@@ -35,7 +35,18 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// </summary>
         /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        [Obsolete("Use other constructor with " + nameof(IKeyVaultAuthentication) + " instead")]
+#pragma warning disable 618
         public KeyVaultSecretProvider(IKeyVaultAuthenticator authenticator, IKeyVaultConfiguration vaultConfiguration)
+            : this(new CompatibleKeyVaultAuthentication(authenticator), vaultConfiguration) { }
+#pragma warning restore 618
+
+        /// <summary>
+        /// Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
+        /// </summary>
+        /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
+        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        public KeyVaultSecretProvider(IKeyVaultAuthentication authenticator, IKeyVaultConfiguration vaultConfiguration)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration));
             Guard.NotNull(authenticator, nameof(authenticator));
@@ -43,10 +54,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
 
             _vaultConfiguration = vaultConfiguration;
-
-            /** TODO: if we only allow a single instance (KeyVaultClient) being created for this type,
-             *       why shouldn't we then take a dependency on the client instead on the factory?
-             *       The factory can still create the instance for us, but this provider may not be the right responsible to call this creation. */
             _authenticator = authenticator;
         }
 
@@ -62,7 +69,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             Guard.NotNullOrEmpty(secretName, nameof(secretName));
             try
             {
-                KeyVaultClient keyVaultClient = await GetClientAsync();
+                IKeyVaultClient keyVaultClient = await GetClientAsync();
                 SecretBundle secretBundle =
                     await ThrottleTooManyRequests(
                         () => keyVaultClient.GetSecretAsync(VaultUri, secretName));
@@ -80,7 +87,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             }
         }
 
-        private async Task<KeyVaultClient> GetClientAsync()
+        private async Task<IKeyVaultClient> GetClientAsync()
         {
             await LockCreateKeyVaultClient.WaitAsync();
 
@@ -102,7 +109,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
 
         private static Task<SecretBundle> ThrottleTooManyRequests(Func<Task<SecretBundle>> secretOperation)
         {
-            /** Client-side throttling using exponential back-off when Key Vault service limit exceeds:
+            /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
              * 1. Wait 1 second, retry request
              * 2. If still throttled wait 2 seconds, retry request
              * 3. If still throttled wait 4 seconds, retry request
