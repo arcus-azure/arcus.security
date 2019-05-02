@@ -73,13 +73,13 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string expected = $"secret-value-{Guid.NewGuid()}";
 
             var keyVaultClient = new SimulatedKeyVaultClient(
-                request => throw new KeyVaultErrorException("Sabotage secret retrieval with TooManyRequests")
+                () => throw new KeyVaultErrorException("Sabotage secret retrieval with TooManyRequests")
                 {
                     Response = new HttpResponseMessageWrapper(
                         new HttpResponseMessage(HttpStatusCode.TooManyRequests), 
                         "some HTTP response content to ignore")
                 },
-                request => new SecretBundle(value: expected));
+                () => new SecretBundle(value: expected));
 
 
             var provider = new KeyVaultSecretProvider(

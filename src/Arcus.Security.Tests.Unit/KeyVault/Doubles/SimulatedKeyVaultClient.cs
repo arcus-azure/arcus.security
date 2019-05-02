@@ -17,7 +17,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
     /// </summary>
     public class SimulatedKeyVaultClient : IKeyVaultClient
     {
-        private readonly Func<(string vaultUrl, string secretName), SecretBundle>[] _simulation;
+        private readonly Func<SecretBundle>[] _simulation;
         
         private int _simulationCount = -1;
 
@@ -25,7 +25,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         /// Initializes a new instance of the <see cref="SimulatedKeyVaultClient"/> class.
         /// </summary>
         /// <param name="simulation">The simulation of key vault requests the simulated client should run through.</param>
-        public SimulatedKeyVaultClient(params Func<(string vaultUrl, string secretName), SecretBundle>[] simulation)
+        public SimulatedKeyVaultClient(params Func<SecretBundle>[] simulation)
         {
             Guard.NotNull(simulation, nameof(simulation));
 
@@ -835,7 +835,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
             Interlocked.Increment(ref _simulationCount);
             var response = new AzureOperationResponse<SecretBundle>
             {
-                Body = _simulation[_simulationCount]((vaultBaseUrl, secretName))
+                Body = _simulation[_simulationCount]()
             };
             
             return Task.FromResult(response);
