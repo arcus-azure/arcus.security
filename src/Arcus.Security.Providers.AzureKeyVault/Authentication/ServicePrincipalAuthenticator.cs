@@ -10,7 +10,9 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     /// Representation of an <see cref="IKeyVaultAuthentication"/> that will generate a <see cref="IKeyVaultClient"/> implementation using a service principle.
     /// </summary>
-    public class ServicePrincipalAuthenticator : IKeyVaultAuthentication
+#pragma warning disable 618
+    public class ServicePrincipalAuthenticator : IKeyVaultAuthentication, IKeyVaultAuthenticator
+#pragma warning restore 618
     {
         private readonly string _clientId;
         private readonly string _clientKey;
@@ -33,9 +35,19 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="KeyVaultClient"/> client to use for interaction with the vault</returns>
-        public Task<IKeyVaultClient> Authenticate()
+        public Task<IKeyVaultClient> AuthenticateClient()
         {
             IKeyVaultClient keyVaultClient = new KeyVaultClient(GetToken);
+            return Task.FromResult(keyVaultClient);
+        }
+
+        /// <summary>
+        ///     Authenticates with Azure Key Vault
+        /// </summary>
+        /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        public Task<KeyVaultClient> Authenticate()
+        {
+            var keyVaultClient = new KeyVaultClient(GetToken);
             return Task.FromResult(keyVaultClient);
         }
 

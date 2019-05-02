@@ -95,7 +95,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             {
                 if (_keyVaultClient == null)
                 {
-                    _keyVaultClient = await _authenticator.Authenticate();
+                    _keyVaultClient = await _authenticator.AuthenticateClient();
                 }
 
                 return _keyVaultClient;

@@ -27,7 +27,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         ///     Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
-        public Task<IKeyVaultClient> Authenticate()
+        public Task<IKeyVaultClient> AuthenticateClient()
         {
             return Task.FromResult(_keyVaultClient);
         }
