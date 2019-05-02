@@ -30,7 +30,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// <summary>
         ///     Authenticates with Azure Key Vault
         /// </summary>
-        /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        /// <returns>A <see cref="IKeyVaultClient" /> client to use for interaction with the vault</returns>
         public async Task<IKeyVaultClient> Authenticate()
         {
             return await _authenticator.Authenticate();
