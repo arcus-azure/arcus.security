@@ -18,7 +18,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private readonly IKeyVaultAuthentication _authenticator;
+        private readonly IKeyVaultAuthentication _authentication;
         private readonly IKeyVaultConfiguration _vaultConfiguration;
 
         private IKeyVaultClient _keyVaultClient;
@@ -44,17 +44,17 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// <summary>
         /// Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
         /// </summary>
-        /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
+        /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance</param>
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
-        public KeyVaultSecretProvider(IKeyVaultAuthentication authenticator, IKeyVaultConfiguration vaultConfiguration)
+        public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration));
-            Guard.NotNull(authenticator, nameof(authenticator));
+            Guard.NotNull(authentication, nameof(authentication));
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
 
             _vaultConfiguration = vaultConfiguration;
-            _authenticator = authenticator;
+            _authentication = authentication;
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             {
                 if (_keyVaultClient == null)
                 {
-                    _keyVaultClient = await _authenticator.AuthenticateClient();
+                    _keyVaultClient = await _authentication.AuthenticateClient();
                 }
 
                 return _keyVaultClient;

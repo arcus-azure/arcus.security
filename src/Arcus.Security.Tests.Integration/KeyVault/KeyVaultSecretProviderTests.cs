@@ -30,9 +30,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             // Act
-            KeyVaultSecretProvider keyVaultSecretProvider = new KeyVaultSecretProvider(
-                new ServicePrincipalAuthenticator(clientId, clientKey), new KeyVaultConfiguration(keyVaultUri)
-                );
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                authentication: new ServicePrincipalAuthenticator(clientId, clientKey), 
+                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+
             string secretValue = await keyVaultSecretProvider.Get(keyName);
 
             // Assert
@@ -49,9 +50,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Guid.NewGuid().ToString("N");
 
             // Act
-            KeyVaultSecretProvider keyVaultSecretProvider = new KeyVaultSecretProvider(
-                new ServicePrincipalAuthenticator(clientId, clientKey), new KeyVaultConfiguration(keyVaultUri)
-            );
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                authentication: new ServicePrincipalAuthenticator(clientId, clientKey), 
+                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Assert
             await Assert.ThrowsAnyAsync<SecretNotFoundException>(async () =>
