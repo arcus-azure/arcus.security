@@ -7,7 +7,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
 {
     internal class AzureKeyVaultAuthenticatorDummy : IKeyVaultAuthentication
     {
-        public Task<IKeyVaultClient> AuthenticateClient()
+        public Task<IKeyVaultClient> Authenticate()
         {
             throw new NotImplementedException();
         }

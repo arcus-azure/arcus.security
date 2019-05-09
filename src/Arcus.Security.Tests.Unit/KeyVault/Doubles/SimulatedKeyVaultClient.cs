@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
 {
     /// <summary>
-    /// Representation of an <see cref="IKeyVaultClient"/> that simulates a series of key vault responses based on requests.
+    ///     Representation of an <see cref="IKeyVaultClient"/> that simulates a series of key vault responses based on requests.
     /// </summary>
     public class SimulatedKeyVaultClient : IKeyVaultClient
     {
@@ -22,7 +22,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         private int _simulationCount = -1;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SimulatedKeyVaultClient"/> class.
+        ///     Initializes a new instance of the <see cref="SimulatedKeyVaultClient"/> class.
         /// </summary>
         /// <param name="simulation">The simulation of key vault requests the simulated client should run through.</param>
         public SimulatedKeyVaultClient(params Func<SecretBundle>[] simulation)

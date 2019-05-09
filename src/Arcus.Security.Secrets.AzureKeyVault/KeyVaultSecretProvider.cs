@@ -14,7 +14,7 @@ using Polly;
 namespace Arcus.Security.Secrets.AzureKeyVault
 {
     /// <summary>
-    /// Secret key provider that connects to Azure Key Vault
+    ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
@@ -26,12 +26,12 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         private static readonly SemaphoreSlim LockCreateKeyVaultClient = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         /// <summary>
-        /// Uri of the vault
+        ///     Uri of the vault
         /// </summary>
         public string VaultUri { get; }
 
         /// <summary>
-        /// Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
+        ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
         /// </summary>
         /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
@@ -42,7 +42,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
 #pragma warning restore 618
 
         /// <summary>
-        /// Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
+        ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
         /// </summary>
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance</param>
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
@@ -58,7 +58,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         }
 
         /// <summary>
-        /// Gets the secret from Key Vault, using the right secret name
+        ///     Gets the secret from Key Vault, using the right secret name
         /// </summary>
         /// <param name="secretName">The secret name</param>
         /// <returns>The value, stored in Key Vault</returns>
@@ -95,7 +95,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
             {
                 if (_keyVaultClient == null)
                 {
-                    _keyVaultClient = await _authentication.AuthenticateClient();
+                    _keyVaultClient = await _authentication.Authenticate();
                 }
 
                 return _keyVaultClient;
