@@ -8,19 +8,37 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     ///     Azure Key Vault authentication by using Azure Managed Service Identity
     /// </summary>
-    public class ManagedServiceIdentityAuthenticator : IKeyVaultAuthenticator
+#pragma warning disable 618
+    public class ManagedServiceIdentityAuthenticator : IKeyVaultAuthentication, IKeyVaultAuthenticator
+#pragma warning restore 618
     {
         /// <summary>
         /// Authenticates with Azure Key Vault
         /// </summary>
-        /// <returns>A <see cref="KeyVaultClient"/> client to use for interaction with the vault</returns>
-        public Task<KeyVaultClient> Authenticate()
+        /// <returns>A <see cref="IKeyVaultClient"/> client to use for interaction with the vault</returns>
+        public Task<IKeyVaultClient> Authenticate()
+        {
+            IKeyVaultClient client = AuthenticateClient();
+            return Task.FromResult(client);
+        }
+
+        /// <summary>
+        ///     Authenticates with Azure Key Vault
+        /// </summary>
+        /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        Task<KeyVaultClient> IKeyVaultAuthenticator.Authenticate()
+        {
+            KeyVaultClient keyVaultClient = AuthenticateClient();
+            return Task.FromResult(keyVaultClient);
+        }
+
+        private static KeyVaultClient AuthenticateClient()
         {
             var tokenProvider = new AzureServiceTokenProvider();
             var authenticationCallback = new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback);
+            
             var keyVaultClient = new KeyVaultClient(authenticationCallback);
-
-            return Task.FromResult(keyVaultClient);
+            return keyVaultClient;
         }
     }
 }
