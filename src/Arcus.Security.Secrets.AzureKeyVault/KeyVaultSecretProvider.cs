@@ -38,7 +38,9 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         [Obsolete("Use other constructor with " + nameof(IKeyVaultAuthentication) + " instead")]
 #pragma warning disable 618
         public KeyVaultSecretProvider(IKeyVaultAuthenticator authenticator, IKeyVaultConfiguration vaultConfiguration)
-            : this(new CompatibleKeyVaultAuthentication(authenticator), vaultConfiguration) { }
+            : this(new CompatibleKeyVaultAuthentication(authenticator), vaultConfiguration)
+            {
+            }
 #pragma warning restore 618
 
         /// <summary>
