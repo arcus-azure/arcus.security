@@ -12,7 +12,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
         {
             // Act / Assert
             Assert.Throws<ArgumentNullException>(
-                () => new CertificateBasedAuthentication(applicationId: null, certificate: new X509Certificate2(rawData: new byte[0])))
+                () => new CertificateBasedAuthentication(applicationId: null, certificate: new X509Certificate2(rawData: new byte[0])));
         }
 
         [Fact]
