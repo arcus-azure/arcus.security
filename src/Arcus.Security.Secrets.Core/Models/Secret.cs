@@ -1,5 +1,6 @@
 ﻿using System;
 using Arcus.Security.Secrets.Core.Interfaces;
+using GuardNet;
 
 namespace Arcus.Security.Secrets.Core.Models
 {
@@ -15,10 +16,7 @@ namespace Arcus.Security.Secrets.Core.Models
         /// <param name="version">The version of the secret.</param>
         public Secret(string value, string version)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
+            Guard.NotNull(value, nameof(value));
 
             Value = value;
             Version = version;
