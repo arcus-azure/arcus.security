@@ -2,9 +2,11 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Secrets.AzureKeyVault;
+using Arcus.Security.Secrets.Core.Models;
 using Arcus.Security.Tests.Unit.KeyVault.Doubles;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Rest;
@@ -91,6 +93,35 @@ namespace Arcus.Security.Tests.Unit.KeyVault
 
             // Assert
             Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public async Task KeyVaultSecretProvider_GetsSecret_AfterRetriedTooManyRequestException()
+        {
+            // Arrange
+            string secretName = $"secret-name-{Guid.NewGuid()}";
+            string expected = $"secret-value-{Guid.NewGuid()}";
+
+            var keyVaultClient = new SimulatedKeyVaultClient(
+                () => throw new KeyVaultErrorException("Sabotage secret retrieval with TooManyRequests")
+                {
+                    Response = new HttpResponseMessageWrapper(
+                        new HttpResponseMessage(HttpStatusCode.TooManyRequests), 
+                        "some HTTP response content to ignore")
+                },
+                () => new SecretBundle(value: expected));
+
+
+            var provider = new KeyVaultSecretProvider(
+                new StubKeyVaultAuthenticator(keyVaultClient), 
+                new KeyVaultConfiguration(GenerateVaultUri()));
+
+            // Act
+            Secret actual = await provider.GetSecret(secretName);
+
+            // Assert
+            Assert.NotNull(actual);
+            Assert.Equal(expected, actual.Value);
         }
 
         private static string GenerateVaultUri()

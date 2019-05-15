@@ -6,6 +6,7 @@ using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Arcus.Security.Providers.AzureKeyVault.Configuration.Interfaces;
 using Arcus.Security.Secrets.Core.Exceptions;
 using Arcus.Security.Secrets.Core.Interfaces;
+using Arcus.Security.Secrets.Core.Models;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
@@ -68,6 +69,20 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
         public async Task<string> Get(string secretName)
         {
+            Secret secret = await GetSecret(secretName);
+            return secret?.Value;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">The name must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The name must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        public async Task<Secret> GetSecret(string secretName)
+        {
             Guard.NotNullOrEmpty(secretName, nameof(secretName));
             try
             {
@@ -75,8 +90,13 @@ namespace Arcus.Security.Secrets.AzureKeyVault
                 SecretBundle secretBundle =
                     await ThrottleTooManyRequests(
                         () => keyVaultClient.GetSecretAsync(VaultUri, secretName));
-                
-                return secretBundle?.Value;
+
+                if (secretBundle == null)
+                {
+                    return null;
+                }
+
+                return new Secret(secretBundle.Value, secretBundle.SecretIdentifier?.Version);
             }
             catch (KeyVaultErrorException keyVaultErrorException)
             {
