@@ -81,7 +81,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
                         new HttpResponseMessage(HttpStatusCode.TooManyRequests), 
                         "some HTTP response content to ignore")
                 },
-                () => new SecretBundle(value: expected));
+                () => new SecretBundle(value: expected, id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}"));
 
 
             var provider = new KeyVaultSecretProvider(
@@ -109,7 +109,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
                         new HttpResponseMessage(HttpStatusCode.TooManyRequests), 
                         "some HTTP response content to ignore")
                 },
-                () => new SecretBundle(value: expected));
+                () => new SecretBundle(value: expected, id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}"));
 
 
             var provider = new KeyVaultSecretProvider(
@@ -122,11 +122,14 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             // Assert
             Assert.NotNull(actual);
             Assert.Equal(expected, actual.Value);
+            Assert.NotNull(actual.Version);
         }
 
         private static string GenerateVaultUri()
         {
             return $"https://{Guid.NewGuid():N}.vault.azure.net/";
         }
+
+
     }
 }

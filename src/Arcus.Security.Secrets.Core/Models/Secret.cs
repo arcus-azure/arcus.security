@@ -17,6 +17,7 @@ namespace Arcus.Security.Secrets.Core.Models
         public Secret(string value, string version)
         {
             Guard.NotNull(value, nameof(value));
+            Guard.NotNull(version, nameof(version));
 
             Value = value;
             Version = version;
