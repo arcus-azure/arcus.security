@@ -36,16 +36,17 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// <returns>A <see cref="IKeyVaultClient" /> client to use for interaction with the vault</returns>
         public Task<IKeyVaultClient> Authenticate()
         {
-            IKeyVaultClient client = new KeyVaultClient((async (authority, resource, scope) =>
-            {
-                var authenticationContext = new AuthenticationContext(authority);
-                var clientAssertionCertificate = new ClientAssertionCertificate(_applicationId, _certificate);
-                
-                AuthenticationResult result = await authenticationContext.AcquireTokenAsync(resource, clientAssertionCertificate);
-                return result.AccessToken;
-            }));
-
+            IKeyVaultClient client = new KeyVaultClient(AuthenticationCallback);
             return Task.FromResult(client);
+        }
+
+        private async Task<string> AuthenticationCallback(string authority, string resource, string scope)
+        {
+            var authenticationContext = new AuthenticationContext(authority);
+            var clientAssertionCertificate = new ClientAssertionCertificate(_applicationId, _certificate);
+
+            AuthenticationResult result = await authenticationContext.AcquireTokenAsync(resource, clientAssertionCertificate);
+            return result.AccessToken;
         }
     }
 }
