@@ -12,7 +12,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
         {
             // Act / Assert
             Assert.Throws<ArgumentNullException>(
-                () => new CertificateBasedAuthentication(applicationId: null, certificate: new X509Certificate2(rawData: new byte[0])));
+                () => new CertificateBasedAuthentication(clientId: null, certificate: new X509Certificate2(rawData: new byte[0])));
         }
 
         [Fact]
@@ -20,7 +20,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
         {
             // Act / Assert
             Assert.Throws<ArgumentNullException>(
-                () => new CertificateBasedAuthentication(applicationId: $"app-{Guid.NewGuid()}", certificate: null));
+                () => new CertificateBasedAuthentication(clientId: $"app-{Guid.NewGuid()}", certificate: null));
         }
 
         [Fact]
@@ -28,7 +28,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
         {
             // Act
             var authentication = new CertificateBasedAuthentication(
-                applicationId: $"app-{Guid.NewGuid()}", 
+                clientId: $"app-{Guid.NewGuid()}", 
                 certificate: new X509Certificate2(rawData: new byte[0]));
 
             // Assert

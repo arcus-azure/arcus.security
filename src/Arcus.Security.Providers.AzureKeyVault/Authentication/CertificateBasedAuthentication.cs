@@ -13,20 +13,20 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// </summary>
     public class CertificateBasedAuthentication : IKeyVaultAuthentication
     {
-        private readonly string _applicationId;
+        private readonly string _clientId;
         private readonly X509Certificate2 _certificate;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CertificateBasedAuthentication"/> class.
+        ///     Initializes a new instance of the <see cref="CertificateBasedAuthentication"/> class.
         /// </summary>
-        /// <param name="applicationId">The identifier of the application requesting the authentication token.</param>
+        /// <param name="clientId">The identifier of the application requesting the authentication token.</param>
         /// <param name="certificate">The certificate that is used as credential.</param>
-        public CertificateBasedAuthentication(string applicationId, X509Certificate2 certificate)
+        public CertificateBasedAuthentication(string clientId, X509Certificate2 certificate)
         {
-            Guard.NotNull(applicationId, nameof(applicationId));
+            Guard.NotNull(clientId, nameof(clientId));
             Guard.NotNull(certificate, nameof(certificate));
 
-            _applicationId = applicationId;
+            _clientId = clientId;
             _certificate = certificate;
         }
 
@@ -43,7 +43,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         private async Task<string> AuthenticationCallback(string authority, string resource, string scope)
         {
             var authenticationContext = new AuthenticationContext(authority);
-            var clientAssertionCertificate = new ClientAssertionCertificate(_applicationId, _certificate);
+            var clientAssertionCertificate = new ClientAssertionCertificate(_clientId, _certificate);
 
             AuthenticationResult result = await authenticationContext.AcquireTokenAsync(resource, clientAssertionCertificate);
             return result.AccessToken;
