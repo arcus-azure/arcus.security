@@ -30,4 +30,16 @@ var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
 ```
 
+### Certificate Based
+Authentication via client ID and certificate is supported with the `CertifidateBasedAuthentication`.
+
+```csharp
+var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+X509Certificate2 certificate = ...
+
+var vaultAuthenticator = new CertificateBasedAuthentication(clientId, certificate);
+var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
+var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
+```
+
 [&larr; back](/)
