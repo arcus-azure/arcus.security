@@ -30,7 +30,7 @@ var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
 ```
 
-### Certificate Based
+### Certificate
 Authentication via client ID and certificate is supported with the `CertifidateBasedAuthentication`.
 
 ```csharp
