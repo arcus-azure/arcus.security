@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Secrets.Core.Caching;
@@ -45,7 +43,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
 
             // Act & Assert
-            var cachedSecretProvider = new CachedSecretProvider(testSecretProvider);
+            var _ = new CachedSecretProvider(testSecretProvider);
         }
 
         [Fact]
@@ -57,7 +55,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var cacheConfiguration = new CacheConfiguration(TimeSpan.MaxValue);
 
             // Act & Assert
-            new CachedSecretProvider(testSecretProvider, cacheConfiguration);
+            var _ = new CachedSecretProvider(testSecretProvider, cacheConfiguration);
         }
 
         [Fact]
@@ -114,6 +112,9 @@ namespace Arcus.Security.Tests.Unit.Core
             // Assert
             Assert.Equal(firstSecret, secondSecret);
             Assert.Equal(1, testSecretProvider.CallsMadeSinceCreation);
+
+            Assert.True(firstSecret.Version != null, "firstSecret.Version != null");
+            Assert.True(secondSecret.Version != null, "secondSecret.Version != null");
         }
 
         [Fact]
@@ -159,12 +160,12 @@ namespace Arcus.Security.Tests.Unit.Core
             Secret secondSecret = await cachedSecretProvider.GetSecret(keyName);
 
             // Assert
-            Assert.True(firstSecret != null, "firstSecret != null");
-            Assert.True(secondSecret != null, "secondSecret != null");
-
             Assert.Equal(secretKeyValue, firstSecret.Value);
             Assert.Equal(newSecretValue, secondSecret.Value);
             Assert.Equal(2, testSecretProvider.CallsMadeSinceCreation);
+
+            Assert.True(firstSecret != null, "firstSecret != null");
+            Assert.True(secondSecret != null, "secondSecret != null");
         }
 
         [Fact]
@@ -210,12 +211,12 @@ namespace Arcus.Security.Tests.Unit.Core
             Secret secondSecret = await cachedSecretProvider.GetSecret(keyName, true);
 
             // Assert
-            Assert.True(firstSecret != null, "firstSecret != null");
-            Assert.True(secondSecret != null, "secondSecret != null");
-
             Assert.Equal(secretKeyValue, firstSecret.Value);
             Assert.Equal(newSecretValue, secondSecret.Value);
             Assert.Equal(2, testSecretProvider.CallsMadeSinceCreation);
+
+            Assert.True(firstSecret != null, "firstSecret != null");
+            Assert.True(secondSecret != null, "secondSecret != null");
         }
     }
 }
