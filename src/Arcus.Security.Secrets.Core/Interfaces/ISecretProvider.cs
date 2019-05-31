@@ -14,12 +14,22 @@ namespace Arcus.Security.Secrets.Core.Interfaces
         /// Retrieves the secret value, based on the given name
         /// </summary>
         /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns a <see cref="Task{string}"/> that contains the secret key</returns>
+        /// <returns>Returns the secret key</returns>
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetSecret) + " method instead.")]
+        [Obsolete("Use the " + nameof(GetRawSecret) + " method instead")]
         Task<string> Get(string secretName);
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">The name must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The name must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        Task<string> GetRawSecret(string secretName);
 
         /// <summary>
         /// Retrieves the secret value, based on the given name

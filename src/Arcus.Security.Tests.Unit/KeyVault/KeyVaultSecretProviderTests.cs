@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Secrets.AzureKeyVault;
@@ -71,22 +70,9 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         public async Task KeyVaultSecretProvider_GetsSecretValue_AfterRetriedTooManyRequestException()
         {
             // Arrange
-            string secretName = $"secret-name-{Guid.NewGuid()}";
             string expected = $"secret-value-{Guid.NewGuid()}";
-
-            var keyVaultClient = new SimulatedKeyVaultClient(
-                () => throw new KeyVaultErrorException("Sabotage secret retrieval with TooManyRequests")
-                {
-                    Response = new HttpResponseMessageWrapper(
-                        new HttpResponseMessage(HttpStatusCode.TooManyRequests), 
-                        "some HTTP response content to ignore")
-                },
-                () => new SecretBundle(value: expected, id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}"));
-
-
-            var provider = new KeyVaultSecretProvider(
-                new StubKeyVaultAuthenticator(keyVaultClient), 
-                new KeyVaultConfiguration(GenerateVaultUri()));
+            string secretName = $"secret-name-{Guid.NewGuid()}";
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
 
             // Act
             string actual = await provider.Get(secretName);
@@ -96,25 +82,27 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         }
 
         [Fact]
+        public async Task KeyVaultSecretProvider_GetsRawSecretValue_AfterRetriedTooManyRequestException()
+        {
+            // Arrange
+            string expected = $"secret-value-{Guid.NewGuid()}";
+            string secretName = $"secret-name-{Guid.NewGuid()}";
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
+
+            // Act
+            string actual = await provider.GetRawSecret(secretName);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
         public async Task KeyVaultSecretProvider_GetsSecret_AfterRetriedTooManyRequestException()
         {
             // Arrange
-            string secretName = $"secret-name-{Guid.NewGuid()}";
             string expected = $"secret-value-{Guid.NewGuid()}";
-
-            var keyVaultClient = new SimulatedKeyVaultClient(
-                () => throw new KeyVaultErrorException("Sabotage secret retrieval with TooManyRequests")
-                {
-                    Response = new HttpResponseMessageWrapper(
-                        new HttpResponseMessage(HttpStatusCode.TooManyRequests), 
-                        "some HTTP response content to ignore")
-                },
-                () => new SecretBundle(value: expected, id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}"));
-
-
-            var provider = new KeyVaultSecretProvider(
-                new StubKeyVaultAuthenticator(keyVaultClient), 
-                new KeyVaultConfiguration(GenerateVaultUri()));
+            string secretName = $"secret-name-{Guid.NewGuid()}";
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
 
             // Act
             Secret actual = await provider.GetSecret(secretName);
@@ -123,6 +111,26 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             Assert.NotNull(actual);
             Assert.Equal(expected, actual.Value);
             Assert.NotNull(actual.Version);
+        }
+
+        private static KeyVaultSecretProvider CreateSecretProviderWithTooManyRequestSimulation(string expected)
+        {
+            // Arrange
+            var keyVaultClient = new SimulatedKeyVaultClient(
+                () => throw new KeyVaultErrorException("Sabotage secret retrieval with TooManyRequests")
+                {
+                    Response = new HttpResponseMessageWrapper(
+                        new HttpResponseMessage(HttpStatusCode.TooManyRequests),
+                        "some HTTP response content to ignore")
+                },
+                () => new SecretBundle(value: expected, id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}"));
+
+
+            var provider = new KeyVaultSecretProvider(
+                new StubKeyVaultAuthenticator(keyVaultClient),
+                new KeyVaultConfiguration(GenerateVaultUri()));
+
+            return provider;
         }
 
         private static string GenerateVaultUri()

@@ -67,7 +67,21 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// <returns>The value, stored in Key Vault</returns>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        public async Task<string> Get(string secretName)
+        [Obsolete("Use the " + nameof(GetRawSecret) + " method instead")]
+        public Task<string> Get(string secretName)
+        {
+            return GetRawSecret(secretName);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">The name must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The name must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        public async Task<string> GetRawSecret(string secretName)
         {
             Secret secret = await GetSecret(secretName);
             return secret?.Value;
