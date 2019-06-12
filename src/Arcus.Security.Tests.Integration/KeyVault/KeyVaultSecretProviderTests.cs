@@ -80,6 +80,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             // Assert
             Assert.NotNull(secret);
+            Assert.NotNull(secret.Value);
+            Assert.NotNull(secret.Version);
         }
 
         [Fact]
