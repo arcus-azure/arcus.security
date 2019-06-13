@@ -72,171 +72,265 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.NotNull(cachedSecretProvider);
         }
 
-        [Theory]
-        [InlineData(GetCachedSecret.WithinCacheInterval)]
-        [InlineData(GetCachedSecret.OutsideCacheInterval)]
-        [InlineData(GetCachedSecret.SkippedCache)]
-        public async Task CachedSecretProvider_GetTwoSecretValues_WithCaching(GetCachedSecret cacheSetup)
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoSecretValues_WithinCacheInterval_ShouldReturnTheSameValues()
         {
             // Arrange
             string expectedFirstSecret = Guid.NewGuid().ToString("N");
             string expectedSecondSecret = Guid.NewGuid().ToString("N");
 
-            // Act 
-            (string actualFirstSecret, string actualSecondSecret) = await GetTwoSecretsFromCachedProvider(
-                (expectedFirstSecret, expectedSecondSecret),
-                (provider, keyName) => provider.Get(keyName),
-                cacheSetup);
-
-            // Assert
-            Assert.True(
-                cacheSetup == GetCachedSecret.WithinCacheInterval 
-                    == (actualFirstSecret == actualSecondSecret && expectedFirstSecret == actualFirstSecret),
-                "Should get the same cached secret value when the two calls happen within the configured cache interval");
-
-            Assert.True(
-                (cacheSetup == GetCachedSecret.OutsideCacheInterval || cacheSetup == GetCachedSecret.SkippedCache) == 
-                    (actualFirstSecret != actualSecondSecret
-                     && expectedFirstSecret == actualFirstSecret
-                     && expectedSecondSecret == actualSecondSecret),
-                "Should get two different secret values when the second call happens outside the configured cache interval");
-        }
-
-        [Theory]
-        [InlineData(GetCachedSecret.WithinCacheInterval)]
-        [InlineData(GetCachedSecret.OutsideCacheInterval)]
-        [InlineData(GetCachedSecret.SkippedCache)]
-        public async Task CachedSecretProvider_GetTwoRawSecrets_WithCaching(GetCachedSecret cacheSetup)
-        {
-            // Arrange
-            string expectedFirstSecret = Guid.NewGuid().ToString("N");
-            string expectedSecondSecret = Guid.NewGuid().ToString("N");
-
-            // Act 
-            (string actualFirstSecret, string actualSecondSecret) = await GetTwoSecretsFromCachedProvider(
-                (expectedFirstSecret, expectedSecondSecret),
-                (provider, keyName) => provider.GetRawSecret(keyName),
-                cacheSetup);
-
-            // Assert
-            Assert.True(
-                cacheSetup == GetCachedSecret.WithinCacheInterval 
-                == (actualFirstSecret == actualSecondSecret && expectedFirstSecret == actualFirstSecret),
-                "Should get the same cached secret value when the two calls happen within the configured cache interval");
-
-            Assert.True(
-                (cacheSetup == GetCachedSecret.OutsideCacheInterval || cacheSetup == GetCachedSecret.SkippedCache) 
-                == (actualFirstSecret != actualSecondSecret
-                    && expectedFirstSecret == actualFirstSecret
-                    && expectedSecondSecret == actualSecondSecret),
-                "Should get two different secret values when the second call happens outside the configured cache interval");
-        }
-
-        [Theory]
-        [InlineData(GetCachedSecret.WithinCacheInterval)]
-        [InlineData(GetCachedSecret.OutsideCacheInterval)]
-        [InlineData(GetCachedSecret.SkippedCache)]
-        public async Task CachedSecretProvider_GetTwoSecrets_WithCaching(GetCachedSecret cacheSetup)
-        {
-            // Arrange
-            string expectedFirstSecret = Guid.NewGuid().ToString("N");
-            string expectedSecondSecret = Guid.NewGuid().ToString("N");
-
-            // Act
-            (Secret actualFirstSecret, Secret actualSecondSecret) = await GetTwoSecretsFromCachedProvider(
-                (expectedFirstSecret, expectedSecondSecret),
-                (provider, keyName) => provider.GetSecret(keyName),
-                cacheSetup);
-
-            // Assert
-            Assert.True(actualFirstSecret != null, "actualFirstSecret != null");
-            Assert.True(actualSecondSecret != null, "actualSecondSecret != null");
-            
-            Assert.True(
-                cacheSetup == GetCachedSecret.WithinCacheInterval 
-                == (actualFirstSecret.Value == actualSecondSecret.Value 
-                    && expectedFirstSecret == actualFirstSecret.Value),
-                "Should get the same cached secret value when the two calls happen within the configured cache interval");
-            
-            Assert.True(
-                (cacheSetup == GetCachedSecret.OutsideCacheInterval || cacheSetup == GetCachedSecret.SkippedCache) == 
-                (actualFirstSecret != actualSecondSecret
-                 && expectedFirstSecret == actualFirstSecret.Value
-                 && expectedSecondSecret == actualSecondSecret.Value),
-                "Should get two different secret values when the second call happens outside the configured cache interval");
-        }
-
-        [Theory]
-        [InlineData(GetCachedSecret.WithinCacheInterval)]
-        [InlineData(GetCachedSecret.OutsideCacheInterval)]
-        [InlineData(GetCachedSecret.SkippedCache)]
-        public async Task CachedSecretProvider_GetTwoSecrets_WithIgnoredCaching(GetCachedSecret cacheSetup)
-        {
-            // Arrange
-            string expectedFirstSecret = Guid.NewGuid().ToString("N");
-            string expectedSecondSecret = Guid.NewGuid().ToString("N");
-
-            // Act
-            (Secret actualFirstSecret, Secret actualSecondSecret) = await GetTwoSecretsFromCachedProvider(
-                (expectedFirstSecret, expectedSecondSecret),
-                (provider, keyName) => provider.GetSecret(keyName, ignoreCache: true),
-                cacheSetup,
-                ignoreCache: true);
-
-            // Assert
-            Assert.True(actualFirstSecret != null, "actualFirstSecret != null");
-            Assert.True(actualSecondSecret != null, "actualSecondSecret != null");
-            Assert.True(
-                actualFirstSecret != actualSecondSecret
-                && expectedFirstSecret == actualFirstSecret.Value
-                && expectedSecondSecret == actualSecondSecret.Value,
-                "Should get two different secret values when no caching is configured (ignoreCache = true)");
-        }
-
-        public enum GetCachedSecret { SkippedCache = 1, WithinCacheInterval = 2, OutsideCacheInterval = 4 }
-
-        private static async Task<(T, T)> GetTwoSecretsFromCachedProvider<T>(
-            (string, string) expectedSecretValues,
-            Func<ICachedSecretProvider, string, Task<T>> getSecret,
-            GetCachedSecret cacheSetup,
-            bool ignoreCache = false)
-        {
-            string firstSecretValue = expectedSecretValues.Item1;
-            var testSecretProvider = new TestSecretProviderStub(firstSecretValue);
-
-            (TimeSpan cacheInterval, TimeSpan secondCallDelay) =
-                cacheSetup == GetCachedSecret.OutsideCacheInterval
-                    ? (TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(150))
-                    : cacheSetup == GetCachedSecret.WithinCacheInterval
-                        ? (TimeSpan.FromSeconds(3), TimeSpan.Zero)
-                        : (TimeSpan.FromTicks(1), TimeSpan.Zero);
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromSeconds(3);
 
             const string keyName = "MyValue";
             ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
-                testSecretProvider,
+                spyTestProvider,
                 new CacheConfiguration(cacheInterval),
                 new MemoryCache(new MemoryCacheOptions()));
-            
-            // Act: change actual value on the internal secret provider !
-            T firstSecret = await getSecret(cachedSecretProvider, keyName);
-            await Task.Delay(secondCallDelay);
 
-            testSecretProvider.SecretValue = expectedSecretValues.Item2; 
-            T secondSecret = await getSecret(cachedSecretProvider, keyName);
+            // Act
+            string actualFirst = await cachedSecretProvider.Get(keyName);
+            await Task.Delay(TimeSpan.Zero);
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            string actualSecond = await cachedSecretProvider.Get(keyName);
 
             // Assert
-            Assert.True(
-                (cacheSetup == GetCachedSecret.WithinCacheInterval && !ignoreCache) 
-                == (1 == testSecretProvider.CallsMadeSinceCreation),
-                "Stub secret provider should be called only once when the second call happens within the configured cache interval");
-            Assert.True(
-                (cacheSetup == GetCachedSecret.OutsideCacheInterval 
-                 || cacheSetup == GetCachedSecret.SkippedCache
-                 || ignoreCache)
-                == (2 == testSecretProvider.CallsMadeSinceCreation),
-                "Stub secret provider should be called two times when the second call happens outside the configured cache interval");
+            Assert.Equal(expectedFirstSecret, actualFirst);
+            Assert.Equal(expectedFirstSecret, actualSecond);
+            Assert.Equal(1, spyTestProvider.CallsMadeSinceCreation);
+        }
 
-            return (firstSecret, secondSecret);
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoSecretValues_OutsideCacheInterval_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromMilliseconds(100);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            string actualFirst = await cachedSecretProvider.Get(keyName);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            string actualSecond = await cachedSecretProvider.Get(keyName);
+
+            // Assert
+            Assert.Equal(expectedFirstSecret, actualFirst);
+            Assert.Equal(expectedSecondSecret, actualSecond);
+            Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoSecretValues_SkippedCache_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromSeconds(3);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            string actualFirst = await cachedSecretProvider.Get(keyName, ignoreCache: true);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            string actualSecond = await cachedSecretProvider.Get(keyName, ignoreCache: true);
+
+            // Assert
+            Assert.Equal(expectedFirstSecret, actualFirst);
+            Assert.Equal(expectedSecondSecret, actualSecond);
+            Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoRawSecrets_WithinCacheInterval_ShouldReturnTheSameValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromSeconds(1);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            string actualFirst = await cachedSecretProvider.GetRawSecret(keyName);
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            string actualSecond = await cachedSecretProvider.GetRawSecret(keyName);
+
+            // Assert
+            Assert.Equal(expectedFirstSecret, actualFirst);
+            Assert.Equal(expectedFirstSecret, actualSecond);
+            Assert.Equal(1, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoRawSecrets_OutsideCacheInterval_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromMilliseconds(100);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            string actualFirst = await cachedSecretProvider.GetRawSecret(keyName);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            string actualSecond = await cachedSecretProvider.GetRawSecret(keyName);
+
+            // Assert
+            Assert.Equal(expectedFirstSecret, actualFirst);
+            Assert.Equal(expectedSecondSecret, actualSecond);
+            Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoRawSecrets_SkippedCache_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromSeconds(3);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            string actualFirst = await cachedSecretProvider.GetRawSecret(keyName, ignoreCache: true);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            string actualSecond = await cachedSecretProvider.GetRawSecret(keyName, ignoreCache: true);
+
+            // Assert
+            Assert.Equal(expectedFirstSecret, actualFirst);
+            Assert.Equal(expectedSecondSecret, actualSecond);
+            Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoSecrets_WithinCacheInterval_ShouldReturnTheSameValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromSeconds(3);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            Secret actualFirst = await cachedSecretProvider.GetSecret(keyName);
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            Secret actualSecond = await cachedSecretProvider.GetSecret(keyName);
+
+            // Assert
+            Assert.True(actualFirst != null, "actualFirst != null");
+            Assert.True(actualSecond != null, "actualSecond != null");
+
+            Assert.Equal(expectedFirstSecret, actualFirst.Value);
+            Assert.Equal(expectedFirstSecret, actualSecond.Value);
+            Assert.Equal(1, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoSecrets_OutsideCacheInterval_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromMilliseconds(100);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            Secret actualFirst = await cachedSecretProvider.GetSecret(keyName);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            Secret actualSecond = await cachedSecretProvider.GetSecret(keyName);
+
+            // Assert
+            Assert.True(actualFirst != null, "actualFirst != null");
+            Assert.True(actualSecond != null, "actualSecond != null");
+
+            Assert.Equal(expectedFirstSecret, actualFirst.Value);
+            Assert.Equal(expectedSecondSecret, actualSecond.Value);
+            Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task CachedSecretProvider_GetTwoSecrets_SkippedCache_ShouldReturnDifferentValues()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+
+            var spyTestProvider = new TestSecretProviderStub(expectedFirstSecret);
+            TimeSpan cacheInterval = TimeSpan.FromSeconds(3);
+
+            const string keyName = "MyValue";
+            ICachedSecretProvider cachedSecretProvider = new CachedSecretProvider(
+                spyTestProvider,
+                new CacheConfiguration(cacheInterval),
+                new MemoryCache(new MemoryCacheOptions()));
+
+            // Act
+            Secret actualFirst = await cachedSecretProvider.GetSecret(keyName, ignoreCache: true);
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            spyTestProvider.SecretValue = expectedSecondSecret; 
+            Secret actualSecond = await cachedSecretProvider.GetSecret(keyName, ignoreCache: true);
+
+            // Assert
+            Assert.True(actualFirst != null, "actualFirst != null");
+            Assert.True(actualSecond != null, "actualSecond != null");
+
+            Assert.Equal(expectedFirstSecret, actualFirst.Value);
+            Assert.Equal(expectedSecondSecret, actualSecond.Value);
+            Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
         }
     }
 }
