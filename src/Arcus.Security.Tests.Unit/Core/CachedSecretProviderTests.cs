@@ -90,7 +90,7 @@ namespace Arcus.Security.Tests.Unit.Core
 
             // Act
             string actualFirst = await cachedSecretProvider.Get(keyName);
-            await Task.Delay(TimeSpan.Zero);
+            await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
             string actualSecond = await cachedSecretProvider.Get(keyName);
 
