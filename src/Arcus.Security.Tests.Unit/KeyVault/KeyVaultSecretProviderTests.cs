@@ -97,6 +97,21 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         }
 
         [Fact]
+        public async Task KeyVaultSecretProvider_GetsRawSecretAsync_AfterRetriedTooManyRequestException()
+        {
+            // Arrange
+            string expected = $"secret-value-{Guid.NewGuid()}";
+            string secretName = $"secret-name-{Guid.NewGuid()}";
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
+
+            // Act
+            string actual = await provider.GetRawSecretAsync(secretName);
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
         public async Task KeyVaultSecretProvider_GetsSecret_AfterRetriedTooManyRequestException()
         {
             // Arrange
@@ -106,6 +121,23 @@ namespace Arcus.Security.Tests.Unit.KeyVault
 
             // Act
             Secret actual = await provider.GetSecret(secretName);
+
+            // Assert
+            Assert.NotNull(actual);
+            Assert.Equal(expected, actual.Value);
+            Assert.NotNull(actual.Version);
+        }
+
+        [Fact]
+        public async Task KeyVaultSecretProvider_GetsSecretAsync_AfterRetriedTooManyRequestException()
+        {
+            // Arrange
+            string expected = $"secret-value-{Guid.NewGuid()}";
+            string secretName = $"secret-name-{Guid.NewGuid()}";
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
+
+            // Act
+            Secret actual = await provider.GetSecretAsync(secretName);
 
             // Assert
             Assert.NotNull(actual);

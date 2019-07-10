@@ -35,9 +35,10 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="IKeyVaultClient"/> client to use for interaction with the vault</returns>
+        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
         public Task<IKeyVaultClient> Authenticate()
         {
-            IKeyVaultClient keyVaultClient = new KeyVaultClient(GetToken);
+            IKeyVaultClient keyVaultClient = new KeyVaultClient(GetTokenAsync);
             return Task.FromResult(keyVaultClient);
         }
 
@@ -45,13 +46,24 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         ///     Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
         Task<KeyVaultClient> IKeyVaultAuthenticator.Authenticate()
         {
-            var keyVaultClient = new KeyVaultClient(GetToken);
+            var keyVaultClient = new KeyVaultClient(GetTokenAsync);
             return Task.FromResult(keyVaultClient);
         }
 
-        private async Task<string> GetToken(string authority, string resource, string scope)
+        /// <summary>
+        ///     Authenticates with Azure Key Vault
+        /// </summary>
+        /// <returns>A <see cref="IKeyVaultClient" /> client to use for interaction with the vault</returns>
+        public Task<IKeyVaultClient> AuthenticateAsync()
+        {
+            IKeyVaultClient keyVaultClient = new KeyVaultClient(GetTokenAsync);
+            return Task.FromResult(keyVaultClient);
+        }
+
+        private async Task<string> GetTokenAsync(string authority, string resource, string scope)
         {
             var authContext = new AuthenticationContext(authority);
             var clientCred = new ClientCredential(_clientId, _clientKey);
