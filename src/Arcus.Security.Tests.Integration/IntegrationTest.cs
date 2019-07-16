@@ -15,9 +15,9 @@ namespace Arcus.Security.Tests.Integration
 
             // The appsettings.local.json allows users to override (gitignored) settings locally for testing purposes
             Configuration = new ConfigurationBuilder()
-                .AddEnvironmentVariables()
                 .AddJsonFile(path: "appsettings.json")
                 .AddJsonFile(path: "appsettings.local.json", optional: true)
+                .AddEnvironmentVariables()
                 .Build();
         }
     }
