@@ -6,6 +6,7 @@ using Arcus.Security.Secrets.Core.Exceptions;
 using Arcus.Security.Secrets.AzureKeyVault;
 using Arcus.Security.Secrets.Core.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -25,13 +26,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_Get_Succeeds()
         {
             // Arrange
-            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+            string applicationId = GetApplicationIdEnvironmentVariable();
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ServicePrincipalAuthenticator(clientId, clientKey), 
+                authentication: new ServicePrincipalAuthenticator(applicationId, clientKey), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Act
@@ -45,13 +46,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_Get_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
-            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+            string applicationId = GetApplicationIdEnvironmentVariable();
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var keyName = Guid.NewGuid().ToString("N");
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ServicePrincipalAuthenticator(clientId, clientKey), 
+                authentication: new ServicePrincipalAuthenticator(applicationId, clientKey), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Assert
@@ -66,13 +67,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_GetSecret_Succeeds()
         {
             // Arrange
-            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+            string applicationId = GetApplicationIdEnvironmentVariable();
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ServicePrincipalAuthenticator(clientId, clientKey), 
+                authentication: new ServicePrincipalAuthenticator(applicationId, clientKey), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Act
@@ -88,13 +89,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
-            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+            string applicationId = GetApplicationIdEnvironmentVariable();
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var keyName = Guid.NewGuid().ToString("N");
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ServicePrincipalAuthenticator(clientId, clientKey), 
+                authentication: new ServicePrincipalAuthenticator(applicationId, clientKey), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Assert
@@ -103,6 +104,21 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 // Act
                 await keyVaultSecretProvider.GetSecret(keyName);
             });
+        }
+
+        private string GetApplicationIdEnvironmentVariable()
+        {
+            var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");
+            string applicationId = Configuration.GetValue("Arcus:ServicePrincipal:ApplicationId", clientId);
+
+            if (clientId != null)
+            {
+                Logger.LogWarning(
+                    "Environment variable 'Arcus__ServicePrincipal__ClientId' is obsolete and will be removed in future versions. "
+                    + "Please use 'Arcus__ServicePrincipal__ApplicationId' instead."); 
+            }
+
+            return applicationId;
         }
     }
 }
