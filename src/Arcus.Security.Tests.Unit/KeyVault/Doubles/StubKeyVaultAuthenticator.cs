@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
@@ -27,7 +28,17 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         ///     Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
         public Task<IKeyVaultClient> Authenticate()
+        {
+            return Task.FromResult(_keyVaultClient);
+        }
+
+        /// <summary>
+        ///     Authenticates with Azure Key Vault
+        /// </summary>
+        /// <returns>A <see cref="IKeyVaultClient" /> client to use for interaction with the vault</returns>
+        public Task<IKeyVaultClient> AuthenticateAsync()
         {
             return Task.FromResult(_keyVaultClient);
         }

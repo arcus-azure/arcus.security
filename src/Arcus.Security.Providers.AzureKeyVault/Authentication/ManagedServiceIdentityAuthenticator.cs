@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
@@ -16,6 +17,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="IKeyVaultClient"/> client to use for interaction with the vault</returns>
+        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead ")]
         public Task<IKeyVaultClient> Authenticate()
         {
             IKeyVaultClient client = AuthenticateClient();
@@ -26,9 +28,20 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         ///     Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
         Task<KeyVaultClient> IKeyVaultAuthenticator.Authenticate()
         {
-            KeyVaultClient keyVaultClient = AuthenticateClient();
+            KeyVaultClient client = AuthenticateClient();
+            return Task.FromResult(client);
+        }
+
+        /// <summary>
+        ///     Authenticates with Azure Key Vault
+        /// </summary>
+        /// <returns>A <see cref="IKeyVaultClient" /> client to use for interaction with the vault</returns>
+        public Task<IKeyVaultClient> AuthenticateAsync()
+        {
+            IKeyVaultClient keyVaultClient = AuthenticateClient();
             return Task.FromResult(keyVaultClient);
         }
 
