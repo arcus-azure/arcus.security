@@ -31,7 +31,7 @@ stages:
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
-      - task: replacetokens@3
+      - task: qetza.replacetokens.replacetokens-task.replacetokens@3
         inputs:
           rootDirectory: 'src/Arcus.Security.Tests.Integration/'
           targetFiles: 'appsettings.json'
