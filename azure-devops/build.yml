@@ -5,6 +5,8 @@ trigger:
 
 variables:
 - group: 'Arcus Security - Integration Testing'
+- name: 'solution'
+  value: 'src/**/*.sln'
 
 stages:
   - stage: Build
@@ -17,9 +19,9 @@ stages:
         displayName: 'Restore .NET Core'
         inputs:
           command: 'restore'
-          projects: '$(Parameters.projects)'
+          projects: $(solution)
       - task: DotNetCoreCLI@2
         displayName: 'dotnet build'
         inputs:
-          projects: '$(Parameters.projects)'
+          projects: '$(solution)'
           arguments: '--configuration $(Build.Configuration)'
