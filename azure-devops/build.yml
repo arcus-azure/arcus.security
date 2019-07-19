@@ -24,4 +24,4 @@ stages:
         displayName: 'dotnet build'
         inputs:
           projects: '$(solution)'
-          arguments: '--configuration $(Build.Configuration)'
+          arguments: '--configuration Release'
