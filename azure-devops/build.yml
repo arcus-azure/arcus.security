@@ -21,7 +21,30 @@ stages:
           command: 'restore'
           projects: $(solution)
       - task: DotNetCoreCLI@2
-        displayName: 'dotnet build'
+        displayName: 'Build .NET Core'
         inputs:
           projects: '$(solution)'
-          arguments: '--configuration Release'
+          arguments: '--configuration $(Build.Configuration)'
+  - stage: UnitTests
+    jobs:
+    - job: UnitTests
+      pool:
+        vmImage: 'ubuntu-16.04'
+      steps:
+      - task: replacetokens@3
+        inputs:
+          rootDirectory: 'src/Arcus.Security.Tests.Integration/'
+          targetFiles: 'appsettings.json'
+          encoding: 'auto'
+          writeBOM: true
+          actionOnMissing: 'fail'
+          keepToken: false
+          tokenPrefix: '#{'
+          tokenSuffix: '}#'
+      - task: DotNetCoreCLI@2
+        displayName: 'Run Unit Tests'
+        inputs:
+          command: test
+          projects: 'src/**/Arcus.Security.Tests.Unit.csproj'
+          arguments: '--configuration $(Build.Configuration)'
+
