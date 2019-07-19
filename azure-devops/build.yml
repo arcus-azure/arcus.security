@@ -5,6 +5,7 @@ trigger:
 
 variables:
 - group: 'Arcus Security - Integration Testing'
+- group: 'Build Configuration'
 - name: 'solution'
   value: 'src/**/*.sln'
 
@@ -26,6 +27,7 @@ stages:
           projects: '$(solution)'
           arguments: '--configuration $(Build.Configuration)'
   - stage: UnitTests
+    dependsOn: Build
     jobs:
     - job: UnitTests
       pool:
