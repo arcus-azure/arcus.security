@@ -4,7 +4,6 @@ trigger:
 - master
 
 variables:
-- group: 'Build Configuration'
 - group: 'Arcus Security - Integration Testing'
 
 stages:
