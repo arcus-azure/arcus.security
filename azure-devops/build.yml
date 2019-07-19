@@ -1,0 +1,27 @@
+name: Build Arcus.Security CI
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-16.04'
+
+variables:
+- group: 'Build Configuration'
+- group: 'Arcus Security - Integration Testing'
+
+stages:
+  - stage: Build
+    jobs:
+    - job: Build
+      steps:
+      - task: DotNetCoreCLI@2
+        displayName: 'Restore .NET Core'
+        inputs:
+          command: 'restore'
+          projects: '$(Parameters.projects)'
+      - task: DotNetCoreCLI@2
+        displayName: 'dotnet build'
+        inputs:
+          projects: '$(Parameters.projects)'
+          arguments: '--configuration $(Build.Configuration)'
