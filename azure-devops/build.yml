@@ -148,3 +148,28 @@ stages:
         inputs:
           command: 'custom'
           arguments: 'push -Source "GitHub nuget registry" $(Build.SourcesDirectory)/**/*.nupkg -ApiKey $(ApiKey)'
+
+# Publish project to GitHub releases
+# - Download build artifacts
+# - Publish package(s) to GitHub releases
+  - stage: PushRelease
+    dependsOn: PublishNuGet
+    condition: succeeded()
+    jobs:
+      -  job: GitHubRelease
+         displayName: 'Publish to GitHub releases'
+         pool:
+           vmImage: 'ubuntu-16.04'
+         steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download build artifacts'
+            inputs:
+              artifact: 'Build'
+              path: '$(Build.SourcesDirectory)'
+          - task: GitHubRelease@0
+            inputs:
+              gitHubConnection: 'GitHub (arcus-automation - PAT)'
+              repositoryName: 'arcus-azure/arcus.security'
+              action: 'create'
+              target: '$(Build.SourceVersion)'
+              tagSource: 'auto'
