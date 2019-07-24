@@ -129,4 +129,4 @@ stages:
         displayName: 'Push NuGet to GitHub package registry'
         inputs:
           command: 'custom'
-          arguments: 'push -Source "GitHub nuget registry" $(Build.SourcesDirectory)/**/*.nupkg'
+          arguments: 'push -Source "GitHub nuget registry" $(Build.SourcesDirectory)/**/*.nupkg -ApiKey $(Personal.Access.Token)'
