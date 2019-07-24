@@ -28,12 +28,12 @@ stages:
           projects: '$(solution)'
           arguments: '--configuration $(Build.Configuration)'
       - task: CopyFiles@2
-        displayName: 'Copy Build Files'
+        displayName: 'Copy build artifacts'
         inputs:
           contents: '**/?(bin|obj)/**'
           targetFolder: '$(Pipeline.Workspace)/build'
       - task: PublishPipelineArtifact@0
-        displayName: 'Publish Build Files'
+        displayName: 'Publish build artifacts'
         inputs:
           targetPath: '$(Pipeline.Workspace)/build'
           artifactName: Build
