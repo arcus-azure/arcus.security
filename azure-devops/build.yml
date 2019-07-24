@@ -16,31 +16,71 @@ stages:
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
+      - task: DotNetCoreInstaller@0
+        displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
+        inputs:
+          version: '$(DotNet.Sdk.Version)'
       - task: DotNetCoreCLI@2
         displayName: 'Compile'
         inputs:
           projects: '$(solution)'
           arguments: '--configuration $(Build.Configuration)'
+      - task: CopyFiles@2
+        displayName: 'Copy Build Files'
+        inputs:
+          contents: '**/?(bin|obj)/**'
+          targetFolder: '$(Pipeline.Workspace)/build'
+      - task: PublishPipelineArtifact@0
+        displayName: 'Publish Build Files'
+        inputs:
+          targetPath: '$(Pipeline.Workspace)/build'
+          artifactName: Build
+
   - stage: UnitTests
     dependsOn: Build
+    condition: succeeded()
     jobs:
     - job: UnitTests
+      displayName: 'Run unit tests'
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download build artifacts'
+        inputs:
+          artifact: 'Build'
+          path: '$(Build.SourcesDirectory)'
+      - task: DotNetCoreInstaller@0
+        displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
+        inputs:
+          version: '$(DotNet.Sdk.Version)'
       - task: DotNetCoreCLI@2
         displayName: 'Run unit tests'
         inputs:
           command: test
           projects: 'src/**/Arcus.Security.Tests.Unit.csproj'
-          arguments: '--no-build --configuration $(Build.Configuration)'
+          arguments: '--configuration $(Build.Configuration)'
+          nobuild: true
+          publishTestResults: true
+      
   - stage: IntegrationTests
     dependsOn: Build
+    condition: succeeded()
     jobs:
-    - job: Run_integration_tests
+    - job: IntegrationTests
+      displayName: 'Run integration tests'
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download build artifacts'
+        inputs:
+          artifact: 'Build'
+          path: '$(Build.SourcesDirectory)'
+      - task: DotNetCoreInstaller@0
+        displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
+        inputs:
+          version: '$(DotNet.Sdk.Version)'
       - task: qetza.replacetokens.replacetokens-task.replacetokens@3
         displayName: 'Replace integration test tokens'
         inputs:
@@ -57,6 +97,8 @@ stages:
         inputs:
           command: test
           projects: 'src/**/Arcus.Security.Tests.Integration.csproj'
-          arguments: '--no-build --configuration $(Build.Configuration)'
+          arguments: '--configuration $(Build.Configuration)'
+          nobuild: true
+          publishTestResults: true
 
 
