@@ -7,7 +7,7 @@ variables:
 - group: 'Arcus Security - Integration Testing'
 - group: 'Build Configuration'
 - name: 'DotNet.Sdk.Version'
-  value: '2.2.30'
+  value: '2.2.0'
 - name: 'solution'
   value: 'src/*.sln'
 
