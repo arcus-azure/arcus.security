@@ -7,7 +7,6 @@ variables:
 - group: 'Arcus Security - Integration Testing'
 - group: 'Arcus - GitHub Package Registry'
 - group: 'Build Configuration'
-- group: NuGet.org
 - name: 'DotNet.Sdk.Version'
   value: '2.2.108'
 - name: 'solution'
