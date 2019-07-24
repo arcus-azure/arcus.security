@@ -12,20 +12,15 @@ variables:
 stages:
   - stage: Build
     jobs:
-    - job: Restore_and_Compile
+    - job: Compile
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
       - task: DotNetCoreCLI@2
-        displayName: 'Restore .NET Core'
-        inputs:
-          command: 'restore'
-          projects: $(solution)
-      - task: DotNetCoreCLI@2
-        displayName: 'Build .NET Core'
+        displayName: 'Compile'
         inputs:
           projects: '$(solution)'
-          arguments: '--configuration Release'
+          arguments: '--configuration $(Build.Configuration)'
   - stage: UnitTests
     dependsOn: Build
     jobs:
@@ -33,7 +28,21 @@ stages:
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
+      - task: DotNetCoreCLI@2
+        displayName: 'Run unit tests'
+        inputs:
+          command: test
+          projects: 'src/**/Arcus.Security.Tests.Unit.csproj'
+          arguments: '--no-build --configuration $(Build.Configuration)'
+  - stage: IntegrationTests
+    dependsOn: Build
+    jobs:
+    - job: Run_integration_tests
+      pool:
+        vmImage: 'ubuntu-16.04'
+      steps:
       - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+        displayName: 'Replace integration test tokens'
         inputs:
           rootDirectory: 'src/Arcus.Security.Tests.Integration/'
           targetFiles: 'appsettings.json'
@@ -44,9 +53,10 @@ stages:
           tokenPrefix: '#{'
           tokenSuffix: '}#'
       - task: DotNetCoreCLI@2
-        displayName: 'Run Unit Tests'
+        displayName: 'Run integration tests'
         inputs:
           command: test
-          projects: 'src/**/Arcus.Security.Tests.Unit.csproj'
-          arguments: '--configuration $(Build.Configuration)'
+          projects: 'src/**/Arcus.Security.Tests.Integration.csproj'
+          arguments: '--no-build --configuration $(Build.Configuration)'
+
 
