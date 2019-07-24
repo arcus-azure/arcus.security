@@ -5,6 +5,7 @@ trigger:
 
 variables:
 - group: 'Arcus Security - Integration Testing'
+- group: 'Arcus - GitHub Package Registry'
 - group: 'Build Configuration'
 - name: 'DotNet.Sdk.Version'
   value: '2.2.108'
@@ -103,3 +104,29 @@ stages:
           nobuild: true
           publishTestResults: true
 
+  - stage: PushNuGet
+    dependsOn:
+    - UnitTests
+    - IntegrationTests
+    condition: succeeded()
+    jobs:
+    - job: GitHubPackageRegistry
+      displayName: 'Push to GitHub package registry'
+      pool:
+        vmImage: 'ubuntu-16.04'
+      steps:
+      - task: DownloadPipelineArtifact@2
+        displayName: 'Download build artifacts'
+        inputs:
+          artifact: 'Build'
+          path: '$(Build.SourcesDirectory)'
+      - task: NuGetCommand@2
+        displayName: 'Add NuGet source GitHub package registry'
+        inputs:
+          command: 'custom'
+          arguments: 'source Add -Name "GitHub nuget registry" -Source "https://nuget.pkg.github.com/arcus-azure/index.json" -UserName "arcus-automation" -Password $(Personal.Access.Token)'
+      - task: NuGetCommand@2
+        displayName: 'Push NuGet to GitHub package registry'
+        inputs:
+          command: 'custom'
+          arguments: 'nuget push -Source "GitHub nuget registry" $(Build.SourcesDirectory)/**/*.nupkg'
