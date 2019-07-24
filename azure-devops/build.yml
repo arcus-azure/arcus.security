@@ -9,8 +9,8 @@ variables:
 - group: 'Build Configuration'
 - name: 'DotNet.Sdk.Version'
   value: '2.2.108'
-- name: 'solution'
-  value: 'src/*.sln'
+- name: 'Project'
+  value: 'Arcus.Security'
 
 stages:
   - stage: Build
@@ -26,7 +26,7 @@ stages:
       - task: DotNetCoreCLI@2
         displayName: 'Compile'
         inputs:
-          projects: '$(solution)'
+          projects: 'src/*.sln'
           arguments: '--configuration $(Build.Configuration)'
       - task: CopyFiles@2
         displayName: 'Copy build artifacts'
@@ -61,7 +61,7 @@ stages:
         displayName: 'Run unit tests'
         inputs:
           command: test
-          projects: 'src/**/Arcus.Security.Tests.Unit.csproj'
+          projects: 'src/**/$(Project).Tests.Unit.csproj'
           arguments: '--configuration $(Build.Configuration)'
           nobuild: true
           publishTestResults: true
@@ -87,7 +87,7 @@ stages:
       - task: qetza.replacetokens.replacetokens-task.replacetokens@3
         displayName: 'Replace integration test tokens'
         inputs:
-          rootDirectory: 'src/Arcus.Security.Tests.Integration/'
+          rootDirectory: 'src/$(Project).Tests.Integration/'
           targetFiles: 'appsettings.json'
           encoding: 'auto'
           writeBOM: true
@@ -99,7 +99,7 @@ stages:
         displayName: 'Run integration tests'
         inputs:
           command: test
-          projects: 'src/**/Arcus.Security.Tests.Integration.csproj'
+          projects: 'src/**/$(Project).Tests.Integration.csproj'
           arguments: '--configuration $(Build.Configuration)'
           nobuild: true
           publishTestResults: true
