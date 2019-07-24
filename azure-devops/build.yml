@@ -7,6 +7,7 @@ variables:
 - group: 'Arcus Security - Integration Testing'
 - group: 'Arcus - GitHub Package Registry'
 - group: 'Build Configuration'
+- group: NuGet.org
 - name: 'DotNet.Sdk.Version'
   value: '2.2.108'
 - name: 'solution'
@@ -129,4 +130,4 @@ stages:
         displayName: 'Push NuGet to GitHub package registry'
         inputs:
           command: 'custom'
-          arguments: 'push -Source "GitHub nuget registry" $(Build.SourcesDirectory)/**/*.nupkg -ApiKey $(NuGet.org)'
+          arguments: 'push -Source "GitHub nuget registry" $(Build.SourcesDirectory)/**/*.nupkg -ApiKey $(ApiKey)'
