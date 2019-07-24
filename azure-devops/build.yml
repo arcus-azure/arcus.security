@@ -7,12 +7,12 @@ variables:
 - group: 'Arcus Security - Integration Testing'
 - group: 'Build Configuration'
 - name: 'solution'
-  value: 'src/**/*.sln'
+  value: 'src/*.sln'
 
 stages:
   - stage: Build
     jobs:
-    - job: Build
+    - job: Restore_and_Compile
       pool:
         vmImage: 'ubuntu-16.04'
       steps:
