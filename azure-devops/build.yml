@@ -25,7 +25,7 @@ stages:
         displayName: 'Build .NET Core'
         inputs:
           projects: '$(solution)'
-          arguments: '--configuration $(Build.Configuration)'
+          arguments: '--configuration Release'
   - stage: UnitTests
     dependsOn: Build
     jobs:
