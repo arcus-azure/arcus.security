@@ -103,5 +103,3 @@ stages:
           nobuild: true
           publishTestResults: true
 
-  - stage: 
-
