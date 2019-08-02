@@ -3,11 +3,11 @@ title: "Authentication for Azure Key Vault"
 layout: default
 ---
 
-## Authentication
+# Authentication
 
 As of today we support a few  authentication mechanisms.
 
-### Managed Service Identity
+## Managed Service Identity
 You can use [Managed Service Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) to delegate the authentication to Azure via `ManagedServiceIdentityAuthenticator`.
 
 ```csharp
@@ -18,7 +18,7 @@ var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaul
 
 This is the recommended approach to interact with Azure Key Vault.
 
-### Service Principle
+## Service Principle
 Authentication via username and password is supported with the `ServicePrincipalAuthenticator`.
 
 ```csharp
@@ -30,7 +30,7 @@ var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
 ```
 
-### Certificate
+## Certificate
 Authentication via client ID and certificate is supported with the `CertifidateBasedAuthentication`.
 
 ```csharp

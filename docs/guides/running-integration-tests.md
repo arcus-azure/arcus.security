@@ -1,8 +1,8 @@
-## Runnning integration tests with Arcus
+# Runnning integration tests with Arcus
 
 We provide some testing infrastructure that allows you to run integration tests on top of Azure Key Vault.
 
-### Azure Infrastructure
+## Azure Infrastructure
 
 An Azure Active Directory (AD) App is required to be created. 
 The **Application Id/Client Id** and **Application Secret/Access Key** should be set as environment variables.
@@ -13,7 +13,7 @@ The **Application Id/Client Id** and **Application Secret/Access Key** should be
     <img src="https://azuredeploy.net/deploybutton.png"/>
 </a>
 
-### Local Environment
+## Local Environment
 
 Configure the following environment variables:
 * `Arcus__KeyVault__Uri`: The URI where the vault is located.

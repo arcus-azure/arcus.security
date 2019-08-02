@@ -19,6 +19,7 @@ PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
 - **Interacting with Secrets**
     - [General](features/secrets/general)
     - [Consume from Azure Key Vault](features/secrets/consume-from-key-vault)
+        - [Integrate with IConfiguration](features/key-vault/extensions/iconfiguration-integration)
 - **Authentication**
     - [Azure Key Vault](auth/azure-key-vault)
 
