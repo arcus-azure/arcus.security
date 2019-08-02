@@ -3,12 +3,19 @@ title: "Replace configuration tokens with ISecretProvider"
 layout: default
 ---
 
-The `Arcus.Security.Providers.AzureKeyVault` package provides a mechanism to use your own `ISecretProvider` implementation when building your configuration for your application.
+# Replace configuration tokens with ISecretProvider
 
-### Usage
+When building your IConfiguration, you can use the extension .AddAzureKeyVault to pass in your `ISecretProvider` instead of using the built-in [Azure Key Vault provider](https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-2.2#packages).
 
-When building your IConfiguration, you can use the extension .AddAzureKeyVault to pass in your ISecretProvider instead of using the built-in [Azure Key Vault provider](https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-2.2#packages).
+## Installation
 
+This feature requires to install our NuGet package
+
+```shell
+PM > Install-Package Arcus.Security.Providers.AzureKeyVault
+```
+
+## Usage
 Example how the configuration builder is used inside a web application:
 
 ```csharp
