@@ -3,7 +3,7 @@ title: "Replace configuration tokens with ISecretProvider"
 layout: default
 ---
 
-The `Arcus.WebApi.Security` package provides a mechanism to use your own `ISecretProvider` implementation when building your configuration for your application.
+The `Arcus.Security.Providers.AzureKeyVault` package provides a mechanism to use your own `ISecretProvider` implementation when building your configuration for your application.
 
 ### Usage
 
