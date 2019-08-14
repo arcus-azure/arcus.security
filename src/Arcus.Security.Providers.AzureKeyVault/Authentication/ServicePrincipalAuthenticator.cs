@@ -22,6 +22,8 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// </summary>
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
+        /// <exception cref="ArgumentException">When the <paramref name="clientId"/> is <c>null</c> or empty.</exception>
+        /// <exception cref="ArgumentException">When the <paramref name="clientKey"/> is <c>null</c> or empty.</exception>
         public ServicePrincipalAuthenticator(string clientId, string clientKey)
         {
             Guard.NotNullOrEmpty(clientId, nameof(clientId));
@@ -35,6 +37,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="IKeyVaultClient"/> client to use for interaction with the vault</returns>
+        /// <exception cref="InvalidOperationException">When the JSON web token (JWT) cannot be obtained.</exception>
         [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
         public Task<IKeyVaultClient> Authenticate()
         {
@@ -46,6 +49,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         ///     Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
+        /// <exception cref="InvalidOperationException">When the JSON web token (JWT) cannot be obtained.</exception>
         [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
         Task<KeyVaultClient> IKeyVaultAuthenticator.Authenticate()
         {
@@ -57,6 +61,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         ///     Authenticates with Azure Key Vault
         /// </summary>
         /// <returns>A <see cref="IKeyVaultClient" /> client to use for interaction with the vault</returns>
+        /// <exception cref="InvalidOperationException">When the JSON web token (JWT) cannot be obtained.</exception>
         public Task<IKeyVaultClient> AuthenticateAsync()
         {
             IKeyVaultClient keyVaultClient = new KeyVaultClient(GetTokenAsync);

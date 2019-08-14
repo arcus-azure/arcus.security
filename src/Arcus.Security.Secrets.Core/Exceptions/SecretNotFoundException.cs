@@ -22,7 +22,7 @@ namespace Arcus.Security.Secrets.Core.Exceptions
         /// </summary>
         /// <param name="name">Name of the secret that is missing</param>
         /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
+        /// <exception cref="ArgumentNullException">The name must not be <c>null</c>.</exception>
         public SecretNotFoundException(string name) : this(name, null)
         {
         }
@@ -33,7 +33,7 @@ namespace Arcus.Security.Secrets.Core.Exceptions
         /// <param name="name">Name of the secret that is missing</param>
         /// <param name="innerException">Inner exception that can be passed to base exception</param>
         /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
+        /// <exception cref="ArgumentNullException">The name must not be <c>null</c>.</exception>
         public SecretNotFoundException(string name, Exception innerException) : base($"The secret {name} was not found.", innerException)
         {
             Guard.NotNullOrEmpty(name, nameof(name));
@@ -45,6 +45,8 @@ namespace Arcus.Security.Secrets.Core.Exceptions
         /// </summary>
         /// <param name="info">The <see cref="T:SerializationInfo"></see> that holds the serialized object data about the exception being thrown.</param>
         /// <param name="context">The <see cref="T:StreamingContext"></see> that contains contextual information about the source or destination.</param>
+        /// <exception cref="ArgumentNullException">The info must not be <c>null</c>.</exception>
+        /// <exception cref="SerializationException">The class name must not be <c>null</c> and <see cref="Exception.HResult"/> must not be zero (<c>0</c>).</exception>
         protected SecretNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
             Name = info.GetString(nameof(Name));

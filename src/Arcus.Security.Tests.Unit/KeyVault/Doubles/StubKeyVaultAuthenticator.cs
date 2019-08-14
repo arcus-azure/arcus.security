@@ -17,6 +17,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         ///     Initializes a new instance of the <see cref="StubKeyVaultAuthenticator"/> class.
         /// </summary>
         /// <param name="keyVaultClient">The stubbed client used to interact with the vault.</param>
+        /// <exception cref="ArgumentNullException">When the <paramref name="keyVaultClient"/> is <c>null</c>.</exception>
         public StubKeyVaultAuthenticator(IKeyVaultClient keyVaultClient)
         {
             Guard.NotNull(keyVaultClient, nameof(keyVaultClient));

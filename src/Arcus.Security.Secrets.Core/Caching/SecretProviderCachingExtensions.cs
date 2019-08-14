@@ -5,6 +5,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Secrets.Core.Caching
 {
+    /// <summary>
+    /// Provide extensions for more fluent/easy composition of adding caching to retrieve Azure Key Vault secrets with the <see cref="CachedSecretProvider"/>.
+    /// </summary>
     public static class SecretProviderCachingExtensions
     {
         /// <summary>
