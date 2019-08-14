@@ -14,6 +14,8 @@ namespace Arcus.Security.Secrets.Core.Models
         /// </summary>
         /// <param name="value">The secret value.</param>
         /// <param name="version">The version of the secret.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="value"/> cannot be <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="version"/> cannot be <c>null</c>.</exception>
         public Secret(string value, string version)
         {
             Guard.NotNull(value, nameof(value));
