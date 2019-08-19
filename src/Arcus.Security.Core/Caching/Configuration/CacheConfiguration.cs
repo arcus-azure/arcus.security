@@ -4,6 +4,9 @@ using GuardNet;
 
 namespace Arcus.Security.Core.Caching.Configuration
 {
+    /// <summary>
+    /// Default implementation of the collected configuration values to control the caching when interacting with Azure Key Vault.
+    /// </summary>
     public class CacheConfiguration : ICacheConfiguration
     {
         /// <summary>

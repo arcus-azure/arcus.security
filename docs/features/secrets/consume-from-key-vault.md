@@ -3,7 +3,7 @@ title: "Consuming Azure Key Vault secrets"
 layout: default
 ---
 
-## Consuming Azure Key Vault secrets
+# Consuming Azure Key Vault secrets
 You can easily create a Key Vault secret provider - The only thing you need to do is specify how you want to configure and to what vault.
 
 ```csharp

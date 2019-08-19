@@ -3,7 +3,7 @@ title: "Consuming Secrets"
 layout: default
 ---
 
-## Consuming secrets
+# Consuming secrets
 Every provider implements `ISecretProvider` which makes it easy to use a consistent flow, regardless of the provider.
 
 You can easily retrieve secrets as following:
@@ -12,7 +12,7 @@ You can easily retrieve secrets as following:
 var secret = await secretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
 
-## Caching Secrets
+# Caching Secrets
 Some secret providers recommend to cache secrets for a while to avoid hitting the service limitations.
 
 We provide a `CachedSecretProvider` which allows them to be cached in memory for a certain amount of time.
@@ -30,7 +30,7 @@ var cachedSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultC
 var secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
 
-### Configuring the cache
+## Configuring the cache
 By default we only keep them around for **5 minutes**, but you can configure this yourself.
 
 ```csharp
@@ -39,7 +39,7 @@ var cachedSecretProvider = new CachedSecretProvider(secretProvider, cacheConfigu
 var secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
 
-### Forcing a secret refresh
+## Forcing a secret refresh
 In some scenarios you'd like to skip the cache and do a hard refresh by looking it up in the provider.
 
 This is important because in certain scenarios your secrets can be rolled and thus you will be revoked access.

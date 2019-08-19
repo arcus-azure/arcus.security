@@ -21,6 +21,8 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// </summary>
         /// <param name="clientId">The identifier of the application requesting the authentication token.</param>
         /// <param name="certificate">The certificate that is used as credential.</param>
+        /// <exception cref="ArgumentNullException">When the <paramref name="clientId"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">When the <paramref name="certificate"/> is <c>null</c>.</exception>
         public CertificateBasedAuthentication(string clientId, X509Certificate2 certificate)
         {
             Guard.NotNull(clientId, nameof(clientId));
