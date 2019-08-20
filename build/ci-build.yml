@@ -1,8 +1,6 @@
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
-pr:
-  - master
 
 variables:
   - group: 'Arcus Security - Integration Testing'
