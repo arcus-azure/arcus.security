@@ -20,7 +20,7 @@ namespace Arcus.Security.Secrets.Core.Interfaces
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         [Obsolete("Use the " + nameof(GetRawSecretAsync) + " method instead")]
-        Task<string> Get(string secretName, bool ignoreCache);
+        Task<signoreCache);
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
