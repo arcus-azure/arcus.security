@@ -148,7 +148,7 @@ stages:
       - job: PushToMyGet
         displayName: 'Push to MyGet'
         pool:
-          vmImage: 'ubuntu-16,04'
+          vmImage: 'ubuntu-16.04'
         steps:
           - task: NuGetCommand@2
             displayName: 'Push to MyGet.org'
