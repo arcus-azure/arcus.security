@@ -3,6 +3,7 @@ name: $(date:yyyyMMdd)$(rev:.r)
 trigger: none
 
 variables:
+  # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
   - group: 'Arcus Security - Integration Testing'
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
