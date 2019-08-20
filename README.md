@@ -1,5 +1,6 @@
 # Arcus - Security
-[![Build status](https://dev.azure.com/codit/Arcus/_apis/build/status/Commit%20builds/CI%20-%20Arcus.Security)](https://dev.azure.com/codit/Arcus/_build/latest?definitionId=514)[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Core?includePreReleases=true)](https://www.nuget.org/packages/Arcus.Security.Core/)
+[![Build Status](https://dev.azure.com/codit/Arcus/_apis/build/status/Commit%20builds/CI%20-%20Arcus.Security?branchName=master)](https://dev.azure.com/codit/Arcus/_build/latest?definitionId=727&branchName=master)
+[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Core?includePreReleases=true)](https://www.nuget.org/packages/Arcus.Security.Core/)
 
 Security for Azure development in a breeze.
 
