@@ -18,7 +18,6 @@ stages:
   - stage: Build
     jobs:
       - job: Compile
-        displayName: 'Release to MyGet'
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
@@ -150,6 +149,11 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download build artifacts'
+            inputs:
+              artifact: 'Build'
+              path: '$(Build.SourcesDirectory)'
           - task: NuGetCommand@2
             displayName: 'Push to MyGet.org'
             inputs:
