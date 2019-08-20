@@ -9,6 +9,8 @@ namespace Arcus.Security.Secrets.Core.Models
     /// </summary>
     public class Secret
     {
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Secret"/> class.
         /// </summary>
