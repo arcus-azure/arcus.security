@@ -31,7 +31,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         /// <returns>True if key has a value, false otherwise.</returns>
         public override bool TryGet(string key, out string value)
         {
-            Task<string> getSecretValueAsync = _secretProvider.Get(key);
+            Task<string> getSecretValueAsync = _secretProvider.GetRawSecretAsync(key);
             if (getSecretValueAsync != null) 
             {
                 string secretValue = getSecretValueAsync.ConfigureAwait(false).GetAwaiter().GetResult();
