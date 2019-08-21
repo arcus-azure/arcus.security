@@ -8,7 +8,12 @@ redirect_from:
 
 # Installation
 
-We provide a NuGet package per provider and area. 
+We provide a NuGet package per provider and area.
+
+Here is how you install all Arcus Security packages
+```shell
+PM > Install-Package Arcus.Security.All
+```
 
 Here is how you consume secrets for Azure Key Vault:
 ```shell

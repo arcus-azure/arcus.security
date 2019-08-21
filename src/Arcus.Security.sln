@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Secrets.Core", "Arcus.Security.Secrets.Core\Arcus.Security.Secrets.Core.csproj", "{A179BD58-7555-4F74-8EAF-CBD4F7BD689E}"
 EndProject
@@ -22,6 +22,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{7E59A380-48DB-443B-9B47-05A4A175B8F3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Core", "Arcus.Security.Core\Arcus.Security.Core.csproj", "{EC4CBB2C-9C38-4D5C-B4C4-602F0756A61F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.All", "Arcus.Security.All\Arcus.Security.All.csproj", "{ADB320AA-15FB-4FAB-A909-A1EE120BE7F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -53,6 +55,10 @@ Global
 		{EC4CBB2C-9C38-4D5C-B4C4-602F0756A61F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC4CBB2C-9C38-4D5C-B4C4-602F0756A61F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC4CBB2C-9C38-4D5C-B4C4-602F0756A61F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADB320AA-15FB-4FAB-A909-A1EE120BE7F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADB320AA-15FB-4FAB-A909-A1EE120BE7F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADB320AA-15FB-4FAB-A909-A1EE120BE7F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADB320AA-15FB-4FAB-A909-A1EE120BE7F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
