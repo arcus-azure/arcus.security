@@ -11,8 +11,6 @@ variables:
     value: '2.2.105'
   - name: 'Project'
     value: 'Arcus.Security'
-  - name: 'Package.Version.ManualTrigger'
-    value: preview
 
 stages:
   - stage: Build
