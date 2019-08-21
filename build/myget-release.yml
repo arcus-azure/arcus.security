@@ -57,7 +57,7 @@ stages:
             displayName: 'Compile'
             inputs:
               projects: 'src/*.sln'
-              arguments: '--configuration $(Build.Configuration)'
+              arguments: '--configuration $(Build.Configuration) --version-suffix $(packageVersion)'
           - task: CopyFiles@2
             displayName: 'Copy build artifacts'
             inputs:
