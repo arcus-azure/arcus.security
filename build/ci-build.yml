@@ -1,6 +1,18 @@
 name: $(date:yyyyMMdd)$(rev:.r)
 
-trigger: none
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/*
+
+pr:
+  paths:
+    include:
+    - src/*
+    - build/ci-build.yml
 
 variables:
   # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
