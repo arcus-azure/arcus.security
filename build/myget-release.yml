@@ -11,8 +11,7 @@ variables:
     value: '2.2.105'
   - name: 'Project'
     value: 'Arcus.Security'
-  - name: 'Package.Version.ManualTrigger'
-    value: preview
+  # 'Package.Version.ManualTrigger' is added as queue-time variable on build in Azure DevOps
 
 stages:
   - stage: Build
