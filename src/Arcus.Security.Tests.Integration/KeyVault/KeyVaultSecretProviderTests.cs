@@ -22,7 +22,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_GetSecret_Succeeds()
+        public async Task KeyVaultSecretProvider_WithServicePrincipal_GetSecret_Succeeds()
         {
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
@@ -44,7 +44,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
+        public async Task KeyVaultSecretProvider_WithServicePrincipal_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
@@ -58,6 +58,43 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             // Assert
             await Assert.ThrowsAnyAsync<SecretNotFoundException>(async () =>
+            {
+                // Act
+                await keyVaultSecretProvider.GetSecretAsync(keyName);
+            });
+        }
+
+        [Fact]
+        public async Task KeyVaultSecretProvider_WithManagedServiceIdentity_GetSecret_Succeeds()
+        {
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                authentication: new ManagedServiceIdentityAuthenticator(),
+                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+
+            // Act
+            Secret secret = await keyVaultSecretProvider.GetSecretAsync(keyName);
+
+            // Assert
+            Assert.NotNull(secret);
+            Assert.NotNull(secret.Value);
+            Assert.NotNull(secret.Version);
+        }
+
+        [Fact]
+        public async Task KeyVaultSecretProvider_WithManagedServiceIdentity_GetSecret_NonExistinSecret_ThrowsSecretNotFoundException()
+        {
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Guid.NewGuid().ToString("N");
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                authentication: new ManagedServiceIdentityAuthenticator(),
+                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+
+            // Assert
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
             {
                 // Act
                 await keyVaultSecretProvider.GetSecretAsync(keyName);

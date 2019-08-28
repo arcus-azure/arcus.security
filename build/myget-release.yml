@@ -11,6 +11,8 @@ variables:
     value: '2.2.105'
   - name: 'Project'
     value: 'Arcus.Security'
+  - name: 'AzureServicesAuthConnectionString'
+    value: $(Arcus_MSI_AzureServicesAuth_ConnectionString)
   # 'Package.Version.ManualTrigger' is added as queue-time variable on build in Azure DevOps
 
 stages:
