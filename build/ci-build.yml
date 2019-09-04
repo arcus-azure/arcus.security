@@ -112,11 +112,15 @@ stages:
               keepToken: false
               tokenPrefix: '#{'
               tokenSuffix: '}#'
-          - task: DotNetCoreCLI@2
-            displayName: 'Run integration tests'
+          - task: AzureCLI@1
             inputs:
-              command: test
-              projects: 'src/**/$(Project).Tests.Integration.csproj'
-              arguments: '--configuration $(Build.Configuration)'
-              nobuild: true
-              publishTestResults: true
+              azureSubscription: 'Azure - Codit-Arcus'
+              scriptLocation: 'inlineScript'
+              inlineScript: 'dotnet test src/**/$(Project).Tests.Integration.csproj --configuration $(Build.Configuration) --no-build --results-directory $(System.DefaultWorkingDirectory)'
+              addSpnToEnvironment: true
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'XUnit'
+              testResultsFiles: '**/*.xml'
+              mergeTestResults: true
+              failTaskOnFailedTests: true
