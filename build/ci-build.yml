@@ -116,7 +116,7 @@ stages:
             inputs:
               azureSubscription: 'Azure - Codit-Arcus'
               scriptLocation: 'inlineScript'
-              inlineScript: 'dotnet test src/**/$(Project).Tests.Integration.csproj --configuration $(Build.Configuration) --no-build --results-directory $(System.DefaultWorkingDirectory)'
+              inlineScript: 'dotnet test $(Build.SourcesDirectory)/**/$(Project).Tests.Integration.dll --configuration $(Build.Configuration) --no-build --results-directory $(System.DefaultWorkingDirectory)'
               addSpnToEnvironment: true
           - task: PublishTestResults@2
             inputs:
