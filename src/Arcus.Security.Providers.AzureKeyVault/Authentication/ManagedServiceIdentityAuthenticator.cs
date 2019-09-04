@@ -21,7 +21,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthenticator"/> class.
         /// </summary>
         /// <param name="connectionString">The connection string to use to authenticate.</param>
-        /// <param name="azureAdInstance">The azure AD instance to use to authenticate.</param>
+        /// <param name="azureAdInstance">The azure AD instance to use to authenticate, if applicable.</param>
         public ManagedServiceIdentityAuthenticator(string connectionString = null, string azureAdInstance = null)
         {
             _connectionString = connectionString;
