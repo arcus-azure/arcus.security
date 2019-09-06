@@ -85,7 +85,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_WithManagedServiceIdentity_GetSecret_NonExistinSecret_ThrowsSecretNotFoundException()
+        public async Task KeyVaultSecretProvider_WithManagedServiceIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
