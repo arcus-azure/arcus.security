@@ -72,9 +72,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ManagedServiceIdentityAuthenticator(),
+                authentication: new ManagedServiceIdentityAuthenticator(connectionString: connectionString),
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Act
@@ -90,20 +91,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_WithManagedServiceIdentity_GetSecret_NonExistinSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
-            var variable = Environment.GetEnvironmentVariable("AzureServicesAuthConnectionString");
-            if (String.IsNullOrWhiteSpace(variable))
-            {
-                _outputWriter.WriteLine("No 'AzureServicesAuthConnectionString' environment variable was found");
-            }
-            else
-            {
-                _outputWriter.WriteLine("'AzureServicesAuthConnectionString ' environment variable was found");
-            }
-
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
             var notExistingKeyName = Guid.NewGuid().ToString("N");
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ManagedServiceIdentityAuthenticator(),
+                authentication: new ManagedServiceIdentityAuthenticator(connectionString: connectionString),
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Assert
