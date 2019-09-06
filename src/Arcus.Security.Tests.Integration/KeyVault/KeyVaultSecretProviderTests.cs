@@ -146,7 +146,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
                 var notExistingKeyName = Guid.NewGuid().ToString("N");
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                    authentication: new ManagedServiceIdentityAuthenticator(connectionString: connectionString),
+                    authentication: new ManagedServiceIdentityAuthenticator(),
                     vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
                 Environment.SetEnvironmentVariable(environmentVariableName, connectionString);
