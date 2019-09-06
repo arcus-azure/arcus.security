@@ -3,16 +3,16 @@ name: $(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-      - master
+    - master
   paths:
     include:
-      - src/*
+    - src/*
 
 pr:
   paths:
     include:
-      - src/*
-      - build/ci-build.yml
+    - src/*
+    - build/ci-build.yml
 
 variables:
   # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
@@ -24,8 +24,6 @@ variables:
     value: '2.2.105'
   - name: 'Project'
     value: 'Arcus.Security'
-  - name: 'AzureServicesAuthConnectionString'
-    value: $(Arcus_MSI_AzureServicesAuth_ConnectionString)
 
 stages:
   - stage: Build
