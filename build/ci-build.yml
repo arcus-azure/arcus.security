@@ -3,16 +3,16 @@ name: $(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-    - master
+      - master
   paths:
     include:
-    - src/*
+      - src/*
 
 pr:
   paths:
     include:
-    - src/*
-    - build/ci-build.yml
+      - src/*
+      - build/ci-build.yml
 
 variables:
   # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
@@ -112,15 +112,11 @@ stages:
               keepToken: false
               tokenPrefix: '#{'
               tokenSuffix: '}#'
-          - task: AzureCLI@1
+          - task: DotNetCoreCLI@2
+            displayName: 'Run integration tests'
             inputs:
-              azureSubscription: 'Azure - Codit-Arcus'
-              scriptLocation: 'inlineScript'
-              inlineScript: 'dotnet test $(Build.SourcesDirectory)/**/$(Project).Tests.Integration.dll --configuration $(Build.Configuration) --no-build --results-directory $(System.DefaultWorkingDirectory)'
-              addSpnToEnvironment: true
-          - task: PublishTestResults@2
-            inputs:
-              testResultsFormat: 'XUnit'
-              testResultsFiles: '**/*.xml'
-              mergeTestResults: true
-              failTaskOnFailedTests: true
+              command: test
+              projects: 'src/**/$(Project).Tests.Integration.csproj'
+              arguments: '--configuration $(Build.Configuration)'
+              nobuild: true
+              publishTestResults: true
