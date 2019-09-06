@@ -14,11 +14,14 @@ namespace Arcus.Security.Tests.Integration.KeyVault
     [Trait(name: "Category", value: "Integration")]
     public class KeyVaultSecretProviderTests : IntegrationTest
     {
+        private readonly ITestOutputHelper _outputWriter;
+
         // The same tests should be tested with different KeyVaultClientFactories 
         // What's the best approach for this ?
 
         public KeyVaultSecretProviderTests(ITestOutputHelper testOutput) : base(testOutput)
         {
+            _outputWriter = testOutput;
         }
 
         [Fact]
@@ -87,6 +90,16 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_WithManagedServiceIdentity_GetSecret_NonExistinSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
+            var variable = Environment.GetEnvironmentVariable("AzureServicesAuthConnectionString");
+            if (String.IsNullOrWhiteSpace(variable))
+            {
+                _outputWriter.WriteLine("No 'AzureServicesAuthConnectionString' environment variable was found");
+            }
+            else
+            {
+                _outputWriter.WriteLine("'AzureServicesAuthConnectionString ' environment variable was found");
+            }
+
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var notExistingKeyName = Guid.NewGuid().ToString("N");
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
