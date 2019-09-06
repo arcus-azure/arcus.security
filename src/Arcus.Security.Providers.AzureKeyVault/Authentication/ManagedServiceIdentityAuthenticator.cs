@@ -13,6 +13,28 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     public class ManagedServiceIdentityAuthenticator : IKeyVaultAuthentication, IKeyVaultAuthenticator
 #pragma warning restore 618
     {
+        private readonly string _connectionString;
+
+        private readonly string _azureAdInstance;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthenticator"/> class.
+        /// </summary>
+        public ManagedServiceIdentityAuthenticator()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthenticator"/> class.
+        /// </summary>
+        /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
+        /// <param name="azureAdInstance">The azure AD instance to use to authenticate, if applicable.</param>
+        public ManagedServiceIdentityAuthenticator(string connectionString = null, string azureAdInstance = null)
+        {
+            _connectionString = connectionString;
+            _azureAdInstance = azureAdInstance;
+        }
+
         /// <summary>
         /// Authenticates with Azure Key Vault
         /// </summary>
@@ -45,12 +67,15 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
             return Task.FromResult(keyVaultClient);
         }
 
-        private static KeyVaultClient AuthenticateClient()
+        private KeyVaultClient AuthenticateClient()
         {
-            var tokenProvider = new AzureServiceTokenProvider();
+            // Unfortunately the default azureAdInstance is hardcoded to a value rather than null, avoid having to hard code the value here too.
+            var tokenProvider = _azureAdInstance == null ? new AzureServiceTokenProvider(_connectionString) : new AzureServiceTokenProvider(_connectionString, _azureAdInstance);
+
             var authenticationCallback = new KeyVaultClient.AuthenticationCallback(tokenProvider.KeyVaultTokenCallback);
             
             var keyVaultClient = new KeyVaultClient(authenticationCallback);
+
             return keyVaultClient;
         }
     }
