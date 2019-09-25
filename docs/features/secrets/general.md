@@ -15,6 +15,14 @@ string secretValue = secret.Value;
 string secretVersion = secret.Version
 ```
 
+# Raw secrets
+In some scenarios you'd like to just get the secret value directly without any metadata.
+This is possible by calling the `...Raw...` variantes on the `ISecretProvider` implementations.
+
+```csharp
+string secretValue = await secretProvider.GetRawSecretAsync("EventGrid-AuthKey");
+```
+
 # Caching Secrets
 Some secret providers recommend to cache secrets for a while to avoid hitting the service limitations.
 
