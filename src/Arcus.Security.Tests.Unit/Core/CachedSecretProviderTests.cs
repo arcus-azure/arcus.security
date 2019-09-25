@@ -89,10 +89,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            string actualFirst = await cachedSecretProvider.Get(keyName);
+            string actualFirst = await cachedSecretProvider.GetRawSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            string actualSecond = await cachedSecretProvider.Get(keyName);
+            string actualSecond = await cachedSecretProvider.GetRawSecretAsync(keyName);
 
             // Assert
             Assert.Equal(expectedFirstSecret, actualFirst);
@@ -117,10 +117,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            string actualFirst = await cachedSecretProvider.Get(keyName);
+            string actualFirst = await cachedSecretProvider.GetRawSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            string actualSecond = await cachedSecretProvider.Get(keyName);
+            string actualSecond = await cachedSecretProvider.GetRawSecretAsync(keyName);
 
             // Assert
             Assert.Equal(expectedFirstSecret, actualFirst);
@@ -145,10 +145,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            string actualFirst = await cachedSecretProvider.Get(keyName, ignoreCache: true);
+            string actualFirst = await cachedSecretProvider.GetRawSecretAsync(keyName, ignoreCache: true);
             await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            string actualSecond = await cachedSecretProvider.Get(keyName, ignoreCache: true);
+            string actualSecond = await cachedSecretProvider.GetRawSecretAsync(keyName, ignoreCache: true);
 
             // Assert
             Assert.Equal(expectedFirstSecret, actualFirst);
@@ -173,10 +173,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            string actualFirst = await cachedSecretProvider.GetRawSecret(keyName);
+            string actualFirst = await cachedSecretProvider.GetRawSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            string actualSecond = await cachedSecretProvider.GetRawSecret(keyName);
+            string actualSecond = await cachedSecretProvider.GetRawSecretAsync(keyName);
 
             // Assert
             Assert.Equal(expectedFirstSecret, actualFirst);
@@ -229,10 +229,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            string actualFirst = await cachedSecretProvider.GetRawSecret(keyName);
+            string actualFirst = await cachedSecretProvider.GetRawSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            string actualSecond = await cachedSecretProvider.GetRawSecret(keyName);
+            string actualSecond = await cachedSecretProvider.GetRawSecretAsync(keyName);
 
             // Assert
             Assert.Equal(expectedFirstSecret, actualFirst);
@@ -285,10 +285,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            string actualFirst = await cachedSecretProvider.GetRawSecret(keyName, ignoreCache: true);
+            string actualFirst = await cachedSecretProvider.GetRawSecretAsync(keyName, ignoreCache: true);
             await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            string actualSecond = await cachedSecretProvider.GetRawSecret(keyName, ignoreCache: true);
+            string actualSecond = await cachedSecretProvider.GetRawSecretAsync(keyName, ignoreCache: true);
 
             // Assert
             Assert.Equal(expectedFirstSecret, actualFirst);
@@ -341,10 +341,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            Secret actualFirst = await cachedSecretProvider.GetSecret(keyName);
+            Secret actualFirst = await cachedSecretProvider.GetSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            Secret actualSecond = await cachedSecretProvider.GetSecret(keyName);
+            Secret actualSecond = await cachedSecretProvider.GetSecretAsync(keyName);
 
             // Assert
             Assert.True(actualFirst != null, "actualFirst != null");
@@ -403,10 +403,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            Secret actualFirst = await cachedSecretProvider.GetSecret(keyName);
+            Secret actualFirst = await cachedSecretProvider.GetSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromSeconds(1));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            Secret actualSecond = await cachedSecretProvider.GetSecret(keyName);
+            Secret actualSecond = await cachedSecretProvider.GetSecretAsync(keyName);
 
             // Assert
             Assert.True(actualFirst != null, "actualFirst != null");
@@ -465,10 +465,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 new MemoryCache(new MemoryCacheOptions()));
 
             // Act
-            Secret actualFirst = await cachedSecretProvider.GetSecret(keyName, ignoreCache: true);
+            Secret actualFirst = await cachedSecretProvider.GetSecretAsync(keyName, ignoreCache: true);
             await Task.Delay(TimeSpan.FromMilliseconds(100));
             spyTestProvider.SecretValue = expectedSecondSecret; 
-            Secret actualSecond = await cachedSecretProvider.GetSecret(keyName, ignoreCache: true);
+            Secret actualSecond = await cachedSecretProvider.GetSecretAsync(keyName, ignoreCache: true);
 
             // Assert
             Assert.True(actualFirst != null, "actualFirst != null");
