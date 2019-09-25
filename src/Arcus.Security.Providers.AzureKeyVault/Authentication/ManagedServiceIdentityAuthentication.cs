@@ -9,27 +9,25 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     ///     Azure Key Vault authentication by using Azure Managed Service Identity
     /// </summary>
-#pragma warning disable 618
-    public class ManagedServiceIdentityAuthenticator : IKeyVaultAuthentication, IKeyVaultAuthenticator
-#pragma warning restore 618
+    public class ManagedServiceIdentityAuthentication : IKeyVaultAuthentication
     {
         private readonly string _connectionString;
 
         private readonly string _azureAdInstance;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthenticator"/> class.
+        /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthentication"/> class.
         /// </summary>
-        public ManagedServiceIdentityAuthenticator()
+        public ManagedServiceIdentityAuthentication()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthenticator"/> class.
+        /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthentication"/> class.
         /// </summary>
         /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
         /// <param name="azureAdInstance">The azure AD instance to use to authenticate, if applicable.</param>
-        public ManagedServiceIdentityAuthenticator(string connectionString = null, string azureAdInstance = null)
+        public ManagedServiceIdentityAuthentication(string connectionString = null, string azureAdInstance = null)
         {
             _connectionString = connectionString;
             _azureAdInstance = azureAdInstance;
@@ -43,17 +41,6 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         public Task<IKeyVaultClient> Authenticate()
         {
             IKeyVaultClient client = AuthenticateClient();
-            return Task.FromResult(client);
-        }
-
-        /// <summary>
-        ///     Authenticates with Azure Key Vault
-        /// </summary>
-        /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
-        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
-        Task<KeyVaultClient> IKeyVaultAuthenticator.Authenticate()
-        {
-            KeyVaultClient client = AuthenticateClient();
             return Task.FromResult(client);
         }
 
