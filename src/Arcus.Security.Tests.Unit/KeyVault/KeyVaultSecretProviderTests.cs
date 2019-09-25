@@ -75,7 +75,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
 
             // Act
-            string actual = await provider.Get(secretName);
+            string actual = await provider.GetRawSecretAsync(secretName);
 
             // Assert
             Assert.Equal(expected, actual);
@@ -90,7 +90,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
 
             // Act
-            string actual = await provider.GetRawSecret(secretName);
+            string actual = await provider.GetRawSecretAsync(secretName);
 
             // Assert
             Assert.Equal(expected, actual);
@@ -120,7 +120,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
 
             // Act
-            Secret actual = await provider.GetSecret(secretName);
+            Secret actual = await provider.GetSecretAsync(secretName);
 
             // Assert
             Assert.NotNull(actual);
