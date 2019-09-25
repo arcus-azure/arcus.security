@@ -30,18 +30,6 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
             _clientId = clientId;
             _clientKey = clientKey;
         }
-        
-        /// <summary>
-        /// Authenticates with Azure Key Vault
-        /// </summary>
-        /// <returns>A <see cref="IKeyVaultClient"/> client to use for interaction with the vault</returns>
-        /// <exception cref="InvalidOperationException">When the JSON web token (JWT) cannot be obtained.</exception>
-        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
-        public Task<IKeyVaultClient> Authenticate()
-        {
-            IKeyVaultClient keyVaultClient = new KeyVaultClient(GetTokenAsync);
-            return Task.FromResult(keyVaultClient);
-        }
 
         /// <summary>
         ///     Authenticates with Azure Key Vault
