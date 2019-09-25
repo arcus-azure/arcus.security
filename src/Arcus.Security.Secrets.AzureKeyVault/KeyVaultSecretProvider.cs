@@ -34,21 +34,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         /// <summary>
         ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
         /// </summary>
-        /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
-        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
-        /// <exception cref="ArgumentNullException">The <paramref name="authenticator"/> cannot be <c>null</c>.</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        [Obsolete("Use other constructor with " + nameof(IKeyVaultAuthentication) + " instead")]
-#pragma warning disable 618
-        public KeyVaultSecretProvider(IKeyVaultAuthenticator authenticator, IKeyVaultConfiguration vaultConfiguration)
-            : this(new CompatibleKeyVaultAuthentication(authenticator), vaultConfiguration)
-            {
-            }
-#pragma warning restore 618
-
-        /// <summary>
-        ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
-        /// </summary>
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance</param>
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
