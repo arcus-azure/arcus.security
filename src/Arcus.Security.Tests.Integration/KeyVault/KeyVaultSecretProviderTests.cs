@@ -31,7 +31,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ServicePrincipalAuthenticator(applicationId, clientKey), 
+                authentication: new ServicePrincipalAuthentication(applicationId, clientKey), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Act
@@ -53,7 +53,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var notExistingKeyName = Guid.NewGuid().ToString("N");
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ServicePrincipalAuthenticator(applicationId, clientKey), 
+                authentication: new ServicePrincipalAuthentication(applicationId, clientKey), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Assert
