@@ -10,19 +10,19 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     /// Representation of an <see cref="IKeyVaultAuthentication"/> that will generate a <see cref="IKeyVaultClient"/> implementation using a service principle.
     /// </summary>
-    public class ServicePrincipalAuthenticator : IKeyVaultAuthentication
+    public class ServicePrincipalAuthentication : IKeyVaultAuthentication
     {
         private readonly string _clientId;
         private readonly string _clientKey;
 
         /// <summary>
-        /// Initializes <see cref="ServicePrincipalAuthenticator"/> that will generate a KeyVaultClient, using a service principal
+        /// Initializes <see cref="ServicePrincipalAuthentication"/> that will generate a KeyVaultClient, using a service principal
         /// </summary>
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
         /// <exception cref="ArgumentException">When the <paramref name="clientId"/> is <c>null</c> or empty.</exception>
         /// <exception cref="ArgumentException">When the <paramref name="clientKey"/> is <c>null</c> or empty.</exception>
-        public ServicePrincipalAuthenticator(string clientId, string clientKey)
+        public ServicePrincipalAuthentication(string clientId, string clientKey)
         {
             Guard.NotNullOrEmpty(clientId, nameof(clientId));
             Guard.NotNullOrEmpty(clientKey, nameof(clientKey));
