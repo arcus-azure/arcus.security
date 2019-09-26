@@ -19,12 +19,31 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 Example how the configuration builder is used inside a web application:
 
 ```csharp
-var vaultAuthenticator = new ManagedServiceIdentityAuthenticator();
-var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
-var yourSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
+IKeyVaultAuthentication vaultAuthentication = new ManagedServiceIdentityAuthenticator();
+IKeyVaultConfiguration vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
+ISecretProvider yourSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
 
 var config = new ConfigurationBuilder()
     .AddAzureKeyVault(yourSecretProvider)
+    .Build();
+
+var host = new WebHostBuilder()
+    .UseConfiguration(config)
+    .UseKestrel()
+    .UseStartup<Startup>();
+```
+
+Note that the above codesample does not provide any caching capabilities.  In contrary to the `AzureKeyVaultConfigurationProvider`, the `Arcus.KeyVaultSecretProvider` does not cache retrieved secrets nor does it retrieve all secrets from KeyVault upfront as the `AzureKeyVaultConfigurationProvider` does.  Each time a secret is requested, it will be fetched from KeyVault.
+
+To provide caching capabilities, you can make use of the `CachedSecretProvider` as shown below:
+
+```csharp
+IKeyVaultAuthentication vaultAuthentication = new ManagedServiceIdentityAuthenticator();
+IKeyVaultConfiguration vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
+ISecretProvider yourSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
+
+var config = new ConfigurationBuilder()
+    .AddAzureKeyVault(new CachedSecretProvider(yourSecretProvider))
     .Build();
 
 var host = new WebHostBuilder()
