@@ -34,7 +34,7 @@ steps:
     }
 
     Write-Host "Package version = $packageVersion"
-    Write-Host "##vso[task.setvariable variable=${{ parameters.manualTriggerVersion }}]$packageVersion"
+    Write-Host "##vso[task.setvariable variable=${{ parameters.packageVersionVariableName }}]$packageVersion"
 
     $isFork = $Env:SYSTEM_PULLREQUEST_ISFORK
     Write-Host "Is this a fork? $isFork"
