@@ -27,10 +27,10 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
-          - template: templates/determine-pr-version.yml
+          - template: nuget/determine-pr-version.yml@templates
             parameters:
               manualTriggerVersion: '$(Package.Version.ManualTrigger)'
-          - template: templates/build.yml
+          - template: build/build-solution.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               versionSuffix: '$(packageVersion)'
@@ -60,7 +60,7 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: templates/run-unit-tests.yml
+          - template: test/run-unit-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               projectName: '$(Project).Tests.Unit'
@@ -80,7 +80,7 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: templates/run-integration-tests.yml
+          - template: test/run-integration-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               projectName: '$(Project).Tests.Integration'
@@ -102,4 +102,4 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: build/nuget/publish-preview-package.yml@templates
+          - template: nuget/publish-preview-package.yml@templates
