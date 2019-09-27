@@ -1,0 +1,42 @@
+parameters:
+  dotnetSdkVersion: ''
+  projectName: 'src/*.sln'
+
+steps:
+- bash: |
+    if [ -z "$DOTNET_SDK_VERSION" ]; then
+      echo "##vso[task.logissue type=error;]Missing template parameter \"dotnetSdkVersion\""
+      echo "##vso[task.complete result=Failed;]"
+    fi
+    if [ -z "$PROJECTS" ]; then
+      echo "##vso[task.logissue type=error;]Missing template parameter \"projectName\""
+      echo "##vso[task.complete result=Failed;]"
+    fi
+  env:
+    DOTNET_SDK_VERSION: ${{ parameters.dotnetSdkVersion }}
+    PROJECTS: ${{ parameters.projectName }}
+  displayName: Check for required parameters in YAML template
+- task: DotNetCoreInstaller@0
+  displayName: 'Import .NET Core SDK (${{ parameters.dotnetSdkVersion }})'
+  inputs:
+    version: '${{ parameters.dotnetSdkVersion }}'
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace integration test tokens'
+  inputs:
+    rootDirectory: 'src/${{ parameters.projectName }}/'
+    targetFiles: 'appsettings.json'
+    encoding: 'auto'
+    verbosity: 'detailed'
+    writeBOM: true
+    actionOnMissing: 'fail'
+    keepToken: false
+    tokenPrefix: '#{'
+    tokenSuffix: '}#'
+- task: DotNetCoreCLI@2
+  displayName: 'Run integration tests'
+  inputs:
+    command: test
+    projects: 'src/**/${{ parameters.projectName }}.csproj'
+    arguments: '--configuration $(Build.Configuration)'
+    nobuild: true
+    publishTestResults: true
