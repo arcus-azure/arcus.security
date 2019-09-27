@@ -27,44 +27,13 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
-          - powershell: |
-              $packageVersion = '$(Build.BuildNumber)';
-
-              Write-Host "Package manual trigger version = $(Package.Version.ManualTrigger)"
-              Write-Host "Build reason = $(Build.Reason)"
-
-              if('$(Build.Reason)' -eq 'PullRequest') {
-                  Write-Host "Overriding package version given it's a PR build"
-
-                  $pullRequestNumber= "$(System.PullRequest.PullRequestNumber)"
-                  Write-Host "PR Number = $pullRequestNumber"
-                  $dateFormat = Get-Date -UFormat "%Y%m%d"
-                  $packageVersion = "$dateFormat-PR-$pullRequestNumber"
-              } else {
-                  $packageVersion = "$packageVersion-$(Package.Version.ManualTrigger)"
-              }
-
-              Write-Host "Package version = $packageVersion"
-              Write-Host "##vso[task.setvariable variable=PackageVersion]$packageVersion"
-
-              $isFork = $Env:SYSTEM_PULLREQUEST_ISFORK
-              Write-Host "Is this a fork? $isFork"
-              if($isFork -eq $false) {
-                  Write-Host "##vso[build.updatebuildnumber]$packageVersion"
-              } else {
-                  # Details: https://developercommunity.visualstudio.com/content/problem/350007/build-from-github-pr-fork-error-tf400813-the-user-1.html
-                  Write-Host "Not changing the build number as this is not supported for forks for now."
-              }
-            displayName: 'Determine Package Version'
-          - task: DotNetCoreInstaller@0
-            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
-            inputs:
-              version: '$(DotNet.Sdk.Version)'
-          - task: DotNetCoreCLI@2
-            displayName: 'Compile'
-            inputs:
-              projects: 'src/*.sln'
-              arguments: '--configuration $(Build.Configuration) --version-suffix $(packageVersion)'
+          - template: templates/determine-pr-version.yml
+            parameters:
+              manualTriggerVersion: '$(Package.Version.ManualTrigger)'
+          - template: templates/build.yml
+            parameters:
+              dotnetSdkVersion: '$(DotNet.Sdk.Version)'
+              versionSuffix: '$(packageVersion)'
           - task: CopyFiles@2
             displayName: 'Copy build artifacts'
             inputs:

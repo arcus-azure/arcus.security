@@ -1,0 +1,33 @@
+parameters:
+  dotnetSdkVersion: 'src/**/*.nupkg'
+  versionSuffix: 'src/**/*.nupkg'
+  projects: 'src/*.sln'
+
+steps:
+- bash: |
+    if [ -z "$DOTNET_SDK_VERSION" ]; then
+      echo "##vso[task.logissue type=error;]Missing template parameter \"dotnetSdkVersion\""
+      echo "##vso[task.complete result=Failed;]"
+    fi
+    if [ -z "$VERSION_SUFFIX" ]; then
+      echo "##vso[task.logissue type=error;]Missing template parameter \"versionSuffix\""
+      echo "##vso[task.complete result=Failed;]"
+    fi
+    if [ -z "$PROJECTS" ]; then
+      echo "##vso[task.logissue type=error;]Missing template parameter \"projects\""
+      echo "##vso[task.complete result=Failed;]"
+    fi
+  env:
+    DOTNET_SDK_VERSION: ${{ parameters.dotnetSdkVersion }}
+    VERSION_SUFFIX: ${{ parameters.versionSuffix }}
+    PROJECTS: ${{ parameters.projects }}
+  displayName: Check for required parameters in YAML template
+- task: DotNetCoreInstaller@0
+  displayName: 'Import .NET Core SDK (${{ parameters.dotnetSdkVersion }})'
+  inputs:
+    version: '${{ parameters.dotnetSdkVersion }}'
+- task: DotNetCoreCLI@2
+  displayName: 'Compile'
+  inputs:
+    projects: '${{ parameters.projects }}'
+    arguments: '--configuration $(Build.Configuration) --version-suffix ${{ parameters.versionSuffix }}'
