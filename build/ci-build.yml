@@ -14,6 +14,14 @@ pr:
     - src/*
     - build/ci-build.yml
 
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: arcus-azure/azure-devops-templates
+    endpoint: arcus-azure
+
+
 variables:
   # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
   - group: 'Arcus Security - Integration Testing'
