@@ -2,6 +2,13 @@ name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
 
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: arcus-azure/azure-devops-templates
+    endpoint: arcus-azure
+
 variables:
   - group: 'Arcus Security - Integration Testing'
   - group: 'Arcus - GitHub Package Registry'
@@ -153,10 +160,4 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - task: NuGetCommand@2
-            displayName: 'Push to MyGet.org'
-            inputs:
-              command: push
-              packagesToPush: 'src/**/*.nupkg'
-              nuGetFeedType: external
-              publishFeedCredentials: 'MyGet.org (Push)'
+          - template: build/nuget/publish-preview-package.yml@templates
