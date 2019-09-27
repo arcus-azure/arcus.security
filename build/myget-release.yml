@@ -84,29 +84,6 @@ stages:
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               projectName: '$(Project).Tests.Integration'
-          - task: DotNetCoreInstaller@0
-            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
-            inputs:
-              version: '$(DotNet.Sdk.Version)'
-          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-            displayName: 'Replace integration test tokens'
-            inputs:
-              rootDirectory: 'src/$(Project).Tests.Integration/'
-              targetFiles: 'appsettings.json'
-              encoding: 'auto'
-              writeBOM: true
-              actionOnMissing: 'fail'
-              keepToken: false
-              tokenPrefix: '#{'
-              tokenSuffix: '}#'
-          - task: DotNetCoreCLI@2
-            displayName: 'Run integration tests'
-            inputs:
-              command: test
-              projects: 'src/**/$(Project).Tests.Integration.csproj'
-              arguments: '--configuration $(Build.Configuration)'
-              nobuild: true
-              publishTestResults: true
 
   - stage: ReleaseToMyget
     displayName: 'Release to MyGet'
