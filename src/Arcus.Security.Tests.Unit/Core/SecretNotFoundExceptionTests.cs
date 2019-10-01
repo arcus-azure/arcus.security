@@ -9,7 +9,7 @@ namespace Arcus.Security.Tests.Unit.Core
     public class SecretNotFoundExceptionTests
     {
         [Fact]
-        public void Exception_CreateWithoutName_ShouldFailWithargumentException()
+        public void Exception_CreateWithoutName_ShouldFailWithArgumentException()
         {
             // Arrange
             string secretName = null;
