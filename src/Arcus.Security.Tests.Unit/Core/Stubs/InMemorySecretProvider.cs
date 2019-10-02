@@ -41,41 +41,13 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// Retrieves the secret value, based on the given name
         /// </summary>
         /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns the secret key</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetRawSecret) + " method instead")]
-        public async Task<string> Get(string secretName)
-        {
-            return await GetRawSecretAsync(secretName);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetSecretAsync) + " method instead")]
-        public async Task<Secret> GetSecret(string secretName)
-        {
-            return await GetSecretAsync(secretName);
-        }
-        
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
-             Guard.NotNull(secretName, "Secret name cannot be 'null'");
+            Guard.NotNull(secretName, "Secret name cannot be 'null'");
 
             if (_secretValueByName.TryGetValue(secretName, out string secretValue))
             {
@@ -94,25 +66,9 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetRawSecretAsync) + " method instead")]
-        public async Task<string> GetRawSecret(string secretName)
-        {
-            return await GetRawSecretAsync(secretName);
-        }
-
-        
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns the secret key.</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
-             Guard.NotNull(secretName, "Secret name cannot be 'null'");
+            Guard.NotNull(secretName, "Secret name cannot be 'null'");
 
             if (_secretValueByName.TryGetValue(secretName, out string secretValue))
             {

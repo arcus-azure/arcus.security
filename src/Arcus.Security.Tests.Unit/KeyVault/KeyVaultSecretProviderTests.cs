@@ -1,14 +1,13 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
-using Arcus.Security.Providers.AzureKeyVault.Configuration;
+﻿using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Secrets.AzureKeyVault;
 using Arcus.Security.Secrets.Core.Models;
 using Arcus.Security.Tests.Unit.KeyVault.Doubles;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Rest;
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.KeyVault
@@ -32,7 +31,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = $"http://{Guid.NewGuid():N}.vault.azure.net/";
 
             // Act & Assert
-            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider((IKeyVaultAuthentication) null, new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -52,7 +51,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = GenerateVaultUri();
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider((IKeyVaultAuthentication) null, new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
@@ -64,36 +63,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             // Act & Assert
             var secretProvider = new KeyVaultSecretProvider(new AzureKeyVaultAuthenticatorDummy(), new KeyVaultConfiguration(uri));
             Assert.NotNull(secretProvider);
-        }
-
-        [Fact]
-        public async Task KeyVaultSecretProvider_GetsSecretValue_AfterRetriedTooManyRequestException()
-        {
-            // Arrange
-            string expected = $"secret-value-{Guid.NewGuid()}";
-            string secretName = $"secret-name-{Guid.NewGuid()}";
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
-
-            // Act
-            string actual = await provider.Get(secretName);
-
-            // Assert
-            Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public async Task KeyVaultSecretProvider_GetsRawSecretValue_AfterRetriedTooManyRequestException()
-        {
-            // Arrange
-            string expected = $"secret-value-{Guid.NewGuid()}";
-            string secretName = $"secret-name-{Guid.NewGuid()}";
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
-
-            // Act
-            string actual = await provider.GetRawSecret(secretName);
-
-            // Assert
-            Assert.Equal(expected, actual);
         }
 
         [Fact]
@@ -109,23 +78,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault
 
             // Assert
             Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public async Task KeyVaultSecretProvider_GetsSecret_AfterRetriedTooManyRequestException()
-        {
-            // Arrange
-            string expected = $"secret-value-{Guid.NewGuid()}";
-            string secretName = $"secret-name-{Guid.NewGuid()}";
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
-
-            // Act
-            Secret actual = await provider.GetSecret(secretName);
-
-            // Assert
-            Assert.NotNull(actual);
-            Assert.Equal(expected, actual.Value);
-            Assert.NotNull(actual.Version);
         }
 
         [Fact]
@@ -169,7 +121,5 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         {
             return $"https://{Guid.NewGuid():N}.vault.azure.net/";
         }
-
-
     }
 }

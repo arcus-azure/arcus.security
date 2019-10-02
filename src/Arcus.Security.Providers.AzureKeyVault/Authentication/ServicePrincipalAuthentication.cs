@@ -10,51 +10,25 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     /// Representation of an <see cref="IKeyVaultAuthentication"/> that will generate a <see cref="IKeyVaultClient"/> implementation using a service principle.
     /// </summary>
-#pragma warning disable 618
-    public class ServicePrincipalAuthenticator : IKeyVaultAuthentication, IKeyVaultAuthenticator
-#pragma warning restore 618
+    public class ServicePrincipalAuthentication : IKeyVaultAuthentication
     {
         private readonly string _clientId;
         private readonly string _clientKey;
 
         /// <summary>
-        /// Initializes <see cref="ServicePrincipalAuthenticator"/> that will generate a KeyVaultClient, using a service principal
+        /// Initializes <see cref="ServicePrincipalAuthentication"/> that will generate a KeyVaultClient, using a service principal
         /// </summary>
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
         /// <exception cref="ArgumentException">When the <paramref name="clientId"/> is <c>null</c> or empty.</exception>
         /// <exception cref="ArgumentException">When the <paramref name="clientKey"/> is <c>null</c> or empty.</exception>
-        public ServicePrincipalAuthenticator(string clientId, string clientKey)
+        public ServicePrincipalAuthentication(string clientId, string clientKey)
         {
             Guard.NotNullOrEmpty(clientId, nameof(clientId));
             Guard.NotNullOrEmpty(clientKey, nameof(clientKey));
 
             _clientId = clientId;
             _clientKey = clientKey;
-        }
-        
-        /// <summary>
-        /// Authenticates with Azure Key Vault
-        /// </summary>
-        /// <returns>A <see cref="IKeyVaultClient"/> client to use for interaction with the vault</returns>
-        /// <exception cref="InvalidOperationException">When the JSON web token (JWT) cannot be obtained.</exception>
-        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
-        public Task<IKeyVaultClient> Authenticate()
-        {
-            IKeyVaultClient keyVaultClient = new KeyVaultClient(GetTokenAsync);
-            return Task.FromResult(keyVaultClient);
-        }
-
-        /// <summary>
-        ///     Authenticates with Azure Key Vault
-        /// </summary>
-        /// <returns>A <see cref="KeyVaultClient" /> client to use for interaction with the vault</returns>
-        /// <exception cref="InvalidOperationException">When the JSON web token (JWT) cannot be obtained.</exception>
-        [Obsolete("Use the " + nameof(AuthenticateAsync) + " method instead")]
-        Task<KeyVaultClient> IKeyVaultAuthenticator.Authenticate()
-        {
-            var keyVaultClient = new KeyVaultClient(GetTokenAsync);
-            return Task.FromResult(keyVaultClient);
         }
 
         /// <summary>
