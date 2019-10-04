@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Arcus.Security.Secrets.Core.Caching;
+﻿using Arcus.Security.Secrets.Core.Caching;
 using Arcus.Security.Secrets.Core.Interfaces;
 using Arcus.Security.Tests.Unit.Core.Stubs;
-using Microsoft.Extensions.Caching.Memory;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -22,10 +19,10 @@ namespace Arcus.Security.Tests.Unit.Core
 
             // Act 
             ICachedSecretProvider cachedSecretProvider = testSecretProvider.WithCaching(TimeSpan.FromSeconds(3));
-            var firstValue = await cachedSecretProvider.Get(keyName);
+            var firstValue = await cachedSecretProvider.GetRawSecretAsync(keyName);
             testSecretProvider.SecretValue = Guid.NewGuid().ToString("N"); // Change actual value on the internal secret provider !
-            var secondValue = await cachedSecretProvider.Get(keyName);
-
+            var secondValue = await cachedSecretProvider.GetRawSecretAsync(keyName);
+            
             // Assert
             Assert.Equal(firstValue, secondValue);
             Assert.Equal(1, testSecretProvider.CallsMadeSinceCreation);
@@ -37,16 +34,16 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             string secretKeyValue = Guid.NewGuid().ToString("N");
             var testSecretProvider = new TestSecretProviderStub(secretKeyValue);
-            var memCache = new MemoryCache(new MemoryCacheOptions());
+
             string keyName = "MyValue";
 
             // Act 
             ICachedSecretProvider cachedSecretProvider = testSecretProvider.WithCaching(TimeSpan.FromMilliseconds(100));
-            var firstValue = await cachedSecretProvider.Get(keyName);
+            var firstValue = await cachedSecretProvider.GetRawSecretAsync(keyName);
             await Task.Delay(TimeSpan.FromMilliseconds(150));
             string newSecretValue = Guid.NewGuid().ToString("N");
             testSecretProvider.SecretValue = newSecretValue; // Change actual value on the internal secret provider !
-            var secondValue = await cachedSecretProvider.Get(keyName);
+            var secondValue = await cachedSecretProvider.GetRawSecretAsync(keyName);
 
             // Assert
             Assert.Equal(secretKeyValue, firstValue);

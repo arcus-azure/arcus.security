@@ -20,7 +20,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
     public class KeyVaultSecretProvider : ISecretProvider
     {
         private readonly IKeyVaultAuthentication _authentication;
-        private readonly IKeyVaultConfiguration _vaultConfiguration;
 
         private IKeyVaultClient _keyVaultClient;
 
@@ -30,21 +29,6 @@ namespace Arcus.Security.Secrets.AzureKeyVault
         ///     Uri of the vault
         /// </summary>
         public string VaultUri { get; }
-
-        /// <summary>
-        ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
-        /// </summary>
-        /// <param name="authenticator">The requested authentication type for connecting to the Azure Key Vault instance</param>
-        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
-        /// <exception cref="ArgumentNullException">The <paramref name="authenticator"/> cannot be <c>null</c>.</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        [Obsolete("Use other constructor with " + nameof(IKeyVaultAuthentication) + " instead")]
-#pragma warning disable 618
-        public KeyVaultSecretProvider(IKeyVaultAuthenticator authenticator, IKeyVaultConfiguration vaultConfiguration)
-            : this(new CompatibleKeyVaultAuthentication(authenticator), vaultConfiguration)
-            {
-            }
-#pragma warning restore 618
 
         /// <summary>
         ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
@@ -60,53 +44,7 @@ namespace Arcus.Security.Secrets.AzureKeyVault
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
 
-            _vaultConfiguration = vaultConfiguration;
             _authentication = authentication;
-        }
-
-        /// <summary>
-        ///     Gets the secret from Key Vault, using the right secret name
-        /// </summary>
-        /// <param name="secretName">The secret name</param>
-        /// <returns>The value, stored in Key Vault</returns>
-        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        [Obsolete("Use the " + nameof(GetRawSecret) + " method instead")]
-        public Task<string> Get(string secretName)
-        {
-            return GetRawSecret(secretName);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns the secret key.</returns>
-        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        [Obsolete("Use the " + nameof(GetRawSecretAsync) + " method instead")]
-        public Task<string> GetRawSecret(string secretName)
-        {
-            return GetRawSecretAsync(secretName);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
-        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        [Obsolete("Use the " + nameof(GetSecretAsync) + " method instead")]
-        public Task<Secret> GetSecret(string secretName)
-        {
-            return GetSecretAsync(secretName);
         }
 
         /// <summary>
