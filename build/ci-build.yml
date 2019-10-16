@@ -1,18 +1,6 @@
 name: $(date:yyyyMMdd)$(rev:.r)
 
-trigger:
-  branches:
-    include:
-      - master
-  paths:
-    include:
-      - src/*
-
-pr:
-  paths:
-    include:
-      - src/*
-      - build/ci-build.yml
+trigger: none
 
 resources:
   repositories:
