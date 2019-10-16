@@ -3,23 +3,23 @@ name: $(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-    - master
+      - master
   paths:
     include:
-    - src/*
+      - src/*
 
 pr:
   paths:
     include:
-    - src/*
-    - build/ci-build.yml
+      - src/*
+      - build/ci-build.yml
 
 resources:
   repositories:
-  - repository: templates
-    type: github
-    name: arcus-azure/azure-devops-templates
-    endpoint: arcus-azure
+    - repository: templates
+      type: github
+      name: arcus-azure/azure-devops-templates
+      endpoint: arcus-azure
 
 variables:
   # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
@@ -88,7 +88,6 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/build'
               artifactName: Build
-
   - stage: UnitTests
     displayName: Unit Tests
     dependsOn: Build
