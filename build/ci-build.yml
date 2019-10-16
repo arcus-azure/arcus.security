@@ -1,6 +1,18 @@
 name: $(date:yyyyMMdd)$(rev:.r)
 
-trigger: none
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/*
+
+pr:
+  paths:
+    include:
+    - src/*
+    - build/ci-build.yml
 
 resources:
   repositories:
@@ -28,35 +40,9 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
-          - powershell: |
-              $packageVersion = '$(Build.BuildNumber)';
-
-              Write-Host "Package manual trigger version = $(Package.Version.ManualTrigger)"
-              Write-Host "Build reason = $(Build.Reason)"
-
-              if('$(Build.Reason)' -eq 'PullRequest') {
-                  Write-Host "Overriding package version given it's a PR build"
-
-                  $pullRequestNumber= "$(System.PullRequest.PullRequestNumber)"
-                  Write-Host "PR Number = $pullRequestNumber"
-                  $dateFormat = Get-Date -UFormat "%Y%m%d"
-                  $packageVersion = "$dateFormat-PR-$pullRequestNumber"
-              } else {
-                  $packageVersion = "$packageVersion-$(Package.Version.ManualTrigger)"
-              }
-
-              Write-Host "Package version = $packageVersion"
-              Write-Host "##vso[task.setvariable variable=PackageVersion]$packageVersion"
-
-              $isFork = $Env:SYSTEM_PULLREQUEST_ISFORK
-              Write-Host "Is this a fork? $isFork"
-              if($isFork -eq $false) {
-                  Write-Host "##vso[build.updatebuildnumber]$packageVersion"
-              } else {
-                  # Details: https://developercommunity.visualstudio.com/content/problem/350007/build-from-github-pr-fork-error-tf400813-the-user-1.html
-                  Write-Host "Not changing the build number as this is not supported for forks for now."
-              }
-            displayName: 'Determine Package Version'
+          - template: 'nuget/determine-pr-version.yml@templates'
+            parameters:
+              manualTriggerVersion: $(Package.Version.ManualTrigger)
           - task: DotNetCoreInstaller@0
             displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
             inputs:
