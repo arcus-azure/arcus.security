@@ -103,42 +103,26 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - task: GitHubRelease@0
-            displayName: 'Create GitHub Release (Conditional Step)'
-            inputs:
-              gitHubConnection: 'GitHub (arcus-automation - OAuth)'
+          - template: github/create-release.yml@templates
+            parameters:
               repositoryName: 'arcus-azure/arcus.security'
-              tagSource: manual
               tag: 'v$(Build.BuildNumber)'
-              title: 'v$(Build.BuildNumber)'
-              releaseNotesSource: input
+              releaseTitle: 'v$(Build.BuildNumber)'
               releaseNotes: |
                 Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
                 ```shell
                 PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
                 ```
             condition: not(contains(variables['Build.BuildNumber'], '-'))
-          - task: GitHubRelease@0
-            displayName: 'Create GitHub Pre-Release (Conditional Step)'
-            inputs:
-              gitHubConnection: 'GitHub (arcus-automation - OAuth)'
+          - template: create-pre-release.yml@templates
+            parameters:
               repositoryName: 'azure-arcus/arcus.security'
-              tagSource: manual
               tag: 'v$(Build.BuildNumber)'
-              title: 'v$(Build.BuildNumber)'
-              releaseNotesSource: input
+              releaseTitle: 'v$(Build.BuildNumber)'
               releaseNotes: |
                 Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
                 ```shell
                 PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
                 ```
-              isPreRelease: true
-              compareWith: 'lastRelease'
             condition: contains(variables['Build.BuildNumber'], '-')
-          - task: NuGetCommand@2
-            displayName: 'Push to NuGet.org'
-            inputs:
-              command: push
-              packagesToPush: '**/*.nupkg'
-              nuGetFeedType: external
-              publishFeedCredentials: 'NuGet.org'
+          - template: nuget/publish-official-package.yml@templates
