@@ -106,8 +106,6 @@ stages:
           - template: github/create-release.yml@templates
             parameters:
               repositoryName: 'arcus-azure/arcus.security'
-              tag: 'v$(Build.BuildNumber)'
-              releaseTitle: 'v$(Build.BuildNumber)'
               releaseNotes: |
                 Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
                 ```shell
@@ -117,8 +115,6 @@ stages:
           - template: create-pre-release.yml@templates
             parameters:
               repositoryName: 'azure-arcus/arcus.security'
-              tag: 'v$(Build.BuildNumber)'
-              releaseTitle: 'v$(Build.BuildNumber)'
               releaseNotes: |
                 Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
                 ```shell
