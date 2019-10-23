@@ -1,18 +1,7 @@
 name: $(date:yyyyMMdd)$(rev:.r)
 
-trigger:
-  branches:
-    include:
-    - master
-  paths:
-    include:
-    - src/*
-
-pr:
-  paths:
-    include:
-    - src/*
-    - build/ci-build.yml
+trigger: none
+pr: none
 
 resources:
   repositories:
@@ -22,7 +11,6 @@ resources:
       endpoint: arcus-azure
 
 variables:
-  # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
   - group: 'Arcus Security - Integration Testing'
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
@@ -31,7 +19,7 @@ variables:
     value: '2.2.105'
   - name: 'Project'
     value: 'Arcus.Security'
-    # 'Package.Version.ManualTrigger' is added as queue-time variable on build in Azure DevOps
+  # 'Package.Version' is added as queue-time variable on build in Azure DevOps
 
 stages:
   - stage: Build
@@ -40,9 +28,6 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
-          - template: 'nuget/determine-pr-version.yml@templates'
-            parameters:
-              manualTriggerVersion: $(Package.Version.ManualTrigger)
           - task: DotNetCoreInstaller@0
             displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
             inputs:
@@ -51,7 +36,7 @@ stages:
             displayName: 'Compile'
             inputs:
               projects: 'src/*.sln'
-              arguments: '--configuration $(Build.Configuration) --version-suffix $(packageVersion)'
+              arguments: '--configuration $(Build.Configuration) /property:Version=$(Build.BuildNumber)'
           - task: CopyFiles@2
             displayName: 'Copy build artifacts'
             inputs:
@@ -78,18 +63,10 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - task: DotNetCoreInstaller@0
-            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
-            inputs:
-              version: '$(DotNet.Sdk.Version)'
-          - task: DotNetCoreCLI@2
-            displayName: 'Run unit tests'
-            inputs:
-              command: test
-              projects: 'src/**/$(Project).Tests.Unit.csproj'
-              arguments: '--configuration $(Build.Configuration)'
-              nobuild: true
-              publishTestResults: true
+          - template: test/run-unit-tests.yaml@templates
+            parameters:
+              dotnetSdkVersion: '$(DotNet.Sdk.Version)'
+              projectName: '$(Project).Tests.Unit'
 
   - stage: IntegrationTests
     displayName: Integration Tests
@@ -106,39 +83,18 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - task: DotNetCoreInstaller@0
-            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
-            inputs:
-              version: '$(DotNet.Sdk.Version)'
-          - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-            displayName: 'Replace integration test tokens'
-            inputs:
-              rootDirectory: 'src/$(Project).Tests.Integration/'
-              targetFiles: 'appsettings.json'
-              encoding: 'auto'
-              writeBOM: true
-              actionOnMissing: 'fail'
-              keepToken: false
-              tokenPrefix: '#{'
-              tokenSuffix: '}#'
-          - task: DotNetCoreCLI@2
-            displayName: 'Run integration tests'
-            inputs:
-              command: test
-              projects: 'src/**/$(Project).Tests.Integration.csproj'
-              arguments: '--configuration $(Build.Configuration)'
-              nobuild: true
-              publishTestResults: true
+          - template: test/run-integration-tests.yml@templates
+            parameters:
+              dotnetSdkVersion: '$(DotNet.Sdk.Version)'
+              projectName: '$(Project).Tests.Integration'
 
-  - stage: ReleaseToMyget
-    displayName: 'Release to MyGet'
-    dependsOn:
-      - UnitTests
-      - IntegrationTests
+  - stage: Release
+    displayName: 'Release to NuGet.org'
+    dependsOn: IntegrationTests
     condition: succeeded()
     jobs:
-      - job: PushToMyGet
-        displayName: 'Push to MyGet'
+      - job: PushToNuGet
+        displayName: 'Push to NuGet.org'
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
@@ -147,4 +103,22 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: build/nuget/publish-preview-package.yml@templates
+          - ${{ if not(contains(variables['Build.BuildNumber'], '-')) }}:
+              - template: github/create-release.yml@templates
+                parameters:
+                  repositoryName: 'arcus-azure/arcus.security'
+                  releaseNotes: |
+                    Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
+                    ```shell
+                    PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
+                    ```
+          - ${{ if contains(variables['Build.BuildNumber'], '-') }}:
+              - template: create-pre-release.yml@templates
+                parameters:
+                  repositoryName: 'azure-arcus/arcus.security'
+                  releaseNotes: |
+                    Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
+                    ```shell
+                    PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
+                    ```
+          - template: nuget/publish-official-package.yml@templates
