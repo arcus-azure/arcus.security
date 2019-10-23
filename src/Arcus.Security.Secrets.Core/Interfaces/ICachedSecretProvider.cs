@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arcus.Security.Core.Caching.Configuration.Interfaces;
 using Arcus.Security.Secrets.Core.Exceptions;
 using Arcus.Security.Secrets.Core.Models;
 
@@ -10,6 +11,11 @@ namespace Arcus.Security.Secrets.Core.Interfaces
     /// </summary>
     public interface ICachedSecretProvider : ISecretProvider
     {
+        /// <summary>
+        /// Gets the cache-configuration for this instance.
+        /// </summary>
+        ICacheConfiguration Configuration { get; }
+
         /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
