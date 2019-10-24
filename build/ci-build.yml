@@ -120,4 +120,4 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: build/nuget/publish-preview-package.yml@templates
+          - template: nuget/publish-preview-package.yml@templates
