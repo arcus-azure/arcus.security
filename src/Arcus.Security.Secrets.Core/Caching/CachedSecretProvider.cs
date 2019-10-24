@@ -57,44 +57,9 @@ namespace Arcus.Security.Secrets.Core.Caching
         }
 
         /// <summary>
-        /// Retrieves the secret value from the cache (when available) or from the internal ISecretProvider
+        /// Gets the cache-configuration for this instance.
         /// </summary>
-        /// <param name="secretName">The name of the secret value to be retrieved</param>
-        /// <returns>The secret value</returns>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetRawSecret) + " method instead")]
-        public Task<string> Get(string secretName)
-        {
-            return GetRawSecret(secretName, ignoreCache: false);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns the secret key.</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetRawSecretAsync) + "method instead")]
-        public Task<string> GetRawSecret(string secretName)
-        {
-            return GetRawSecretAsync(secretName, ignoreCache: false);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetSecretAsync) + " method instead")]
-        public Task<Secret> GetSecret(string secretName)
-        {
-            return GetSecretAsync(secretName, ignoreCache: false);
-        }
+        public ICacheConfiguration Configuration => _cacheConfiguration;
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
@@ -120,49 +85,6 @@ namespace Arcus.Security.Secrets.Core.Caching
         public Task<Secret> GetSecretAsync(string secretName)
         {
             return GetSecretAsync(secretName, ignoreCache: false);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value from the cache (when available) or from the internal ISecretProvider
-        /// </summary>
-        /// <param name="secretName">The name of the secret value to be retrieved</param>
-        /// <param name="ignoreCache">Indicates whether or not the cache should be skipped in order to force an update of the secret value</param>
-        /// <returns>The secret value</returns>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetRawSecret) + " method instead")]
-        public Task<string> Get(string secretName, bool ignoreCache)
-        {
-            return GetRawSecretAsync(secretName, ignoreCache);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <param name="ignoreCache">Indicates if the cache should be used or skipped</param>
-        /// <returns>Returns a <see cref="Task{TResult}"/> that contains the secret key</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetRawSecretAsync) + " method instead")]
-        public Task<string> GetRawSecret(string secretName, bool ignoreCache)
-        {
-            return GetRawSecretAsync(secretName, ignoreCache);
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <param name="ignoreCache">Indicates if the cache should be used or skipped</param>
-        /// <returns>Returns a <see cref="Task{TResult}"/> that contains the secret key</returns>
-        /// <exception cref="ArgumentException">The name must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The name must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(GetSecretAsync) + " method instead")]
-        public Task<Secret> GetSecret(string secretName, bool ignoreCache)
-        {
-            return GetSecretAsync(secretName, ignoreCache);
         }
 
         /// <summary>

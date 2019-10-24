@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Arcus.Security.Providers.AzureKeyVault.Authentication;
+﻿using Arcus.Security.Providers.AzureKeyVault.Authentication;
+using System;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
@@ -16,7 +14,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
             string clientKey = Guid.NewGuid().ToString();
 
             // Act
-            var authenticator = new ServicePrincipalAuthenticator(clientId: clientId, clientKey: clientKey);
+            var authenticator = new ServicePrincipalAuthentication(clientId: clientId, clientKey: clientKey);
 
             // Assert
             Assert.NotNull(authenticator);
@@ -29,7 +27,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
             string clientKey = Guid.NewGuid().ToString();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => new ServicePrincipalAuthenticator(clientId: null, clientKey: clientKey));
+            Assert.Throws<ArgumentException>(() => new ServicePrincipalAuthentication(clientId: null, clientKey: clientKey));
         }
 
         [Fact]
@@ -39,7 +37,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Authentication
             string clientId = Guid.NewGuid().ToString();
 
             // Act & Assert
-            Assert.Throws<ArgumentException>(() => new ServicePrincipalAuthenticator(clientId: clientId, clientKey: null));
+            Assert.Throws<ArgumentException>(() => new ServicePrincipalAuthentication(clientId: clientId, clientKey: null));
         }
     }
 }
