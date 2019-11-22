@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Arcus.Security.Secrets.AzureKeyVault\Arcus.Security.Secrets.AzureKeyVault.csproj" />
+    <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
   </ItemGroup>
 
 </Project>
