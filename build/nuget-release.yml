@@ -63,7 +63,7 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: test/run-unit-tests.yaml@templates
+          - template: test/run-unit-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               projectName: '$(Project).Tests.Unit'

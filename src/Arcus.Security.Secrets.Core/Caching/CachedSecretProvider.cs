@@ -57,6 +57,11 @@ namespace Arcus.Security.Secrets.Core.Caching
         }
 
         /// <summary>
+        /// Gets the cache-configuration for this instance.
+        /// </summary>
+        public ICacheConfiguration Configuration => _cacheConfiguration;
+
+        /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
         /// <param name="secretName">The name of the secret key</param>

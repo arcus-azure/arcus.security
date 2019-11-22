@@ -43,7 +43,7 @@ IKeyVaultConfiguration vaultConfiguration = new KeyVaultConfiguration(keyVaultUr
 ISecretProvider yourSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration);
 
 var config = new ConfigurationBuilder()
-    .AddAzureKeyVault(new CachedSecretProvider(yourSecretProvider))
+    .AddAzureKeyVault(yourSecretProvider.WithCaching())
     .Build();
 
 var host = new WebHostBuilder()
