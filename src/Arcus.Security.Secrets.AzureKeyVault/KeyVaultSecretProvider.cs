@@ -2,11 +2,9 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Arcus.Security.Core;
 using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
 using Arcus.Security.Providers.AzureKeyVault.Configuration.Interfaces;
-using Arcus.Security.Secrets.Core.Exceptions;
-using Arcus.Security.Secrets.Core.Interfaces;
-using Arcus.Security.Secrets.Core.Models;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;

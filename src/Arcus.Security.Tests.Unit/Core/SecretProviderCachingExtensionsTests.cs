@@ -1,5 +1,4 @@
-﻿using Arcus.Security.Secrets.Core.Caching;
-using Arcus.Security.Secrets.Core.Interfaces;
+﻿using Arcus.Security.Core.Caching;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using System;
 using System.Threading.Tasks;

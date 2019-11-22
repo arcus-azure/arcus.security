@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Arcus.Security.Core.Caching.Configuration.Interfaces
+namespace Arcus.Security.Core.Caching.Configuration
 {
     /// <summary>
     /// Collected configuration values to control the caching when interacting with Azure Key Vault.
