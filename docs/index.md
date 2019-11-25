@@ -17,7 +17,7 @@ PM > Install-Package Arcus.Security.All
 
 Here is how you consume secrets for Azure Key Vault:
 ```shell
-PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
+PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
 
 # Features
