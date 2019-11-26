@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Providers.Az
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C42FDAC3-5A31-4F39-BD92-C57C2CDAB2D2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Secrets", "Secrets", "{26FD7AFD-F12E-4F1F-965E-379065340D47}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Core", "Arcus.Security.Core\Arcus.Security.Core.csproj", "{EC4CBB2C-9C38-4D5C-B4C4-602F0756A61F}"
