@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Arcus.Security.Providers.AzureKeyVault.Configuration.Interfaces
+namespace Arcus.Security.Providers.AzureKeyVault.Configuration
 {
     /// <summary>
     ///     Configuration for interaction with a Azure Key Vault instance

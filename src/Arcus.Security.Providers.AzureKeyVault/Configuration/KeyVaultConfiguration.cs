@@ -1,5 +1,4 @@
 ﻿using System;
-using Arcus.Security.Providers.AzureKeyVault.Configuration.Interfaces;
 using GuardNet;
 
 namespace Arcus.Security.Providers.AzureKeyVault.Configuration

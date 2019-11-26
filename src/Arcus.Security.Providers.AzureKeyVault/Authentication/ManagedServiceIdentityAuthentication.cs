@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
+﻿using System.Threading.Tasks;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.Services.AppAuthentication;
 

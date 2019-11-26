@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
+using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 
