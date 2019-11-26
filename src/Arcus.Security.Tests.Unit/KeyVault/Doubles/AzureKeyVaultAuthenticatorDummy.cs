@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
+using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Microsoft.Azure.KeyVault;
 
 namespace Arcus.Security.Tests.Unit.KeyVault.Doubles

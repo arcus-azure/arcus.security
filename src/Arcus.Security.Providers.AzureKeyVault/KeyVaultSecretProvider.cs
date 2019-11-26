@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault.Authentication;
+using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Core;
-using Arcus.Security.Providers.AzureKeyVault.Authentication.Interfaces;
-using Arcus.Security.Providers.AzureKeyVault.Configuration.Interfaces;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Polly;
 
-namespace Arcus.Security.Secrets.AzureKeyVault
+namespace Arcus.Security.Providers.AzureKeyVault
 {
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault

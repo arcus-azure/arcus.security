@@ -25,7 +25,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
-    <ProjectReference Include="..\Arcus.Security.Secrets.AzureKeyVault\Arcus.Security.Secrets.AzureKeyVault.csproj" />
   </ItemGroup>
 
 </Project>

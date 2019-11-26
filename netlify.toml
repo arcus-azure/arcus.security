@@ -20,6 +20,9 @@ ID = "3c6b6358-fc09-40a0-b72a-befae5cb6abb"
   # Directory with the lambda functions to deploy to AWS.
   # functions = "project/functions/"
 
+[build.environment]
+  RUBY_VERSION = "2.6.2"
+
 # Production context: all deploys from the Production branch set in your site's 
 # deploy settings will inherit these settings.
 # [context.production]

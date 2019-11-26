@@ -8,6 +8,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.KeyVault
