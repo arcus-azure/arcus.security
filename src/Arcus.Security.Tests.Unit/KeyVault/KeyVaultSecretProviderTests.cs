@@ -1,5 +1,4 @@
 ﻿using Arcus.Security.Providers.AzureKeyVault.Configuration;
-using Arcus.Security.Secrets.AzureKeyVault;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Unit.KeyVault.Doubles;
 using Microsoft.Azure.KeyVault.Models;
