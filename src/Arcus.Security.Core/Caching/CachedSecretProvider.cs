@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
-using Arcus.Security.Core.Caching.Configuration.Interfaces;
-using Arcus.Security.Secrets.Core.Exceptions;
-using Arcus.Security.Secrets.Core.Interfaces;
-using Arcus.Security.Secrets.Core.Models;
 using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Arcus.Security.Secrets.Core.Caching
+namespace Arcus.Security.Core.Caching
 {
     /// <inheritdoc cref="ISecretProvider"/>
     /// <summary>

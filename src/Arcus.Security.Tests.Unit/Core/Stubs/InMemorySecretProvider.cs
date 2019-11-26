@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Arcus.Security.Secrets.Core.Interfaces;
-using Arcus.Security.Secrets.Core.Models;
+using Arcus.Security.Core;
 using GuardNet;
 
 namespace Arcus.Security.Tests.Unit.Core.Stubs

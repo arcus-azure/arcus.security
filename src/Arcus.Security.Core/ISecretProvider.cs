@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Arcus.Security.Secrets.Core.Exceptions;
-using Arcus.Security.Secrets.Core.Models;
 
-namespace Arcus.Security.Secrets.Core.Interfaces
+namespace Arcus.Security.Core
 {
     /// <summary>
     /// <see cref="ISecretProvider"/> allows developers to build specific Secret key providers.

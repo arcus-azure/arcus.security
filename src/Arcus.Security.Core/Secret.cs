@@ -1,8 +1,7 @@
 ﻿using System;
-using Arcus.Security.Secrets.Core.Interfaces;
 using GuardNet;
 
-namespace Arcus.Security.Secrets.Core.Models
+namespace Arcus.Security.Core
 {
     /// <summary>
     /// Represents the secret returned from the <see cref="ISecretProvider"/> implementation.

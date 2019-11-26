@@ -1,4 +1,4 @@
-﻿using Arcus.Security.Secrets.Core.Interfaces;
+﻿using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 

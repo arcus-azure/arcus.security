@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Arcus.Security.Core.Caching.Configuration.Interfaces;
-using Arcus.Security.Secrets.Core.Exceptions;
-using Arcus.Security.Secrets.Core.Models;
+using Arcus.Security.Core.Caching.Configuration;
 
-namespace Arcus.Security.Secrets.Core.Interfaces
+namespace Arcus.Security.Core.Caching
 {
     /// <summary>
     /// <see cref="ICachedSecretProvider"/> allows developers to build specific Secret key providers with caching.
