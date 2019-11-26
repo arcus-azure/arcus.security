@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using GuardNet;
 
-namespace Arcus.Security.Secrets.Core.Exceptions
+namespace Arcus.Security.Core
 {
     /// <summary>
     /// Exception, thrown when no secret was found, using the given name.

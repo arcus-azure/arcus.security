@@ -1,5 +1,4 @@
 ﻿using System;
-using Arcus.Security.Core.Caching.Configuration.Interfaces;
 using GuardNet;
 
 namespace Arcus.Security.Core.Caching.Configuration
