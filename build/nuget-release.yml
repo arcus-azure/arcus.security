@@ -1,4 +1,4 @@
-name: $(date:yyyyMMdd)$(rev:.r)
+name: $(Package.Version)
 
 trigger: none
 pr: none
