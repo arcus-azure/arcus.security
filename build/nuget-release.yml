@@ -28,15 +28,10 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
-          - task: DotNetCoreInstaller@0
-            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
-            inputs:
-              version: '$(DotNet.Sdk.Version)'
-          - task: DotNetCoreCLI@2
-            displayName: 'Compile'
-            inputs:
-              projects: 'src/*.sln'
-              arguments: '--configuration $(Build.Configuration) /property:Version=$(Build.BuildNumber)'
+          - template: build/build-solution.yml@templates
+            parameters:
+              dotnetSdkVersion: '$(DotNet.Sdk.Version)'
+              version: $(Build.BuildNumber)
           - task: CopyFiles@2
             displayName: 'Copy build artifacts'
             inputs:
