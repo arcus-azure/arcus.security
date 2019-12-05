@@ -110,7 +110,7 @@ stages:
           - ${{ if contains(variables['Build.BuildNumber'], '-') }}:
               - template: create-pre-release.yml@templates
                 parameters:
-                  repositoryName: 'azure-arcus/arcus.security'
+                  repositoryName: 'arcus-azure/arcus.security'
                   releaseNotes: |
                     Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
                     ```shell
