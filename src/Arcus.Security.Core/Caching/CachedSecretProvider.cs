@@ -138,6 +138,8 @@ namespace Arcus.Security.Core.Caching
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
         public Task InvalidateSecretAsync(string secretName)
         {
+            Guard.NotNullOrEmpty(secretName, nameof(secretName), "Cannot invalidate a cached secret with an empty name");
+
             _memoryCache.Remove(secretName);
             return Task.CompletedTask;
         }
