@@ -60,4 +60,13 @@ After a hard refresh you can use the latest secret again and proceed your work.
 Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey", ignoreCache: true);
 ```
 
+## Invalidates a secret from the cach
+In some scenarios you'd like to remove the entry from the cache, so the next the secret is retrieved, a new lookup will be done in the provider.
+
+This is useful for scenario's where the secret is updated and you need to tell the cache somehow.
+
+```csharp
+await cachedSecretProvider.InvalidateSecretAsync("EventGrid-AuthKey");
+```
+
 [&larr; back](/)
