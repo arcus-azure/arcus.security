@@ -14,8 +14,10 @@ variables:
   - group: 'Arcus Security - Integration Testing'
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
-  # Always use fixed version for .NET Core SDK
   - name: 'DotNet.Sdk.Version'
+    value: '3.0.101'
+  # Backwards compatible .NET SDK version
+  - name: 'DotNet.Sdk.VersionBC'
     value: '2.2.105'
   - name: 'Project'
     value: 'Arcus.Security'
@@ -28,6 +30,11 @@ stages:
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
+          - task: UseDotNet@2
+            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
+            inputs:
+              packageType: 'sdk'
+              version: '$(DotNet.Sdk.VersionBC)'
           - template: build/build-solution.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
@@ -58,6 +65,11 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
+          - task: UseDotNet@2
+            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
+            inputs:
+              packageType: 'sdk'
+              version: '$(DotNet.Sdk.VersionBC)'
           - template: test/run-unit-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
@@ -78,6 +90,11 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
+          - task: UseDotNet@2
+            displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
+            inputs:
+              packageType: 'sdk'
+              version: '$(DotNet.Sdk.VersionBC)'
           - template: test/run-integration-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
