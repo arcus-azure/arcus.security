@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 
 namespace Arcus.Security.Core.Caching
 {
@@ -128,6 +129,19 @@ namespace Arcus.Security.Core.Caching
             _memoryCache.Set(secretName, secret, cacheEntryOptions);
 
             return secret;
+        }
+
+        /// <summary>
+        /// Removes the secret with the given <paramref name="secretName"/> from the cache;
+        /// so the next time <see cref="GetSecretAsync(string)"/> is called, a new version of the secret will be added back to the cache.
+        /// </summary>
+        /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
+        public Task InvalidateSecretAsync(string secretName)
+        {
+            Guard.NotNullOrEmpty(secretName, nameof(secretName), "Cannot invalidate a cached secret with an empty name");
+
+            _memoryCache.Remove(secretName);
+            return Task.CompletedTask;
         }
     }
 }

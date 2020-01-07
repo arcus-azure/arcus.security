@@ -35,5 +35,13 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         Task<Secret> GetSecretAsync(string secretName, bool ignoreCache);
+
+
+        /// <summary>
+        /// Removes the secret with the given <paramref name="secretName"/> from the cache;
+        /// so the next time <see cref="CachedSecretProvider.GetSecretAsync(string)"/> is called, a new version of the secret will be added back to the cache.
+        /// </summary>
+        /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
+        Task InvalidateSecretAsync(string secretName);
     }
 }
