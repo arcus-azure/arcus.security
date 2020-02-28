@@ -115,22 +115,12 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - ${{ if not(contains(variables['Build.BuildNumber'], '-')) }}:
-              - template: github/create-release.yml@templates
-                parameters:
-                  repositoryName: 'arcus-azure/arcus.security'
-                  releaseNotes: |
-                    Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
-                    ```shell
-                    PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
-                    ```
-          - ${{ if contains(variables['Build.BuildNumber'], '-') }}:
-              - template: create-pre-release.yml@templates
-                parameters:
-                  repositoryName: 'arcus-azure/arcus.security'
-                  releaseNotes: |
-                    Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
-                    ```shell
-                    PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
-                    ```
+          - template: github/create-release.yml@templates
+            parameters:
+              repositoryName: 'arcus-azure/arcus.security'
+              releaseNotes: |
+                Install new version via [NuGet](https://www.nuget.org/packages/Arcus.Security.All/$(Build.BuildNumber))
+                ```shell
+                PM > Install-Package Arcus.Security.All --Version $(Build.BuildNumber)
+                ```
           - template: nuget/publish-official-package.yml@templates
