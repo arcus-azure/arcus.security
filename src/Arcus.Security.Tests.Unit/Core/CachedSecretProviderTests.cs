@@ -247,5 +247,35 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.Equal(expectedSecondSecret, actualSecond.Value);
             Assert.Equal(2, spyTestProvider.CallsMadeSinceCreation);
         }
+
+        [Fact]
+        public async Task CacheSecretProvider_GetSecretAsync_InvalidateSecret_ShouldRequestNewSecretEvenWithinCacheDuration()
+        {
+            // Arrange
+            string expectedFirstSecret = Guid.NewGuid().ToString("N");
+            string expectedSecondSecret = Guid.NewGuid().ToString("N");
+            var testProviderStub = new TestSecretProviderStub(expectedFirstSecret);
+            var cacheInterval = TimeSpan.FromSeconds(10);
+
+            const string keyName = "MySecret";
+            var cachedSecretProvider = new CachedSecretProvider(
+                testProviderStub,
+                new CacheConfiguration(cacheInterval));
+
+            Secret actualFirst = await cachedSecretProvider.GetSecretAsync(keyName);
+            testProviderStub.SecretValue = expectedSecondSecret;
+
+            // Act
+            await cachedSecretProvider.InvalidateSecretAsync(keyName);
+
+            // Assert
+            Secret actualSecond = await cachedSecretProvider.GetSecretAsync(keyName);
+            Assert.True(actualFirst != null, "actualFirst != null");
+            Assert.True(actualSecond != null, "actualSecond != null");
+
+            Assert.Equal(expectedFirstSecret, actualFirst.Value);
+            Assert.Equal(expectedSecondSecret, actualSecond.Value);
+            Assert.Equal(2, testProviderStub.CallsMadeSinceCreation);
+        }
     }
 }
