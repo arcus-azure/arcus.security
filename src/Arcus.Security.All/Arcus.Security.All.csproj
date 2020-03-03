@@ -18,11 +18,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Guard.Net" Version="1.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="2.2.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
   </ItemGroup>
