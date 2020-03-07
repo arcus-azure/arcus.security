@@ -14,13 +14,7 @@ variables:
   - group: 'Arcus Security - Integration Testing'
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
-  - name: 'DotNet.Sdk.Version'
-    value: '3.0.101'
-  # Backwards compatible .NET SDK version
-  - name: 'DotNet.Sdk.VersionBC'
-    value: '2.2.105'
-  - name: 'Project'
-    value: 'Arcus.Security'
+  - template: ./variables/build.yml
   # 'Package.Version' is added as queue-time variable on build in Azure DevOps
 
 stages:
