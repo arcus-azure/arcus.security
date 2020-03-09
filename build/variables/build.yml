@@ -1,0 +1,5 @@
+variables:
+  DotNet.Sdk.Version: '3.0.101'
+  # Backwards compatible .NET SDK version
+  DotNet.Sdk.VersionBC: '2.2.105'
+  Projecte: 'Arcus.Security'
