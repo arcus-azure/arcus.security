@@ -38,7 +38,7 @@ namespace Arcus.Security.Core
         public string Version { get; }
 
         /// <summary>
-        /// Gets the optional expiration date of the secret.
+        /// Gets the expiration date of the secret.
         /// </summary>
         public DateTime? Expires { get; }
     }
