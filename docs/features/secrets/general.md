@@ -13,7 +13,7 @@ Secret secret = await secretProvider.GetSecretAsync("EventGrid-AuthKey");
 
 string secretValue = secret.Value;
 string secretVersion = secret.Version;
-DateTime? expirationDate = secret.Expires;
+DateTimeOffset? expirationDate = secret.Expires;
 ```
 
 # Raw secrets
