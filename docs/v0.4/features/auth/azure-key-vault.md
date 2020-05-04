@@ -8,7 +8,10 @@ layout: default
 As of today we support a few  authentication mechanisms.
 
 ## Managed Service Identity
+
 You can use [Managed Service Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) to delegate the authentication to Azure via `ManagedServiceIdentityAuthenticator`.
+
+![](https://img.shields.io/badge/Available%20starting-v0.1-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.1.0)
 
 This is the recommended approach to interact with Azure Key Vault.
 
@@ -17,6 +20,8 @@ var vaultAuthenticator = new ManagedServiceIdentityAuthenticator();
 var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
 ```
+
+![](https://img.shields.io/badge/Available%20starting-v0.4-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.4.0)
 
 If you require more control over the authentication mechanism you can optionally specify an `AzureServiceTokenProvider` connection string &/or Azure AD instance.
 
@@ -31,6 +36,9 @@ See [Service-to-service authentication to Azure Key Vault using .NET - Connectio
 
 
 ## Service Principle
+
+![](https://img.shields.io/badge/Available%20starting-v0.1-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.1.0)
+
 Authentication via username and password is supported with the `ServicePrincipalAuthenticator`.
 
 ```csharp
@@ -43,6 +51,9 @@ var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaul
 ```
 
 ## Certificate
+
+![](https://img.shields.io/badge/Available%20starting-v0.2-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.2.0)
+
 Authentication via client ID and certificate is supported with the `CertifidateBasedAuthentication`.
 
 ```csharp
