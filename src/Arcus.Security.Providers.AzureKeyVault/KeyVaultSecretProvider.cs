@@ -84,7 +84,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     return null;
                 }
 
-                return new Secret(secretBundle.Value, secretBundle.SecretIdentifier?.Version);
+                return new Secret(
+                    secretBundle.Value, 
+                    secretBundle.SecretIdentifier?.Version, 
+                    secretBundle.Attributes.Expires);
             }
             catch (KeyVaultErrorException keyVaultErrorException)
             {
