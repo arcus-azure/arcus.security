@@ -32,17 +32,6 @@ namespace Arcus.Security.Core.Storage.Source
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
         /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns the secret key.</returns>
-        /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
-        /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
-        /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
-        public Task<string> GetRawSecretAsync(string secretName)
-        {
-            return Task.FromResult(System.Environment.GetEnvironmentVariable(secretName, _target));
-        }
-
-        /// <summary>Retrieves the secret value, based on the given name</summary>
-        /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns a <see cref="T:Arcus.Security.Core.Secret" /> that contains the secret key</returns>
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
@@ -51,6 +40,17 @@ namespace Arcus.Security.Core.Storage.Source
         {
             string secretValue = await GetRawSecretAsync(secretName);
             return new Secret(secretValue, _version);
+        }
+        
+        /// <summary>Retrieves the secret value, based on the given name</summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
+        /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
+        /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
+        public Task<string> GetRawSecretAsync(string secretName)
+        {
+            return Task.FromResult(Environment.GetEnvironmentVariable(secretName, _target));
         }
     }
 }
