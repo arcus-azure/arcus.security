@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 namespace Arcus.Security.Core.Storage.Source
 {
     /// <summary>
-    /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the <see cref="IConfiguration"/>.
+    /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the <see cref="IConfiguration"/>. It is recommended to only use this for development purposes.
     /// </summary>
     public class ConfigurationSecretProvider : ISecretProvider
     {
