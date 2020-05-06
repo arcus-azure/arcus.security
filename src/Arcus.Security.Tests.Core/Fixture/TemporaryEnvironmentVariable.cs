@@ -12,6 +12,7 @@ namespace Arcus.Security.Tests.Core.Fixture
 
         private TemporaryEnvironmentVariable(string name)
         {
+            Guard.NotNull(name, nameof(name));
             _name = name;
         }
 
