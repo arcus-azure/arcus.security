@@ -54,7 +54,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        public async Task<string> GetRawSecretAsync(string secretName)
+        public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
@@ -69,14 +69,14 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        public async Task<Secret> GetSecretAsync(string secretName)
+        public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrEmpty(secretName, nameof(secretName));
             try
             {
                 IKeyVaultClient keyVaultClient = await GetClientAsync();
                 SecretBundle secretBundle =
-                    await ThrottleTooManyRequests(
+                    await ThrottleTooManyRequestsAsync(
                         () => keyVaultClient.GetSecretAsync(VaultUri, secretName));
 
                 if (secretBundle == null)
@@ -84,7 +84,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     return null;
                 }
 
-                return new Secret(secretBundle.Value, secretBundle.SecretIdentifier?.Version);
+                return new Secret(
+                    secretBundle.Value, 
+                    secretBundle.SecretIdentifier?.Version, 
+                    secretBundle.Attributes.Expires);
             }
             catch (KeyVaultErrorException keyVaultErrorException)
             {
@@ -97,7 +100,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
         }
 
-        private async Task<IKeyVaultClient> GetClientAsync()
+        /// <summary>
+        /// Gets the authenticated Key Vault client.
+        /// </summary>
+        /// <returns></returns>
+        protected async Task<IKeyVaultClient> GetClientAsync()
         {
             await LockCreateKeyVaultClient.WaitAsync();
 
@@ -116,7 +123,14 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
         }
 
-        private static Task<SecretBundle> ThrottleTooManyRequests(Func<Task<SecretBundle>> secretOperation)
+        /// <summary>
+        /// Client-side throttling when the Key Vault service limit exceeds.
+        /// </summary>
+        /// <param name="secretOperation">The operation to retry.</param>
+        /// <returns>
+        ///     The resulting secret bundle of the <paramref name="secretOperation"/>.
+        /// </returns>
+        protected static Task<SecretBundle> ThrottleTooManyRequestsAsync(Func<Task<SecretBundle>> secretOperation)
         {
             /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
              * 1. Wait 1 second, retry request
