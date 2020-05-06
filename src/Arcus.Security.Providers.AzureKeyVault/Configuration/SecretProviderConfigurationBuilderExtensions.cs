@@ -1,12 +1,15 @@
-﻿using Arcus.Security.Core;
+﻿using System;
+using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Providers.AzureKeyVault.Configuration
 {
     /// <summary>
     /// Provide extensions to use an <see cref="ISecretProvider"/> implementation to retrieve secret values from configuration tokens.
     /// </summary>
+    [Obsolete("In favor of the secret store concept, use " + nameof(SecretStoreBuilderExtensions.AddAzureKeyVault) + " instead during the " + nameof(IHostBuilderExtensions.ConfigureSecretStore))]
     public static class SecretProviderConfigurationBuilderExtensions
     {
         /// <summary>
