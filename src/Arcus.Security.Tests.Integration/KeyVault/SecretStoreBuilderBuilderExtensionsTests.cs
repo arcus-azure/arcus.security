@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Arcus.Security.Tests.Integration.KeyVault.Configuration
+namespace Arcus.Security.Tests.Integration.KeyVault
 {
     [Trait(name: "Category", value: "Integration")]
     public class SecretStoreBuilderBuilderExtensionsTests : IntegrationTest

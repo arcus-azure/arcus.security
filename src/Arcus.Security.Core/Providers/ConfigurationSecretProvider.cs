@@ -2,7 +2,7 @@
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 
-namespace Arcus.Security.Core.Storage.Source
+namespace Arcus.Security.Core.Providers
 {
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the <see cref="IConfiguration"/>. It is recommended to only use this for development purposes.

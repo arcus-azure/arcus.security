@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
-using Arcus.Security.Core.Storage.Source;
 using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xunit;
 
-namespace Arcus.Security.Tests.Unit.Core.Configuration
+namespace Arcus.Security.Tests.Unit.Core
 {
     public class IHostBuilderExtensionsTests
     {

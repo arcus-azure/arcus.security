@@ -1,9 +1,10 @@
 ﻿using System;
+using Arcus.Security.Core.Providers;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
-namespace Arcus.Security.Core.Storage.Source
+// ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.Hosting
 {
     /// <summary>
     /// Extends the <see cref="SecretStoreBuilder"/> to provide additional secret sources.

@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using GuardNet;
 
-namespace Arcus.Security.Core.Storage.Source
+namespace Arcus.Security.Core.Providers
 {
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the environment.
