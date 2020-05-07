@@ -86,7 +86,8 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             // Arrange
             string expected = $"secret-value-{Guid.NewGuid()}";
             string secretName = $"secret-name-{Guid.NewGuid()}";
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
+            DateTime expirationDate = DateTime.UtcNow;
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected, expirationDate);
 
             // Act
             Secret actual = await provider.GetSecretAsync(secretName);
@@ -95,9 +96,10 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             Assert.NotNull(actual);
             Assert.Equal(expected, actual.Value);
             Assert.NotNull(actual.Version);
+            Assert.Equal(expirationDate, actual.Expires);
         }
 
-        private static KeyVaultSecretProvider CreateSecretProviderWithTooManyRequestSimulation(string expected)
+        private static KeyVaultSecretProvider CreateSecretProviderWithTooManyRequestSimulation(string expected, DateTime? expirationDate = null)
         {
             // Arrange
             var keyVaultClient = new SimulatedKeyVaultClient(
@@ -107,7 +109,10 @@ namespace Arcus.Security.Tests.Unit.KeyVault
                         new HttpResponseMessage(HttpStatusCode.TooManyRequests),
                         "some HTTP response content to ignore")
                 },
-                () => new SecretBundle(value: expected, id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}"));
+                () => new SecretBundle(
+                    value: expected, 
+                    id: $"http://requires-3-or-4-segments/secrets/with-the-second-named-secrets-{Guid.NewGuid()}",
+                    attributes: new SecretAttributes(expires: expirationDate)));
 
 
             var provider = new KeyVaultSecretProvider(
