@@ -9,23 +9,17 @@ namespace Arcus.Security.Core.Providers
     /// </summary>
     public class ConfigurationSecretProvider : ISecretProvider
     {
-        internal const string DefaultVersion = "1.0.0";
-
         private readonly IConfiguration _configuration;
-        private readonly string _version;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationSecretProvider"/> class.
         /// </summary>
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
-        /// <param name="version">The fixed version to attach to each configured variable.</param>
-        public ConfigurationSecretProvider(IConfiguration configuration, string version = DefaultVersion)
+        public ConfigurationSecretProvider(IConfiguration configuration)
         {
             Guard.NotNull(configuration, nameof(configuration));
-            Guard.NotNull(version, nameof(version));
 
             _configuration = configuration;
-            _version = version;
         }
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
@@ -37,7 +31,7 @@ namespace Arcus.Security.Core.Providers
         public async Task<Secret> GetSecretAsync(string secretName)
         {
             string secretValue = await GetRawSecretAsync(secretName);
-            return new Secret(secretValue, _version);
+            return new Secret(secretValue);
         }
 
         /// <summary>Retrieves the secret value, based on the given name</summary>

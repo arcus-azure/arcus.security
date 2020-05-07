@@ -1,8 +1,6 @@
-﻿using System;
-using Arcus.Security.Core;
+﻿using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Providers.AzureKeyVault.Configuration
 {

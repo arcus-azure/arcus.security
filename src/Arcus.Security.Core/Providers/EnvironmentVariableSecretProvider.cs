@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using GuardNet;
 
 namespace Arcus.Security.Core.Providers
 {
@@ -9,25 +8,17 @@ namespace Arcus.Security.Core.Providers
     /// </summary>
     public class EnvironmentVariableSecretProvider : ISecretProvider
     {
-        internal const string DefaultVersion = "1.0.0";
         internal const EnvironmentVariableTarget DefaultTarget = EnvironmentVariableTarget.Process;
 
         private readonly EnvironmentVariableTarget _target;
-        private readonly string _version;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvironmentVariableSecretProvider"/> class.
         /// </summary>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
-        /// <param name="version">The fixed version to attach to each environment variable.</param>
-        public EnvironmentVariableSecretProvider(
-            EnvironmentVariableTarget target = DefaultTarget, 
-            string version = DefaultVersion)
+        public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget)
         {
-            Guard.NotNull(version, nameof(version));
-
             _target = target;
-            _version = version;
         }
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
@@ -39,7 +30,7 @@ namespace Arcus.Security.Core.Providers
         public async Task<Secret> GetSecretAsync(string secretName)
         {
             string secretValue = await GetRawSecretAsync(secretName);
-            return new Secret(secretValue, _version);
+            return new Secret(secretValue);
         }
         
         /// <summary>Retrieves the secret value, based on the given name</summary>
