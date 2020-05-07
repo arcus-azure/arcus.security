@@ -13,8 +13,7 @@ namespace Microsoft.Extensions.Hosting
     public static class SecretStoreBuilderExtensions
     {
         /// <summary>
-        /// Adds a secret source to the secret store of the application that gets its secrets from Azure Key Vault
-        /// using certificate based authentication to authenticate with the vault.
+        /// Adds Azure Key Vault as a secret source which uses certificate authentication.
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
@@ -37,8 +36,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// Adds a secret source to the secret store of the application that gets its secrets from Azure Key Vault
-        /// using managed service identity authentication to authenticate with the vault.
+        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
@@ -59,8 +57,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// Adds a secret source to the secret store of the application that gets its secrets from Azure Key Vault
-        /// using service principal authentication to authenticate with the vault.
+        /// Adds Azure Key Vault as a secret source which uses client secret authentication.
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
@@ -83,8 +80,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// Adds a secret source to the secret store of the application that gets its secrets from Azure Key Vault
-        /// using a custom specified <paramref name="authentication"/> to authenticate with the vault.
+        /// Adds Azure Key Vault as a secret source.
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance.</param>
