@@ -4,6 +4,7 @@ using Arcus.Security.Core;
 using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
+using Arcus.Security.Tests.Core.Fixture;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
@@ -13,6 +14,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
     [Trait(name: "Category", value: "Integration")]
     public class KeyVaultSecretProviderTests : IntegrationTest
     {
+        private const string KeyVaultConnectionStringEnvironmentVariable = "AzureServicesAuthConnectionString";
+
         // The same tests should be tested with different KeyVaultClientFactories 
         // What's the best approach for this ?
 
@@ -105,20 +108,16 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         [Fact]
         public async Task KeyVaultSecretProvider_WithDefaultManagedServiceIdentity_GetSecret_Succeeds()
         {
-            const string environmentVariableName = "AzureServicesAuthConnectionString";
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                authentication: new ManagedServiceIdentityAuthentication(),
+                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
-            try
+            using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
             {
-                // Arrange
-                var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-                var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-                var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-                var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                    authentication: new ManagedServiceIdentityAuthentication(),
-                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
-
-                Environment.SetEnvironmentVariable(environmentVariableName, connectionString);
-
                 // Act
                 Secret secret = await keyVaultSecretProvider.GetSecretAsync(keyName);
 
@@ -127,39 +126,27 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.NotNull(secret.Value);
                 Assert.NotNull(secret.Version);
             }
-            finally
-            {
-                Environment.SetEnvironmentVariable(environmentVariableName, value: null);
-            }
         }
 
         [Fact]
         public async Task KeyVaultSecretProvider_WithDefaultManagedServiceIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
-            const string environmentVariableName = "AzureServicesAuthConnectionString";
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
+            var notExistingKeyName = Guid.NewGuid().ToString("N");
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                authentication: new ManagedServiceIdentityAuthentication(),
+                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
-            try
+            using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
             {
-                // Arrange
-                var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-                var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-                var notExistingKeyName = Guid.NewGuid().ToString("N");
-                var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                    authentication: new ManagedServiceIdentityAuthentication(),
-                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
-
-                Environment.SetEnvironmentVariable(environmentVariableName, connectionString);
-
                 // Assert
                 await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
                 {
-                // Act
-                await keyVaultSecretProvider.GetSecretAsync(notExistingKeyName);
+                    // Act
+                    await keyVaultSecretProvider.GetSecretAsync(notExistingKeyName);
                 });
-            }
-            finally
-            {
-                Environment.SetEnvironmentVariable(environmentVariableName, value: null);
             }
         }
     }
