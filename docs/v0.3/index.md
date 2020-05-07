@@ -1,9 +1,6 @@
 ---
 title: "Home"
 layout: default
-permalink: /
-redirect_from:
- - /index.html
 ---
 
 [![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Secrets.AzureKeyVault?packageVersion=0.3.0)](https://www.nuget.org/packages/Arcus.Security.Secrets.AzureKeyVault/0.3.0)
@@ -23,6 +20,11 @@ PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
     - [Consume from Azure Key Vault](features/secrets/consume-from-key-vault)
 - **Authentication**
     - [Azure Key Vault](auth/azure-key-vault)
+
+## Older versions
+
+- [v0.1](v0.1)
+- [v0.2](v0.2)
 
 # License
 This is licensed under The MIT License (MIT). Which means that you can use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the web application. But you always need to state that Codit is the original author of this web application.
