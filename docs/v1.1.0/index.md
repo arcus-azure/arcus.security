@@ -3,7 +3,7 @@ title: "Home"
 layout: default
 ---
 
-[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Secrets.AzureKeyVault?packageVersion=1.0.0)](https://www.nuget.org/packages/Arcus.Security.Secrets.AzureKeyVault/1.0.0)
+[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Secrets.AzureKeyVault?packageVersion=1.1.0)](https://www.nuget.org/packages/Arcus.Security.Secrets.AzureKeyVault/1.1.0)
 
 # Installation
 
@@ -29,10 +29,11 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 
 ## Older versions
 
-- [v0.1](v0.1)
-- [v0.2](v0.2)
-- [v0.3](v0.3)
-- [v0.4](v0.4)
+- [v0.1.0](../v0.1.0)
+- [v0.2.0](../v0.2.0)
+- [v0.3.0](../v0.3.0)
+- [v0.4.0](../v0.4.0)
+- [v1.0.0](../v1.0.0)
 
 # License
 This is licensed under The MIT License (MIT). Which means that you can use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the web application. But you always need to state that Codit is the original author of this web application.
