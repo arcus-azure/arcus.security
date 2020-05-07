@@ -5,8 +5,6 @@ layout: default
 
 ## Authentication
 
-![](https://img.shields.io/badge/Available%20starting-v0.1-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.1.0)
-
 As of today we support a few  authentication mechanisms.
 
 ### Managed Service Identity

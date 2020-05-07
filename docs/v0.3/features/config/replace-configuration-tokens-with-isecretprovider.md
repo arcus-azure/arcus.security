@@ -3,8 +3,6 @@ title: "Replace configuration tokens with ISecretProvider"
 layout: default
 ---
 
-![](https://img.shields.io/badge/Available%20starting-v0.3-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.3.0)
-
 The `Arcus.Security.Providers.AzureKeyVault` package provides a mechanism to use your own `ISecretProvider` implementation when building your configuration for your application.
 
 ### Usage

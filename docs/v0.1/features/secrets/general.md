@@ -5,8 +5,6 @@ layout: default
 
 ## Consuming secrets
 
-![](https://img.shields.io/badge/Available%20starting-v0.1-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.1.0)
-
 Every provider implements `ISecretProvider` which makes it easy to use a consistent flow, regardless of the provider.
 
 You can easily retrieve secrets as following:

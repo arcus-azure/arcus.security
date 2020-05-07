@@ -5,8 +5,6 @@ layout: default
 
 # Replace configuration tokens with ISecretProvider
 
-![](https://img.shields.io/badge/Available%20starting-v0.3-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.3.0)
-
 When building your IConfiguration, you can use the extension .AddAzureKeyVault to pass in your `ISecretProvider` instead of using the built-in [Azure Key Vault provider](https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-2.2#packages).
 
 ## Installation

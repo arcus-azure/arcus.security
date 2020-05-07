@@ -5,8 +5,6 @@ layout: default
 
 # Consuming secrets
 
-![](https://img.shields.io/badge/Available%20starting-v0.2-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.2.0)
-
 Every provider implements `ISecretProvider` which makes it easy to use a consistent flow, regardless of the provider.
 
 Secrets can be easily retrieved as follows:
@@ -20,8 +18,6 @@ string secretVersion = secret.Version
 
 # Raw secrets
 
-![](https://img.shields.io/badge/Available%20starting-v1.0-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v1.0.0)
-
 In some scenarios you'd like to just get the secret value directly without any metadata.
 This is possible by calling the `...Raw...` variants on the `ISecretProvider` implementations.
 
@@ -30,8 +26,6 @@ string secretValue = await secretProvider.GetRawSecretAsync("EventGrid-AuthKey")
 ```
 
 # Caching Secrets
-
-![](https://img.shields.io/badge/Available%20starting-v0.2-green?link=https://github.com/arcus-azure/arcus.security/releases/tag/v0.2.0)
 
 Some secret providers recommend to cache secrets for a while to avoid hitting the service limitations.
 
