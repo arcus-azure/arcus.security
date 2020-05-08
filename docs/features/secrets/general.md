@@ -12,7 +12,8 @@ Secrets can be easily retrieved as follows:
 Secret secret = await secretProvider.GetSecretAsync("EventGrid-AuthKey");
 
 string secretValue = secret.Value;
-string secretVersion = secret.Version
+string secretVersion = secret.Version;
+DateTimeOffset? expirationDate = secret.Expires;
 ```
 
 # Raw secrets
