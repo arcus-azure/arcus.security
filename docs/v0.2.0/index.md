@@ -15,7 +15,7 @@ Here is how you consume secrets for Azure Key Vault:
 PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
 ```
 
-# Features
+# Featuresg
 - **Interacting with Secrets**
     - [General](features/secrets/general)
     - [Consume from Azure Key Vault](features/secrets/consume-from-key-vault)
