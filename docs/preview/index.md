@@ -23,8 +23,10 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 # Features
 - **Interacting with Secrets**
     - [General](features/secrets/general)
+    - [Secret store integration](features/secrets/secret-store-integration)
+      - [Create new secret source](features/secrets/create-new-secret-source)
     - [Consume from Azure Key Vault](features/secrets/consume-from-key-vault)
-        - [Integrate with IConfiguration](features/key-vault/extensions/iconfiguration-integration)
+        - [Key Vault secret source](features/key-vault/extensions/key-vault-secret-source)
 - **Authentication**
     - [Azure Key Vault](features/auth/azure-key-vault)
 
@@ -35,6 +37,7 @@ This is licensed under The MIT License (MIT). Which means that you can use, copy
 
 # Older versions
 
+- [v1.1.0](v1.1.0)
 - [v1.0.0](v1.0.0)
 - [v0.4.0](v0.4.0)
 - [v0.3.0](v0.3.0)

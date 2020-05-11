@@ -1,3 +1,8 @@
+---
+title: "Create a new secret source"
+layout: default
+---
+
 # Create a new secret source
 
 ## Prerequisits
@@ -31,22 +36,18 @@ This section describes how a new secret store source can be added to the pipelin
 2. Implement your own implementation of the `ISecretProvider` 
    ex:
    ```csharp
-   public class InMemorySecretProvider : ISecretProvider
+   public class RegistrySecretProvider : ISecretProvider
    {
-       private readonly IDictionary<string, Secret> _secrets = new Dictionary<string, Secret>
+       public Task<string> GetRawSecretAsync(string secretName)
        {
-           ["MySecret"] = new Secret("SuP3r_$eCreT", version: "1.0.0")
-       };
-
-       public async Task<string> GetRawSecretAsync(string secretName)
-       {
-           Secret secret = await GetSecretAsync(secretName);
-           return secret.Value;
+           object value = Registry.LocalMachine.GetValue(secretName);
+           return Task.FromResult(value?.ToString());
        }
 
-       public Task<Secret> GetSecretAsync(string secretName)
+       public async Task<Secret> GetSecretAsync(string secretName)
        {
-           return Task.FromResult(_secrets[secretName]);
+           string secretValue = await GetRawSecretAsync(secretName);
+           return new Secret(secretValue);
        }
    }
    ```
@@ -55,9 +56,9 @@ This section describes how a new secret store source can be added to the pipelin
    ```csharp
     public static class SecretStoreBuilderExtensions
     {
-        public static SecretStoreBuilder AddInMemory(this SecretStoreBuilder builder)
+        public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
         {
-            var provider = new InMemorySecretProvider();
+            var provider = new RegistrySecretProvider();
             return builder.AddProvider(provider);
         }
     }
@@ -66,7 +67,7 @@ This section describes how a new secret store source can be added to the pipelin
    ```csharp
    .ConfigureSecretStore((context, config, builder) => 
    {
-       var provider = new InMemorySecretProvider();
+       var provider = new RegistrySecretProvider();
        builder.AddProvider(provider);
    })
    ```
