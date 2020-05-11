@@ -88,3 +88,5 @@ The entire built-up `IConfiguration` can be used as a secret source so secrets w
 **Azure Key Vault**
 Adding Azure Key Vault secrets to the secret store is not built-in, but available in another package.
 See [this specific](../key-vault/extensions/key-vault-secret-source) page for more information.
+
+[&larr; back](/)
