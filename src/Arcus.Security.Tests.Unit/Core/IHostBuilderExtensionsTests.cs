@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
+using Arcus.Security.Core.Caching;
+using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Xunit;
@@ -27,6 +30,115 @@ namespace Arcus.Security.Tests.Unit.Core
             // Assert
             IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
+            Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+            Assert.Null(host.Services.GetService<ICachedSecretProvider>());
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCachingDuration_RegistersCachingSecretProvider()
+        {
+            // Arrange
+            string secretKey = "MySecret";
+            string secretValue = $"secret-{Guid.NewGuid()}";
+            var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider)
+                      .WithCaching(TimeSpan.FromSeconds(5));
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            Assert.NotNull(host.Services.GetService<ISecretProvider>());
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCachingDurationAndMemoryCache_RegistersCachingSecretProvider()
+        {
+            // Arrange
+            string secretKey = "MySecret";
+            string secretValue = $"secret-{Guid.NewGuid()}";
+            var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
+
+            var builder = new HostBuilder();
+            var duration = TimeSpan.FromSeconds(5);
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider).WithCaching(duration, memoryCache));
+
+            // Assert
+            IHost host = builder.Build();
+            Assert.NotNull(host.Services.GetService<ISecretProvider>());
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCaching_RegistersCachingSecretProvider()
+        {
+            // Arrange
+            string secretKey = "MySecret";
+            string secretValue = $"secret-{Guid.NewGuid()}";
+            var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider).WithCaching());
+
+            // Assert
+            IHost host = builder.Build();
+            Assert.NotNull(host.Services.GetService<ISecretProvider>());
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCachingConfiguration_RegistersCachingSecretProvider()
+        {
+            // Arrange
+            string secretKey = "MySecret";
+            string secretValue = $"secret-{Guid.NewGuid()}";
+            var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
+
+            var builder = new HostBuilder();
+            var configuration = new CacheConfiguration();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider).WithCaching(configuration));
+
+            // Assert
+            IHost host = builder.Build();
+            Assert.NotNull(host.Services.GetService<ISecretProvider>());
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCachingConfigurationAndMemoryCache_RegistersCachingSecretProvider()
+        {
+            // Arrange
+            string secretKey = "MySecret";
+            string secretValue = $"secret-{Guid.NewGuid()}";
+            var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
+
+            var builder = new HostBuilder();
+            var configuration = new CacheConfiguration();
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider).WithCaching(configuration, memoryCache));
+
+            // Assert
+            IHost host = builder.Build();
+            Assert.NotNull(host.Services.GetService<ISecretProvider>());
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
             Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
         }
 

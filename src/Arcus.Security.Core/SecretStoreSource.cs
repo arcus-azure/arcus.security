@@ -1,6 +1,6 @@
 ﻿using GuardNet;
 
-namespace Arcus.Security.Core.Storage 
+namespace Arcus.Security.Core 
 {
     /// <summary>
     /// Represents an entry for an <see cref="ISecretProvider"/> implementation.
