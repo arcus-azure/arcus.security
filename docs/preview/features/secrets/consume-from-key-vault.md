@@ -15,7 +15,7 @@ var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vau
 You can find a list of supported authentication schemes for Azure Key Vault [here](./../auth/azure-key-vault).
 
 ## Open for extension
-One can easily extend the Key Vault secret provider, by overriding the `GetSecret*Async` methods on the provider.
+You can easily extend the Key Vault provider by overriding the `GetSecret*Async` methods on the it.
 This useful to provide additional logging, for example, during the retrieval of the secrets.
 
 ```csharp
