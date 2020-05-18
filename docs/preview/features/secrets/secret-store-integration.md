@@ -3,11 +3,11 @@ title: "Secret store integration"
 layout: default
 ---
 
-# Secret Store Integration
+# Using Secret Store
 As alternative to the usage of placing secrets into an `IConfiguration` instance in your application, the `Arcus.Security.Core` package provides a alternative concept called 'secret stores'.
-The setup is simulair as to building an `IConfiguration` instance, by adding the different 'secret store sources' where the secrets should be present.
+We provide an approach similar to how `IConfiguration` is built, but with a focus on secrets. You can pick and choose the secret providers you want to use and we'll get the job done!
 
-All of those sources combined, creates then a single `ISecretProvider` that the application can use and has access to all the different registered secret sources.
+Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
 ## Installation
 For this feature, the following package needs to be installed:
@@ -43,7 +43,7 @@ public class Program
 }
 ```
 
-After the registration, the `ISecretProvider` can be used as any other registered service:
+Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
 
 ```csharp
 [ApiController]
