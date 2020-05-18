@@ -3,7 +3,7 @@ title: "Secret store integration"
 layout: default
 ---
 
-# Secret Store Integration
+# Using Secret Store
 As alternative to the usage of placing secrets into an `IConfiguration` instance in your application, the `Arcus.Security.Core` package provides a alternative concept called 'secret stores'.
 We provide an approach similar to how `IConfiguration` is built, but with a focus on secrets. You can pick and choose the secret providers you want to use and we'll get the job done!
 
