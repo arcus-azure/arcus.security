@@ -30,9 +30,11 @@ public class LoggedKeyVaultSecretProvider : KeyVaultSecretProvider
 
     public override async Task<Secret> GetSecretAsync(string secretName)
     {
-        _logger.LogTrace("Getting Azure Key Vault secret...);
-        Secret secret = await base.GetSecretAsync(secretName);
-        _logger.LogInformation("Got Azure Key Vault secret");
+        using (var measurement = DependencyMeasurement.Start())
+        {
+            Secret secret = await base.GetSecretAsync(secretName);
+            _logger.LogDependency("Azure Key Vault", "Secret", isSuccessful: true, startTime: measurement.StartTime, duration: measurement.Elapsed);
+        }
 
         return secret;
     }
