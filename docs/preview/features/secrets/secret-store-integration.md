@@ -43,7 +43,7 @@ public class Program
 }
 ```
 
-After the registration, the `ISecretProvider` can be used as any other registered service:
+Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
 
 ```csharp
 [ApiController]
