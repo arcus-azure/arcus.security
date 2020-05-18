@@ -30,6 +30,10 @@ public class Program
                     // Adding the Azure Key Vault secret source with the built-in overloads
                     builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri);
 
+                    // Several other built-in overloads are available too:
+                    // `AddAzureKeyVaultWithServicePrincipal`
+                    // `AddAzureKeyVaultWithCertificate`
+
                     // Or, alternatively using the fully customizable approach.
                     var vaultAuthentication = new ManagedServiceIdentityAuthentication();
                     var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
