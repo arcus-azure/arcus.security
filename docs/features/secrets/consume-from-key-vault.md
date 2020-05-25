@@ -12,6 +12,6 @@ var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration)
 ```
 
-You can find a list of supported authentication schemes for Azure Key Vault [here](./../../features/auth/azure-key-vault.md).
+You can find a list of supported authentication schemes for Azure Key Vault [here](./../../features/auth/azure-key-vault).
 
 [&larr; back](/)
