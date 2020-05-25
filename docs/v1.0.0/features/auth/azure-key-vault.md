@@ -14,9 +14,9 @@ You can use [Managed Service Identity](https://docs.microsoft.com/en-us/azure/ac
 This is the recommended approach to interact with Azure Key Vault.
 
 ```csharp
-var vaultAuthenticator = new ManagedServiceIdentityAuthenticator();
+var vaultAuthentication = new ManagedServiceIdentityAuthentication();
 var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
-var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
+var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration);
 ```
 
 If you require more control over the authentication mechanism you can optionally specify an `AzureServiceTokenProvider` connection string &/or Azure AD instance.
@@ -24,9 +24,9 @@ If you require more control over the authentication mechanism you can optionally
 ```csharp
 var connectionString = Configuration.GetConnectionString("Arcus:MSI:ConnectionString");
 var azureAdInstance = Configuration.GetValue<string>("Arcus:MSI:AzureAdInstance");
-var vaultAuthenticator = new ManagedServiceIdentityAuthenticator(connectionString, azureAdInstance);
+var vaultAuthentication = new ManagedServiceIdentityAuthentication(connectionString, azureAdInstance);
 var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
-var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration);
+var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration);
 ```
 See [Service-to-service authentication to Azure Key Vault using .NET - Connection String Support](https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication#connection-string-support) for supported connection strings and [National clouds - Azure AD authentication endpoints](https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints) for valid azure AD instances
 
