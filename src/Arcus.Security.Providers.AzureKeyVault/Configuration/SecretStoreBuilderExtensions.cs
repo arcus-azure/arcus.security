@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="clientId">The identifier of the application requesting the authentication token.</param>
         /// <param name="certificate">The certificate that is used as credential.</param>
-        public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
+        public static ISecretStoreAdditions AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
         /// <param name="azureADInstance">The azure AD instance to use to authenticate, if applicable.</param>
-        public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
+        public static ISecretStoreAdditions AddAzureKeyVaultWithManagedServiceIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string connectionString = null,
@@ -63,7 +63,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
-        public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
+        public static ISecretStoreAdditions AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
@@ -85,7 +85,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance.</param>
         /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
-        public static SecretStoreBuilder AddAzureKeyVault(
+        public static ISecretStoreAdditions AddAzureKeyVault(
             this SecretStoreBuilder builder,
             IKeyVaultAuthentication authentication,
             IKeyVaultConfiguration configuration)

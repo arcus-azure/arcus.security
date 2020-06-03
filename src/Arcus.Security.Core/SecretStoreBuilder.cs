@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
@@ -13,12 +17,8 @@ namespace Microsoft.Extensions.Hosting
     /// <summary>
     /// Represents the entry point for extending the available secret store in the application.
     /// </summary>
-    public class SecretStoreBuilder
+    public class SecretStoreBuilder : ISecretStoreAdditions
     {
-        private bool _includeCaching;
-        private ICacheConfiguration _cacheConfiguration;
-        private IMemoryCache _memoryCache;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
         /// </summary>
@@ -35,29 +35,55 @@ namespace Microsoft.Extensions.Hosting
         public IServiceCollection Services { get; }
 
         /// <summary>
+        /// Gets the available secret sources currently registered to be included in the resulting root secret store.
+        /// </summary>
+        /// <remarks>
+        ///     The series of secret stores is directly publicly available including the operations so future (consumer) extensions can easily manipulate this series during build-up.
+        /// </remarks>
+        public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
+
+        /// <summary>
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
         /// </summary>
         /// <param name="secretProvider">The provider which secrets are added to the secret store.</param>
         /// <returns>
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
-        public SecretStoreBuilder AddProvider(ISecretProvider secretProvider)
+        public ISecretStoreAdditions AddProvider(ISecretProvider secretProvider)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
-            Services.AddSingleton(new SecretStoreSource(secretProvider));
+            SecretStoreSources.Add(new SecretStoreSource(secretProvider));
 
             return this;
         }
+        
+        /// <summary>
+        /// Adds an <see cref="ICachedSecretProvider"/> implementation to the secret store of the application.
+        /// </summary>
+        /// <param name="secretProvider">The provider which the secrets are added to the secret store.</param>
+        public void AddCachedProvider(ICachedSecretProvider secretProvider)
+        {
+            Guard.NotNull(secretProvider, nameof(secretProvider));
+            SecretStoreSources.Add(new SecretStoreSource(secretProvider));
+        }
+
+        /// <summary>
+        /// Include caching in the resulting secret source.
+        /// </summary>
+        ISecretStoreAdditions ISecretStoreAdditions.WithCaching()
+        {
+            return AddCachingToPreviousSecretStore(new CacheConfiguration(), new MemoryCache(new MemoryCacheOptions()));
+        }
 
         /// <summary>
         /// Include caching in the resulting secret source.
         /// </summary>
         /// <param name="cachingDuration">The duration for which an entry should be cached.</param>
-        public SecretStoreBuilder WithCaching(TimeSpan cachingDuration)
+        ISecretStoreAdditions ISecretStoreAdditions.WithCaching(TimeSpan cachingDuration)
         {
             Guard.For<ArgumentException>(() => cachingDuration <= default(TimeSpan), "Caching duration should be a positive interval");
 
-            return WithCaching(new CacheConfiguration(cachingDuration));
+            return AddCachingToPreviousSecretStore(new CacheConfiguration(cachingDuration), new MemoryCache(new MemoryCacheOptions()));
         }
 
         /// <summary>
@@ -65,28 +91,20 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="cachingDuration">The duration for which an entry should be cached.</param>
         /// <param name="memoryCache">A <see cref="IMemoryCache"/> implementation that can cache data in memory.</param>
-        public SecretStoreBuilder WithCaching(TimeSpan cachingDuration, IMemoryCache memoryCache)
+        ISecretStoreAdditions ISecretStoreAdditions.WithCaching(TimeSpan cachingDuration, IMemoryCache memoryCache)
         {
             Guard.For<ArgumentException>(() => cachingDuration <= default(TimeSpan), "Caching duration should be a positive interval");
 
-            return WithCaching(new CacheConfiguration(cachingDuration), memoryCache);
-        }
-
-        /// <summary>
-        /// Include caching in the resulting secret source.
-        /// </summary>
-        public SecretStoreBuilder WithCaching()
-        {
-            return WithCaching(cacheConfiguration: null, memoryCache: null);
+            return AddCachingToPreviousSecretStore(new CacheConfiguration(cachingDuration), memoryCache);
         }
 
         /// <summary>
         /// Include caching in the resulting secret source.
         /// </summary>
         /// <param name="cacheConfiguration">The <see cref="ICacheConfiguration"/> which defines how the cache works.</param>
-        public SecretStoreBuilder WithCaching(ICacheConfiguration cacheConfiguration)
+        ISecretStoreAdditions ISecretStoreAdditions.WithCaching(ICacheConfiguration cacheConfiguration)
         {
-            return WithCaching(cacheConfiguration, memoryCache: null);
+            return AddCachingToPreviousSecretStore(cacheConfiguration, new MemoryCache(new MemoryCacheOptions()));
         }
 
         /// <summary>
@@ -94,11 +112,28 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="cacheConfiguration">The <see cref="ICacheConfiguration"/> which defines how the cache works.</param>
         /// <param name="memoryCache">A <see cref="IMemoryCache"/> implementation that can cache data in memory.</param>
-        public SecretStoreBuilder WithCaching(ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache)
+        ISecretStoreAdditions ISecretStoreAdditions.WithCaching(ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache)
         {
-            _includeCaching = true;
-            _cacheConfiguration = cacheConfiguration;
-            _memoryCache = memoryCache;
+            return AddCachingToPreviousSecretStore(cacheConfiguration, memoryCache);
+        }
+
+        private ISecretStoreAdditions AddCachingToPreviousSecretStore(
+            ICacheConfiguration cacheConfiguration,
+            IMemoryCache memoryCache)
+        {
+            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration));
+            Guard.NotNull(memoryCache, nameof(memoryCache));
+
+            if (SecretStoreSources.Any())
+            {
+                SecretStoreSource source = SecretStoreSources.Last();
+                int index = SecretStoreSources.IndexOf(source);
+                if (index != -1)
+                {
+                    SecretStoreSources[index] = new SecretStoreSource(
+                        new CachedSecretProvider(source.SecretProvider, cacheConfiguration, memoryCache));
+                }
+            }
 
             return this;
         }
@@ -108,34 +143,13 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         internal void RegisterSecretStore()
         {
-            if (_includeCaching)
+            foreach (SecretStoreSource source in SecretStoreSources)
             {
-                Services.TryAddSingleton<ICachedSecretProvider>(serviceProvider =>
-                {
-                    var compositeSecretProvider = ActivatorUtilities.CreateInstance<CompositeSecretProvider>(serviceProvider);
-                    return CreateCachedSecretProvider(compositeSecretProvider);
-                });
-                Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
-            }
-            else
-            {
-                Services.TryAddSingleton<ISecretProvider, CompositeSecretProvider>();
-            }
-        }
-
-        private ICachedSecretProvider CreateCachedSecretProvider(ISecretProvider secretProvider)
-        {
-            if (_memoryCache is null)
-            {
-                if (_cacheConfiguration is null)
-                {
-                    return new CachedSecretProvider(secretProvider);
-                }
-
-                return new CachedSecretProvider(secretProvider, _cacheConfiguration);
+                Services.AddSingleton(source);
             }
 
-            return new CachedSecretProvider(secretProvider, _cacheConfiguration, _memoryCache);
+            Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
+            Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
         }
     }
 }

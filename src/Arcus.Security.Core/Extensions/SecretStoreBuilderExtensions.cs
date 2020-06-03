@@ -16,7 +16,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
-        public static SecretStoreBuilder AddEnvironmentVariables(
+        public static ISecretStoreAdditions AddEnvironmentVariables(
             this SecretStoreBuilder builder,
             EnvironmentVariableTarget target = EnvironmentVariableSecretProvider.DefaultTarget)
         {
@@ -30,7 +30,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
-        public static SecretStoreBuilder AddConfiguration(
+        public static ISecretStoreAdditions AddConfiguration(
             this SecretStoreBuilder builder,
             IConfiguration configuration)
         {

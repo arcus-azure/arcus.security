@@ -1,4 +1,5 @@
-﻿using GuardNet;
+﻿using Arcus.Security.Core.Caching;
+using GuardNet;
 
 namespace Arcus.Security.Core 
 {
@@ -17,8 +18,24 @@ namespace Arcus.Security.Core
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
+        /// </summary>
+        public SecretStoreSource(ICachedSecretProvider secretProvider)
+        {
+            Guard.NotNull(secretProvider, nameof(secretProvider));
+
+            SecretProvider = secretProvider;
+            CachedSecretProvider = secretProvider;
+        }
+
+        /// <summary>
         /// Gets the provider for this secret store.
         /// </summary>
         public ISecretProvider SecretProvider { get; }
+
+        /// <summary>
+        /// Gets the cached provider for this secret store.
+        /// </summary>
+        public ICachedSecretProvider CachedSecretProvider { get; }
     }
 }
