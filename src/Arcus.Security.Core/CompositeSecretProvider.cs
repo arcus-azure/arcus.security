@@ -16,7 +16,7 @@ namespace Arcus.Security.Core
     internal class CompositeSecretProvider : ICachedSecretProvider
     {
         private readonly IEnumerable<SecretStoreSource> _secretProviders;
-        private readonly ILogger<CompositeSecretProvider> _logger;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeSecretProvider"/> class.
@@ -33,6 +33,10 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Gets the cache-configuration for this instance.
         /// </summary>
+        /// <remarks>
+        ///     Will always return <c>null</c> because several cached secret providers can be registered with different caching configuration,
+        ///     and there also could be none configured for caching.
+        /// </remarks>
         public ICacheConfiguration Configuration => null;
 
         /// <summary>
@@ -47,7 +51,7 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrEmpty(secretName, nameof(secretName));
 
-            string secretValue = await WithChildSecretStoreAsync(
+            string secretValue = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetRawSecretAsync(secretName));
             
             return secretValue;
@@ -65,7 +69,7 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrEmpty(secretName, nameof(secretName));
 
-            Secret secret = await WithChildSecretStoreAsync(
+            Secret secret = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetSecretAsync(secretName));
 
             return secret;
@@ -84,13 +88,8 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName));
 
-            string secretValue = await WithChildSecretStoreAsync(secretName, async source =>
+            string secretValue = await WithCachedSecretStoreAsync(secretName, async source =>
             {
-                if (source.CachedSecretProvider is null)
-                {
-                    return null;
-                }
-
                 string found = await source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache);
                 return found;
             });
@@ -111,13 +110,8 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName));
 
-            Secret secret = await WithChildSecretStoreAsync(secretName, async source =>
+            Secret secret = await WithCachedSecretStoreAsync(secretName, async source =>
             {
-                if (source.CachedSecretProvider is null)
-                {
-                    return null;
-                }
-
                 Secret found = await source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache);
                 return found;
             });
@@ -134,13 +128,8 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName));
 
-            ICachedSecretProvider provider = await WithChildSecretStoreAsync(secretName, async source =>
+            ICachedSecretProvider provider = await WithCachedSecretStoreAsync(secretName, async source =>
             {
-                if (source.CachedSecretProvider is null)
-                {
-                    return null;
-                }
-
                 Secret secret = await source.CachedSecretProvider.GetSecretAsync(secretName);
                 return secret is null ? null : source.CachedSecretProvider;
             });
@@ -148,7 +137,22 @@ namespace Arcus.Security.Core
             await provider.InvalidateSecretAsync(secretName);
         }
 
-        private async Task<T> WithChildSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
+        private async Task<T> WithCachedSecretStoreAsync<T>(
+            string secretName,
+            Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
+        {
+            return await  WithSecretStoreAsync(secretName, async source =>
+            {
+                if (source.CachedSecretProvider is null)
+                {
+                    return null;
+                }
+
+                return await callRegisteredStore(source);
+            });
+        }
+
+        private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
         {
             if (!_secretProviders.Any())
             {
