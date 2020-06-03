@@ -48,10 +48,28 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
+        public async Task ConfigureSecretStore_WithoutFoundCachedProvider_ThrowsException()
+        {
+            // Arrange
+            const string secretKey = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretKey, $"secret-{Guid.NewGuid()}"));
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider));
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.InvalidateSecretAsync(secretKey));
+        }
+
+        [Fact]
         public async Task ConfigureSecretStore_AddInMemorySecretProvider_UsesInMemorySecretsInSecretStore()
         {
             // Arrange
-            string secretKey = "MySecret";
+            const string secretKey = "MySecret";
             string secretValue = $"secret-{Guid.NewGuid()}";
             var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
             

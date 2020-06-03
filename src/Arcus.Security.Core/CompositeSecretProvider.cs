@@ -84,8 +84,16 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName));
 
-            string secretValue = await WithChildSecretStoreAsync(
-                secretName, source => source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache));
+            string secretValue = await WithChildSecretStoreAsync(secretName, async source =>
+            {
+                if (source.CachedSecretProvider is null)
+                {
+                    return null;
+                }
+
+                string found = await source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache);
+                return found;
+            });
 
             return secretValue;
         }
@@ -103,8 +111,16 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName));
 
-            Secret secret = await WithChildSecretStoreAsync(
-                secretName, source => source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache));
+            Secret secret = await WithChildSecretStoreAsync(secretName, async source =>
+            {
+                if (source.CachedSecretProvider is null)
+                {
+                    return null;
+                }
+
+                Secret found = await source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache);
+                return found;
+            });
 
             return secret;
         }
@@ -120,6 +136,11 @@ namespace Arcus.Security.Core
 
             ICachedSecretProvider provider = await WithChildSecretStoreAsync(secretName, async source =>
             {
+                if (source.CachedSecretProvider is null)
+                {
+                    return null;
+                }
+
                 Secret secret = await source.CachedSecretProvider.GetSecretAsync(secretName);
                 return secret is null ? null : source.CachedSecretProvider;
             });
