@@ -1,4 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using Arcus.Security.Core.Caching;
+using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
@@ -19,11 +21,15 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="clientId">The identifier of the application requesting the authentication token.</param>
         /// <param name="certificate">The certificate that is used as credential.</param>
-        public static ISecretStoreAdditions AddAzureKeyVaultWithCertificate(
+        /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done (setting this will automatically enable <paramref name="allowCaching"/>).</param>
+        public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
-            X509Certificate2 certificate)
+            X509Certificate2 certificate,
+            bool allowCaching = false,
+            ICacheConfiguration cacheConfiguration = null)
         {
             Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
             Guard.NotNull(clientId, nameof(clientId));
@@ -32,7 +38,9 @@ namespace Microsoft.Extensions.Hosting
             return AddAzureKeyVault(
                 builder,
                 new CertificateBasedAuthentication(clientId, certificate),
-                new KeyVaultConfiguration(rawVaultUri));
+                new KeyVaultConfiguration(rawVaultUri),
+                allowCaching,
+                cacheConfiguration);
         }
 
         /// <summary>
@@ -42,18 +50,24 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
         /// <param name="azureADInstance">The azure AD instance to use to authenticate, if applicable.</param>
-        public static ISecretStoreAdditions AddAzureKeyVaultWithManagedServiceIdentity(
+        /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done (setting this will automatically enable <paramref name="allowCaching"/>).</param>
+        public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string connectionString = null,
-            string azureADInstance = null)
+            string azureADInstance = null,
+            bool allowCaching = false,
+            ICacheConfiguration cacheConfiguration = null)
         {
             Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
 
             return AddAzureKeyVault(
                 builder,
                 new ManagedServiceIdentityAuthentication(connectionString, azureADInstance),
-                new KeyVaultConfiguration(rawVaultUri));
+                new KeyVaultConfiguration(rawVaultUri),
+                allowCaching,
+                cacheConfiguration);
         }
 
         /// <summary>
@@ -63,11 +77,15 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
-        public static ISecretStoreAdditions AddAzureKeyVaultWithServicePrincipal(
+        /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done (setting this will automatically enable <paramref name="allowCaching"/>).</param>
+        public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
-            string clientKey)
+            string clientKey,
+            bool allowCaching = false,
+            ICacheConfiguration cacheConfiguration = null)
         {
             Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
             Guard.NotNullOrEmpty(clientId, nameof(clientId));
@@ -76,7 +94,9 @@ namespace Microsoft.Extensions.Hosting
             return AddAzureKeyVault(
                 builder,
                 new ServicePrincipalAuthentication(clientId, clientKey),
-                new KeyVaultConfiguration(rawVaultUri));
+                new KeyVaultConfiguration(rawVaultUri),
+                allowCaching,
+                cacheConfiguration);
         }
 
         /// <summary>
@@ -85,16 +105,28 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance.</param>
         /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
-        public static ISecretStoreAdditions AddAzureKeyVault(
+        /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done (setting this will automatically enable <paramref name="allowCaching"/>).</param>
+        public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             IKeyVaultAuthentication authentication,
-            IKeyVaultConfiguration configuration)
+            IKeyVaultConfiguration configuration,
+            bool allowCaching = false,
+            ICacheConfiguration cacheConfiguration = null)
         {
             Guard.NotNull(builder, nameof(builder));
             Guard.NotNull(authentication, nameof(authentication));
             Guard.NotNull(configuration, nameof(configuration));
 
-            return builder.AddProvider(new KeyVaultSecretProvider(authentication, configuration));
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
+
+            if (allowCaching || cacheConfiguration != null)
+            {
+                var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration ?? new CacheConfiguration());
+                return builder.AddProvider(cachedSecretProvider);
+            }
+
+            return builder.AddProvider(keyVaultSecretProvider);
         }
     }
 }
