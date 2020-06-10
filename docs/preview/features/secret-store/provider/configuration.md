@@ -4,7 +4,7 @@ layout: default
 ---
 
 # Configuration secret provider
-The entire built-up `IConfiguration` can be used as a secret source so secrets will be searched also in all the registered configuration sources.
+Configuration secret provider brings you all registered configuration providers of .NET Core by using `IConfiguration` to your application.
 
 > Be careful of using the configuration as a place to store secrets. Please use this only for local development.
 
