@@ -3,7 +3,7 @@ title: "Azure Key Vault secret store"
 layout: default
 ---
 
-# Azure key vault secret provider
+# Azure Key Vault secret provider
 Azure Key Vault secret provider brings secrets from Azure Key Vault to your application.
 
 ## Installation
