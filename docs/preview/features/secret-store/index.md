@@ -37,6 +37,12 @@ public class Program
                 .ConfigureSecretStore((context, config, builder) =>
                 {
                     builder.AddEnvironmentVariables();
+#if DEBUG
+                    builder.AddConfiguration(config);
+#endif
+                    var keyVaultName = config["KeyVault_Name"];
+                    builder.AddEnvironmentVariables()
+                                                            .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
                 })
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
