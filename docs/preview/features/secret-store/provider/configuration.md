@@ -9,7 +9,7 @@ Configuration secret provider brings you all registered configuration providers 
 > Be careful of using the configuration as a place to store secrets. Please use this only for local development.
 
 ## Installation
-The environment variable secret provider is built-in as part of the package [Arcus.Security.Core](https://www.nuget.org/packages/Arcus.Security.Core).
+The configuration secret provider is built-in as part of the package [Arcus.Security.Core](https://www.nuget.org/packages/Arcus.Security.Core).
 
 ## Configuration
 
