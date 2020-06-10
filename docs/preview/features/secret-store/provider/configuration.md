@@ -6,6 +6,8 @@ layout: default
 # Configuration secret provider
 The entire built-up `IConfiguration` can be used as a secret source so secrets will be searched also in all the registered configuration sources.
 
+> Be careful of using the configuration as a place to store secrets. Please use this only for local development.
+
 ## Installation
 The environment variable secret provider is built-in as part of the package [Arcus.Security.Core](https://www.nuget.org/packages/Arcus.Security.Core).
 
