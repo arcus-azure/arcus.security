@@ -13,7 +13,7 @@ Adding secrets from Azure Key Vault into the secret store requires following pac
 PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
 
-## Usage
+## Configuration
 After installing the package, the addtional extensions becomes available when building the secret store.
 
 ```csharp
