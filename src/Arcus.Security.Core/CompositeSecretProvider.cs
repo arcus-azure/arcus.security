@@ -169,7 +169,6 @@ namespace Arcus.Security.Core
                     {
                         return result;
                     }
-                    
                 }
                 catch (Exception exception)
                 {
