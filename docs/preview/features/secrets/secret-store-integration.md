@@ -66,7 +66,7 @@ Using the environment variable secret source, the secrets will be searched in th
 ```csharp
 .ConfigureSecretStore((context, config, builder) =>
 {
-    builder.AdEnvironmentVariables();
+    builder.AddEnvironmentVariables();
 })
 ```
 
