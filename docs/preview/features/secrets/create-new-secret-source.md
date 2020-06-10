@@ -13,17 +13,18 @@ The secret stores are configured during the initial application build-up in the 
 public class Program
 {
     public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    {
+        CreateHostBuilder(args).Build().Run();
+    }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureSecretStore((context, config, builder) =>
-                {
-                    builder.AddEnvironmentVariables();
-                })
-                .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
+    public static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        return Host.CreateDefaultBuilder(args)
+                   .ConfigureSecretStore((context, config, builder) =>
+                   {
+                       builder.AddEnvironmentVariables();
+                   })
+                   .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
 }
 ```

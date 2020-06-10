@@ -55,38 +55,13 @@ public class HealthController : ControllerBase
 }
 ```
 
-## Built-in secret sources
-Several built in secret sources available in the package.
+## Built-in secret providers
+Several built in secret providers available in the package.
+
+* [Environment variables](./../../features/secret-store/provider/environment-variables)
+* [Configuration](./../../features/secret-store/provider/configuration)
+* [Azure key vault](./../../features/secret-store/provider/key-vault)
 
 If you require an additional secret sources that aren't available here, please [this document](./create-new-secret-source) that describes how you can create your own secret soure.
-
-**Environment variables**
-Using the environment variable secret source, the secrets will be searched in the the variables on the evnvironment.
-
-```csharp
-.ConfigureSecretStore((context, config, builder) =>
-{
-    builder.AdEnvironmentVariables();
-})
-```
-
-**IConfiguration**
-The entire built-up `IConfiguration` can be used as a secret source so secrets will be searched also in all the registered configuration sources.
-
-```csharp
-.ConfigureAppConfiguration((context, config) => 
-{
-    config.AddJsonFile("appsettings.json")
-          .AddJsonFile("appsettings.Development.json");
-})
-.ConfigureSecretStore((HostBuilderContext context, IConfiguration config, SecretStoreBuilder builder) =>
-{
-    builder.AddConfiguration(config);
-});
-```
-
-**Azure Key Vault**
-Adding Azure Key Vault secrets to the secret store is not built-in, but available in another package.
-See [this specific](../key-vault/extensions/key-vault-secret-source) page for more information.
 
 [&larr; back](/)
