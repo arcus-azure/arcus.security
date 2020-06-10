@@ -3,7 +3,7 @@ title: "Azure Key Vault secret store"
 layout: default
 ---
 
-# Azure Key Vault Secret Store
+# Azure Key Vault Secret Provider
 
 ## Installation
 Adding secrets from Azure Key Vault into the secret store requires following package:
