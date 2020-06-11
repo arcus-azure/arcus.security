@@ -3,7 +3,8 @@ title: "Azure Key Vault secret store"
 layout: default
 ---
 
-# Azure key vault secret provider
+# Azure Key Vault secret provider
+Azure Key Vault secret provider brings secrets from Azure Key Vault to your application.
 
 ## Installation
 Adding secrets from Azure Key Vault into the secret store requires following package:
@@ -12,7 +13,7 @@ Adding secrets from Azure Key Vault into the secret store requires following pac
 PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
 
-## Usage
+## Configuration
 After installing the package, the addtional extensions becomes available when building the secret store.
 
 ```csharp

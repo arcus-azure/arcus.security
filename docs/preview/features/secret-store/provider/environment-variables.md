@@ -4,7 +4,7 @@ layout: default
 ---
 
 # Environment variables secret provider
-Using the environment variable secret provider, the secrets will be searched in the the variables on the evnvironment.
+Environment variable secret provider brings environment variables as secrets to your application.
 
 ## Installation
 The environment variable secret provider is built-in as part of the package [Arcus.Security.Core](https://www.nuget.org/packages/Arcus.Security.Core).
