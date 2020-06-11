@@ -31,7 +31,9 @@ public class Program
                    })
                    .ConfigureSecretStore((HostBuilderContext context, IConfiguration config, SecretStoreBuilder builder) =>
                    {
+#if DEBUG
                        builder.AddConfiguration(config);
+#endif
                    });
                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
