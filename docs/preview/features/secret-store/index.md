@@ -42,7 +42,7 @@ public class Program
 #endif
                     var keyVaultName = config["KeyVault_Name"];
                     builder.AddEnvironmentVariables()
-                                                            .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+                            .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
                 })
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
