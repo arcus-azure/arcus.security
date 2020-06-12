@@ -1,13 +1,13 @@
 ---
-title: "Create a new secret source"
+title: "Create a new secret provider"
 layout: default
 ---
 
-# Create a new secret source
+# Create a new secret provider
 
 ## Prerequisits
 
-The secret stores are configured during the initial application build-up in the `Program.cs`:
+The secret providers are configured during the initial application build-up in the `Program.cs`:
 
 ```csharp
 public class Program
@@ -31,7 +31,7 @@ public class Program
 
 This section describes how a new secret store source can be added to the pipeline.
 
-## Developing a secret source
+## Developing a secret provider
 
 1. Install the NuGet package `Arcus.Security.Core`.
 2. Implement your own implementation of the `ISecretProvider` 
@@ -52,7 +52,7 @@ This section describes how a new secret store source can be added to the pipelin
        }
    }
    ```
-3. Optionally, you can provide an extension for a consumer-friendly way to add the provider as source.
+3. Optionally, you can provide an extension for a consumer-friendly way to add the provider.
    ex:
    ```csharp
     public static class SecretStoreBuilderExtensions

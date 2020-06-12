@@ -1,5 +1,5 @@
 ---
-title: "Azure Key Vault secret store"
+title: "Azure Key Vault secret provider"
 layout: default
 ---
 

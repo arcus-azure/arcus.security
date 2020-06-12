@@ -3,8 +3,8 @@ title: "Secret store integration"
 layout: default
 ---
 
-# Using Secret Store
-As alternative to the usage of placing secrets into an `IConfiguration` instance in your application, the `Arcus.Security.Core` package provides a alternative concept called 'secret stores'.
+# Using secret store
+As alternative to the usage of placing secrets into an `IConfiguration` instance in your application, the `Arcus.Security.Core` package provides a alternative concept called 'secret store'.
 We provide an approach similar to how `IConfiguration` is built, but with a focus on secrets. You can pick and choose the secret providers you want to use and we'll get the job done!
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
@@ -68,6 +68,6 @@ Several built in secret providers available in the package.
 * [Configuration](./../../features/secret-store/provider/configuration)
 * [Azure key vault](./../../features/secret-store/provider/key-vault)
 
-If you require an additional secret sources that aren't available here, please [this document](./../../features/secret-store/create-new-secret-source) that describes how you can create your own secret soure.
+If you require an additional secret providers that aren't available here, please [this document](./../../features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
 
 [&larr; back](/)
