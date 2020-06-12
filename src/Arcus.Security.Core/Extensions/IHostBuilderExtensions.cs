@@ -1,8 +1,6 @@
 ﻿using System;
 using Arcus.Security.Core;
-using Arcus.Security.Core.Storage;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -34,8 +32,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 var builder = new SecretStoreBuilder(services);
                 configureSecretStores(context, context.Configuration, builder);
-
-                services.TryAddSingleton<ISecretProvider, CompositeSecretProvider>();
+                builder.RegisterSecretStore();
             });
         }
     }
