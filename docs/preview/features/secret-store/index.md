@@ -68,6 +68,6 @@ Several built in secret providers available in the package.
 * [Configuration](./../../features/secret-store/provider/configuration)
 * [Azure key vault](./../../features/secret-store/provider/key-vault)
 
-If you require an additional secret sources that aren't available here, please [this document](./create-new-secret-source) that describes how you can create your own secret soure.
+If you require an additional secret sources that aren't available here, please [this document](./../../features/secret-store/create-new-secret-source) that describes how you can create your own secret soure.
 
 [&larr; back](/)
