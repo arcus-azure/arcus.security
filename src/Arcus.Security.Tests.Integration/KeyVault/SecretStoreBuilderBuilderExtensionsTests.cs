@@ -100,7 +100,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, connectionString, cacheConfiguration: cacheConfiguration));
+            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration));
 
             // Assert
             IHost host = builder.Build();

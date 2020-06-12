@@ -96,56 +96,14 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
-        public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
-            this SecretStoreBuilder builder,
-            string rawVaultUri,
-            ICacheConfiguration cacheConfiguration)
-        {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
-
-            return AddAzureKeyVault(
-                builder,
-                new ManagedServiceIdentityAuthentication(),
-                new KeyVaultConfiguration(rawVaultUri),
-                cacheConfiguration);
-        }
-
-        /// <summary>
-        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
-        /// </summary>
-        /// <param name="builder">The builder to create the secret store.</param>
-        /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
-        /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
-        /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
-        public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
-            this SecretStoreBuilder builder,
-            string rawVaultUri,
-            string connectionString,
-            ICacheConfiguration cacheConfiguration)
-        {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
-
-            return AddAzureKeyVault(
-                builder,
-                new ManagedServiceIdentityAuthentication(connectionString, azureAdInstance: null),
-                new KeyVaultConfiguration(rawVaultUri),
-                cacheConfiguration);
-        }
-
-        /// <summary>
-        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
-        /// </summary>
-        /// <param name="builder">The builder to create the secret store.</param>
-        /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
         /// <param name="azureADInstance">The azure AD instance to use to authenticate, if applicable.</param>
-        /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
-            string connectionString,
-            string azureADInstance,
-            ICacheConfiguration cacheConfiguration)
+            ICacheConfiguration cacheConfiguration,
+            string connectionString = null,
+            string azureADInstance = null)
         {
             Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
 
