@@ -5,7 +5,7 @@ layout: default
 
 # Create a new secret provider
 
-## Prerequisits
+## Prerequisites
 
 The secret providers are configured during the initial application build-up in the `Program.cs`:
 
