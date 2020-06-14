@@ -92,4 +92,7 @@ This section describes how a new secret store source can be added to the pipelin
     }
    ```
 
+## Contribute your secret provider
+
+We are open for contributions and are more than happy to receive pull requests with new secret providers!
 [&larr; back](/)
