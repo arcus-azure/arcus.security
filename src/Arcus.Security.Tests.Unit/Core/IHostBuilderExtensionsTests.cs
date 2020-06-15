@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
+using Arcus.Security.Core.Caching;
+using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Moq;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -12,10 +17,59 @@ namespace Arcus.Security.Tests.Unit.Core
     public class IHostBuilderExtensionsTests
     {
         [Fact]
+        public async Task ConfigureSecretStore_WithoutSecretProviders_ThrowsException()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => { });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync("ignored-key"));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithoutFoundSecretProvider_ThrowsException()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            var emptyProvider = new InMemorySecretProvider();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(emptyProvider));
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync("ignored-key"));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithoutFoundCachedProvider_ThrowsException()
+        {
+            // Arrange
+            const string secretKey = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretKey, $"secret-{Guid.NewGuid()}"));
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider));
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.InvalidateSecretAsync(secretKey));
+        }
+
+        [Fact]
         public async Task ConfigureSecretStore_AddInMemorySecretProvider_UsesInMemorySecretsInSecretStore()
         {
             // Arrange
-            string secretKey = "MySecret";
+            const string secretKey = "MySecret";
             string secretValue = $"secret-{Guid.NewGuid()}";
             var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
             
@@ -28,6 +82,7 @@ namespace Arcus.Security.Tests.Unit.Core
             IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
             Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+            Assert.NotNull(host.Services.GetService<ICachedSecretProvider>());
         }
 
         [Fact]
