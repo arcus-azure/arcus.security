@@ -20,10 +20,10 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 # Features
 - **Interacting with Secrets**
     - [General](features/secrets/general)
-    - [Secret store integration](features/secrets/secret-store-integration)
-      - [Create new secret source](features/secrets/create-new-secret-source)
+    - [Secret store integration](features/secret-store/)
+      - [Create new secret source](features/secret-store/create-new-secret-source)
     - [Consume from Azure Key Vault](features/secrets/consume-from-key-vault)
-        - [Key Vault secret source](features/key-vault/extensions/key-vault-secret-source)
+        - [Key Vault secret source](features/secret-store/provider/key-vault)
 - **Authentication**
     - [Azure Key Vault](features/auth/azure-key-vault)
 
