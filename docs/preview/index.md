@@ -18,14 +18,17 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
 
 # Features
+- **Using a Secret Store**
+  - [What is it?](features/secrets/secret-store-integration)
+  - Providers
+    - [Azure Key Vault](features/secret-store/provider/key-vault)
+    - [Configuration](features/secret-store/provider/configuration)
+    - [Environment variables](features/secret-store/provider/environment-variables)
+  - [Creating your own secret provider](features/secrets/create-new-secret-source)
 - **Interacting with Secrets**
     - [General](features/secrets/general)
-    - [Secret store integration](features/secrets/secret-store-integration)
-      - [Create new secret source](features/secrets/create-new-secret-source)
     - [Consume from Azure Key Vault](features/secrets/consume-from-key-vault)
-        - [Key Vault secret source](features/key-vault/extensions/key-vault-secret-source)
-- **Authentication**
-    - [Azure Key Vault](features/auth/azure-key-vault)
+    - [Authenticate with Azure Key Vault](features/auth/azure-key-vault)
 
 # License
 This is licensed under The MIT License (MIT). Which means that you can use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the web application. But you always need to state that Codit is the original author of this web application.
