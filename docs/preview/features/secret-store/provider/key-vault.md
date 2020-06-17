@@ -29,18 +29,25 @@ public class Program
         return Host.CreateDefaultBuilder(args)
                    .ConfigureSecretStore((context, config, builder) =>
                    {
-                       // Adding the Azure Key Vault secret source with the built-in overloads
-                       builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri);
+                         // Adding the Azure Key Vault secret provider with the built-in overloads
+                         builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri);
 
-                      // Several other built-in overloads are available too:
-                      // `AddAzureKeyVaultWithServicePrincipal`
-                      // `AddAzureKeyVaultWithCertificate`
+                        // Several other built-in overloads are available too:
+                        // `AddAzureKeyVaultWithServicePrincipal`
+                        // `AddAzureKeyVaultWithCertificate`
 
-                      // Or, alternatively using the fully customizable approach.
-                      var vaultAuthentication = new ManagedServiceIdentityAuthentication();
-                      var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
+                        // Or, alternatively using the fully customizable approach.
+                        var vaultAuthentication = new ManagedServiceIdentityAuthentication();
+                        var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 
-                      builder.AddAzureKeyVault(vaultAuthentication, vaultConfiguration);
+                        builder.AddAzureKeyVault(vaultAuthentication, vaultConfiguration);
+
+                        // Adding a default cached variant of the Azure Key Vault provider (default: 5 min caching).
+                        builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, allowCaching: true);
+
+                        // Assing a configurable cached variant of the Azure Key Vault provider.
+                        var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(1));
+                        builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, cacheConfiguration);
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
