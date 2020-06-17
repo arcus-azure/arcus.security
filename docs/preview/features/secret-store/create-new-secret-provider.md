@@ -5,7 +5,7 @@ layout: default
 
 # Create a new secret provider
 
-## Prerequisits
+## Prerequisites
 
 The secret providers are configured during the initial application build-up in the `Program.cs`:
 
@@ -92,4 +92,7 @@ This section describes how a new secret store source can be added to the pipelin
     }
    ```
 
+## Contribute your secret provider
+
+We are open for contributions and are more than happy to receive pull requests with new secret providers!
 [&larr; back](/)

@@ -19,7 +19,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 
 # Features
 - **Using a Secret Store**
-  - [What is it?](features/secrets/secret-store-integration)
+  - [What is it?](features/secret-store/)
   - Providers
     - [Azure Key Vault](features/secret-store/provider/key-vault)
     - [Configuration](features/secret-store/provider/configuration)

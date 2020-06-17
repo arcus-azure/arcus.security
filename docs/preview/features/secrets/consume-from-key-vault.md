@@ -16,6 +16,7 @@ You can find a list of supported authentication schemes for Azure Key Vault [her
 
 ## Open for extension
 You can easily extend the Key Vault provider by overriding the `GetSecret*Async` methods on the it.
+
 This useful to provide additional logging, for example, during the retrieval of the secrets.
 
 ```csharp
