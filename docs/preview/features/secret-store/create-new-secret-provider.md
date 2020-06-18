@@ -84,12 +84,39 @@ This section describes how a new secret store source can be added to the pipelin
    ex:
    ```csharp
    [ApiController]
-    public class OrderController : ControllerBase
-    {
-        public class OrderController(ISecretProvider secretProvider)
-        {
-        }
-    }
+   public class OrderController : ControllerBase
+   {
+       public class OrderController(ISecretProvider secretProvider)
+       {
+       }
+   }
+   ```
+
+5. Note that when your secret provider requires caching, you can wrap the provider in a `CachedSecretProvider` at registration:
+   ex:
+   ```csharp
+   public static class SecretStoreBuilderExtensions
+   {
+       public static SecretStoreBuilder AddCachedRegistry(this SecretStoreBuilder builder)
+       {
+           var provider = new RegistrySecretProvider();
+           var configuration = new CacheConfiguration(TimeSpan.FromSeconds(5));
+           
+           return builder.AddProvider(new CachedSecretProvider(provider, configuration));
+       }
+   }
+   ```
+
+   When accessing the provider in the application, you can use the `ICachedSecretProvider` to have access to the cache-specific methods.
+   ex:
+   ```csharp
+   [ApiController]
+   public class OrderController : ControllerBase
+   {
+       public class OrderController(ICachedSecretProvider secretProvider)
+       {
+       }
+   }
    ```
 
 ## Contribute your secret provider
