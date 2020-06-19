@@ -37,7 +37,6 @@ public class Program
                 })
                 .ConfigureSecretStore((context, config, builder) =>
                 {
-                    builder.AddEnvironmentVariables();
 #if DEBUG
                     builder.AddConfiguration(config);
 #endif
