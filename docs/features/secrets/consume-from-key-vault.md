@@ -9,7 +9,7 @@ You can easily create a Key Vault secret provider - The only thing you need to d
 ```csharp
 var vaultAuthentication = new ManagedServiceIdentityAuthentication();
 var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
-var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration)
+var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration);
 ```
 
 You can find a list of supported authentication schemes for Azure Key Vault [here](./../../features/auth/azure-key-vault).
