@@ -42,7 +42,7 @@ stages:
         steps:
           - template: 'nuget/determine-pr-version.yml@templates'
             parameters:
-              manualTriggerVersion: $(Package.Version.ManualTrigger)
+              manualTriggerVersion: ${{ parameters['Package.Version.ManualTrigger'] }}
           - task: UseDotNet@2
             displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
             inputs:
