@@ -19,6 +19,8 @@ variables:
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
   - template: ./variables/build.yml
+  - name: 'Package.Version
+    value: ${{ parameters['Package.Version'] }}
 
 stages:
   - stage: Build
