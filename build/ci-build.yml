@@ -14,6 +14,11 @@ pr:
     - src/*
     - build/ci-build.yml
 
+parameters:
+  - name: 'Package.Version.ManualTrigger'
+    type: string
+    default: 'preview'
+
 resources:
   repositories:
     - repository: templates
@@ -27,7 +32,6 @@ variables:
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
   - template: ./variables/build.yml
-    # 'Package.Version.ManualTrigger' is added as queue-time variable on build in Azure DevOps
 
 stages:
   - stage: Build
@@ -38,7 +42,7 @@ stages:
         steps:
           - template: 'nuget/determine-pr-version.yml@templates'
             parameters:
-              manualTriggerVersion: $(Package.Version.ManualTrigger)
+              manualTriggerVersion: ${{ parameters['Package.Version.ManualTrigger'] }}
           - task: UseDotNet@2
             displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
             inputs:
