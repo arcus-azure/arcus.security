@@ -10,6 +10,8 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
+> :bulb: See [this page](./../../features/secret-store/azure-functions) if you want to use the secret store functionality whitin Azure Functions.
+
 ## Installation
 For this feature, the following package needs to be installed:
 
