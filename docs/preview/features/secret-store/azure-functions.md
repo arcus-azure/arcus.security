@@ -22,18 +22,23 @@ PM > Install-Package Arcus.Security.AzureFunctions
 The secret stores are configured during the initial application build-up in the `Startup.cs`:
 
 ```csharp
-public class Startup : FunctionsStartup
-{
-    public override void Configure(IFunctionsHostBuilder builder)
-    {
-        builder.ConfigureSecretStore(stores =>
-        {
-            builder.AddEnvironmentVariables();
+[assembly: FunctionsStartup(typeof(Startup))]
 
-            var keyVaultName = config["KeyVault_Name"];
-            builder.AddEnvironmentVariables()
-                   .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
-        })
+namespace MyHttpAzureFunction
+{
+    public class Startup : FunctionsStartup
+    {
+        public override void Configure(IFunctionsHostBuilder builder)
+        {
+            builder.ConfigureSecretStore(stores =>
+            {
+                builder.AddEnvironmentVariables();
+
+                var keyVaultName = config["KeyVault_Name"];
+                builder.AddEnvironmentVariables()
+                       .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+            })
+        }
     }
 }
 ```
