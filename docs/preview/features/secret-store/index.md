@@ -68,6 +68,7 @@ Several built in secret providers available in the package.
 * [Environment variables](./../../features/secret-store/provider/environment-variables)
 * [Configuration](./../../features/secret-store/provider/configuration)
 * [Azure key vault](./../../features/secret-store/provider/key-vault)
+* [User Secrets](./../../features/secret-store/provider/user-secrets)
 
 If you require an additional secret providers that aren't available here, please [this document](./../../features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
 
