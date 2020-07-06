@@ -46,7 +46,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(assembly, nameof(assembly));
 
             string userSecretsId = GetUserSecretsIdFromTypeAssembly(assembly);
-            return AddUserSecrets(builder, userSecretsId, reloadOnChange);
+            return AddUserSecrets(builder, userSecretsId);
         }
 
         private static string GetUserSecretsIdFromTypeAssembly(Assembly assembly)
