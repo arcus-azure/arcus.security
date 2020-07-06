@@ -35,6 +35,49 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
         }
 
         [Fact]
+        public async Task AddUserSecrets_WithUserSecretsId_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            var secretKey = "MyDummySetting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets(TestSecretsId));
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
+        public async Task AddUserSecrets_WithAssembly_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            var secretKey = "MyDummySetting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var assembly = typeof(SecretStoreBuilderExtensionsTests).Assembly;
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets(assembly));
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
         public async Task AddUserSecrets_WithGenericType_ResolvesSecret()
         {
             // Arrange
@@ -45,7 +88,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var hostBuilder = new HostBuilder();
 
             // Act
-            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(reloadOnChange: true));
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>());
 
             // Assert
             IHost host = hostBuilder.Build();

@@ -23,14 +23,13 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <typeparam name="T">The type from the assembly to search for an instance of <see cref="UserSecretsIdAttribute"/>.</typeparam>
         /// <param name="builder">The builder to create the secret store.</param>
-        /// <param name="reloadOnChange">Whether the configuration should be reloaded if the file changes.</param>
         /// <exception cref="InvalidOperationException">Thrown when the assembly containing <typeparamref name="T"/> does not have <see cref="UserSecretsIdAttribute"/>.</exception>
-        public static SecretStoreBuilder AddUserSecrets<T>(this SecretStoreBuilder builder, bool reloadOnChange = false) where T : class
+        public static SecretStoreBuilder AddUserSecrets<T>(this SecretStoreBuilder builder) where T : class
         {
             Guard.NotNull(builder, nameof(builder));
 
             Assembly assembly = typeof(T).GetTypeInfo().Assembly;
-            return AddUserSecrets(builder, assembly, reloadOnChange);
+            return AddUserSecrets(builder, assembly);
         }
 
         /// <summary>
@@ -40,9 +39,8 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="assembly">The assembly with the <see cref="UserSecretsIdAttribute" />.</param>
-        /// <param name="reloadOnChange">Whether the configuration should be reloaded if the file changes.</param>
         /// <exception cref="InvalidOperationException">Thrown when <paramref name="assembly"/> does not have a valid <see cref="UserSecretsIdAttribute"/>.</exception>
-        public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, bool reloadOnChange = false)
+        public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly)
         {
             Guard.NotNull(builder, nameof(builder));
             Guard.NotNull(assembly, nameof(assembly));
@@ -71,14 +69,13 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="userSecretsId">The user secrets ID.</param>
-        /// <param name="reloadOnChange">Whether the configuration should be reloaded if the file changes.</param>
-        public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, string userSecretsId, bool reloadOnChange = false)
+        public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, string userSecretsId)
         {
             Guard.NotNull(builder, nameof(builder));
             Guard.NotNullOrWhitespace(userSecretsId, nameof(userSecretsId));
 
             string directoryPath = GetUserSecretsDirectoryPath(userSecretsId);
-            JsonConfigurationSource source = CreateJsonFileSource(reloadOnChange, directoryPath);
+            JsonConfigurationSource source = CreateJsonFileSource(directoryPath);
 
             var provider = new JsonConfigurationProvider(source);
             provider.Load();
@@ -94,7 +91,7 @@ namespace Microsoft.Extensions.Hosting
             return directoryPath;
         }
 
-        private static JsonConfigurationSource CreateJsonFileSource(bool reloadOnChange, string directoryPath)
+        private static JsonConfigurationSource CreateJsonFileSource(string directoryPath)
         {
             IFileProvider fileProvider = null;
             if (Directory.Exists(directoryPath))
@@ -106,7 +103,6 @@ namespace Microsoft.Extensions.Hosting
             {
                 FileProvider = fileProvider,
                 Path = SecretsFileName,
-                ReloadOnChange = reloadOnChange,
                 Optional = false
             };
 
