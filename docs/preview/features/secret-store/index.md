@@ -12,16 +12,23 @@ Once register, you can fetch all secrets by using `ISecretProvider` which will g
 
 > :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality whitin Azure Functions.
 
-## Using secret store within .NET Core (web, worker...) project
+## Built-in secret providers
+Several built in secret providers available in the package.
 
-### Installation
+* [Environment variables](./../../features/secret-store/provider/environment-variables)
+* [Configuration](./../../features/secret-store/provider/configuration)
+* [Azure key vault](./../../features/secret-store/provider/key-vault)
+
+If you require an additional secret providers that aren't available here, please [this document](./../../features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
+
+## Installation
 For this feature, the following package needs to be installed:
 
 ```shell
 PM > Install-Package Arcus.Security.Core
 ```
 
-### Usage
+## Usage
 The secret stores are configured during the initial application build-up in the `Program.cs`:
 
 ```csharp
@@ -118,14 +125,5 @@ public class MyHttpTrigger
     }
 }
 ```
-
-## Built-in secret providers
-Several built in secret providers available in the package.
-
-* [Environment variables](./../../features/secret-store/provider/environment-variables)
-* [Configuration](./../../features/secret-store/provider/configuration)
-* [Azure key vault](./../../features/secret-store/provider/key-vault)
-
-If you require an additional secret providers that aren't available here, please [this document](./../../features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
 
 [&larr; back](/)
