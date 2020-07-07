@@ -31,7 +31,7 @@ public class Program
         return Host.CreateDefaultBuilder(args)
                    .ConfigureSecretStore((context, config, builder) =>
                    {
-                         // Adds the user secrets configuration source with specified user secrets ID.
+                         // Adds the user secrets secret source with specified user secrets ID.
                          // A user secrets ID is unique value used to store and identify a collection of secrets.
 
                          // `Progam`: The type from the assembly to search for an instance of `UserSecretsIdAttribute`.
