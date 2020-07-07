@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.All", "Arcus
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Tests.Core", "Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj", "{D2C8C470-EA9E-4237-84ED-14665187E19F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arcus.Security.Providers.UserSecrets", "Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj", "{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arcus.Security.AzureFunctions", "Arcus.Security.AzureFunctions\Arcus.Security.AzureFunctions.csproj", "{77104975-D6EB-4A4C-827A-5EC7E01B7A36}"
 EndProject
 Global
@@ -51,6 +53,10 @@ Global
 		{D2C8C470-EA9E-4237-84ED-14665187E19F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2C8C470-EA9E-4237-84ED-14665187E19F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2C8C470-EA9E-4237-84ED-14665187E19F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85}.Release|Any CPU.Build.0 = Release|Any CPU
 		{77104975-D6EB-4A4C-827A-5EC7E01B7A36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{77104975-D6EB-4A4C-827A-5EC7E01B7A36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77104975-D6EB-4A4C-827A-5EC7E01B7A36}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -64,6 +70,7 @@ Global
 		{D185D73E-D617-4846-9CAB-12884C1266C5} = {C42FDAC3-5A31-4F39-BD92-C57C2CDAB2D2}
 		{DD03DFBB-7D61-4FC9-B2D0-1BB800EA1ED9} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
 		{D2C8C470-EA9E-4237-84ED-14665187E19F} = {C42FDAC3-5A31-4F39-BD92-C57C2CDAB2D2}
+		{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D3310D31-C37D-47F4-A6D3-325EE3806698}

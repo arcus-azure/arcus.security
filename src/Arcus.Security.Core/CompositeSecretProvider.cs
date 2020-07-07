@@ -164,11 +164,19 @@ namespace Arcus.Security.Core
             {
                 try
                 {
-                    T result = await callRegisteredStore(source);
-                    if (!(result is null))
+                    Task<T> resultAsync = callRegisteredStore(source);
+                    if (resultAsync is null)
                     {
-                        return result;
+                        continue;
                     }
+
+                    T result = await resultAsync;
+                    if (result is null)
+                    {
+                        continue;
+                    }
+
+                    return result;
                 }
                 catch (Exception exception)
                 {

@@ -1,28 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Arcus.Testing.Logging" Version="0.1.0" />
-    <PackageReference Include="Guard.Net" Version="1.2.0" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' != 'netcoreapp3.1'">
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Arcus.Testing.Logging" Version="0.1.0" />
+    <PackageReference Include="Guard.Net" Version="1.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
+    <ProjectReference Include="..\Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="appsettings.local.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -31,5 +34,4 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>
