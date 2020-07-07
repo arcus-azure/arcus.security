@@ -18,7 +18,7 @@ namespace Microsoft.Extensions.Hosting
         private const string SecretsFileName = "secrets.json";
 
         /// <summary>
-        /// <para>Adds the user secrets configuration source with specified user secrets ID.</para>
+        /// <para>Adds the user secrets secret source with specified user secrets ID.</para>
         /// <para>A user secrets ID is unique value used to store and identify a collection of secrets.</para>
         /// </summary>
         /// <typeparam name="T">The type from the assembly to search for an instance of <see cref="UserSecretsIdAttribute"/>.</typeparam>
@@ -33,7 +33,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// <para>Adds the user secrets configuration source. This searches <paramref name="assembly"/> for an instance
+        /// <para>Adds the user secrets secret source. This searches <paramref name="assembly"/> for an instance
         /// of <see cref="UserSecretsIdAttribute"/>, which specifies a user secrets ID.</para>
         /// <para>A user secrets ID is unique value used to store and identify a collection of secrets.</para>
         /// </summary>
@@ -64,7 +64,7 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
-        /// <para>Adds the user secrets configuration source with specified user secrets ID.</para>
+        /// <para>Adds the user secrets secret source with specified user secrets ID.</para>
         /// <para>A user secrets ID is unique value used to store and identify a collection of secrets.</para>
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
