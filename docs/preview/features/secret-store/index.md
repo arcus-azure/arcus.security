@@ -10,14 +10,18 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
-## Installation
+> :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality whitin Azure Functions.
+
+## Using secret store within .NET Core (web, worker...) project
+
+### Installation
 For this feature, the following package needs to be installed:
 
 ```shell
 PM > Install-Package Arcus.Security.Core
 ```
 
-## Usage
+### Usage
 The secret stores are configured during the initial application build-up in the `Program.cs`:
 
 ```csharp
@@ -58,6 +62,59 @@ public class HealthController : ControllerBase
 {
     public HealthController(ISecretProvider secretProvider)
     {
+    }
+}
+```
+
+## Using secret store within Azure Functions
+
+### Installation
+For this feature, the following package needs to be installed:
+
+```shell
+PM > Install-Package Arcus.Security.AzureFunctions
+```
+
+### Usage
+The secret stores are configured during the initial application build-up in the `Startup.cs`:
+
+```csharp
+[assembly: FunctionsStartup(typeof(Startup))]
+
+namespace MyHttpAzureFunction
+{
+    public class Startup : FunctionsStartup
+    {
+        public override void Configure(IFunctionsHostBuilder builder)
+        {
+            builder.ConfigureSecretStore(stores =>
+            {
+                builder.AddEnvironmentVariables();
+
+                var keyVaultName = config["KeyVault_Name"];
+                builder.AddEnvironmentVariables()
+                       .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+            })
+        }
+    }
+}
+```
+
+Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
+
+```csharp
+public class MyHttpTrigger
+{
+    public MyHttpTrigger(ISecretProvide secretProvider)
+    {
+    }
+
+    [FunctionName("MyHttpTrigger")]
+    public async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        return new OkObjectResult("Response from function with injected dependencies.");
     }
 }
 ```

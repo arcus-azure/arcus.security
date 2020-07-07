@@ -1,5 +1,6 @@
 ﻿using System;
 using Arcus.Security.Core;
+using GuardNet;
 using Microsoft.Extensions.Configuration;
 
 // ReSharper disable once CheckNamespace
@@ -18,6 +19,9 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configureSecretStores">The customization of the different target secret store sources to include in the final <see cref="ISecretProvider"/>.</param>
         public static IHostBuilder ConfigureSecretStore(this IHostBuilder hostBuilder, Action<IConfiguration, SecretStoreBuilder> configureSecretStores)
         {
+            Guard.NotNull(hostBuilder, nameof(hostBuilder));
+            Guard.NotNull(configureSecretStores, nameof(configureSecretStores));
+
             return ConfigureSecretStore(hostBuilder, (context, config, secretStores) => configureSecretStores(config, secretStores));
         }
 
@@ -28,6 +32,9 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configureSecretStores">The customization of the different target secret store sources to include in the final <see cref="ISecretProvider"/>.</param>
         public static IHostBuilder ConfigureSecretStore(this IHostBuilder hostBuilder, Action<HostBuilderContext, IConfiguration, SecretStoreBuilder> configureSecretStores)
         {
+            Guard.NotNull(hostBuilder, nameof(hostBuilder));
+            Guard.NotNull(configureSecretStores, nameof(configureSecretStores));
+            
             return hostBuilder.ConfigureServices((context, services) =>
             {
                 var builder = new SecretStoreBuilder(services);
