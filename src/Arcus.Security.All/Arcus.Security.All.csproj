@@ -18,6 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Arcus.Security.AzureFunctions\Arcus.Security.AzureFunctions.csproj" />
     <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj" />
