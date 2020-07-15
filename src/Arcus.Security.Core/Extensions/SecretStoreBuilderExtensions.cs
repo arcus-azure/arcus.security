@@ -16,13 +16,15 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
+        /// /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
         public static SecretStoreBuilder AddEnvironmentVariables(
             this SecretStoreBuilder builder,
-            EnvironmentVariableTarget target = EnvironmentVariableSecretProvider.DefaultTarget)
+            EnvironmentVariableTarget target = EnvironmentVariableSecretProvider.DefaultTarget,
+            string prefix = null)
         {
             Guard.NotNull(builder, nameof(builder));
 
-            return builder.AddProvider(new EnvironmentVariableSecretProvider(target));
+            return builder.AddProvider(new EnvironmentVariableSecretProvider(target, prefix));
         }
 
         /// <summary>

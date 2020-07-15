@@ -138,5 +138,28 @@ namespace Arcus.Security.Tests.Unit.Core
                 Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
             }
         }
+
+        [Fact]
+        public async Task ConfigureSecretStore_AddEnvironmentVariablesWithPrefix_UsesEnvironmentVariableSecrets()
+        {
+            // Arrange
+            string prefix = "ARCUS_";
+            string secretKey = prefix + "MySecret";
+            string secretValue = $"secret-{Guid.NewGuid()}";
+
+            var builder = new HostBuilder();
+
+            using (TemporaryEnvironmentVariable.Create(secretKey, secretValue))
+            {
+                // Act
+                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(prefix: prefix));
+
+                // Assert
+                IHost host = builder.Build();
+                var provider = host.Services.GetRequiredService<ISecretProvider>();
+                string nonPrefixedSecret = secretKey.Substring(prefix.Length);
+                Assert.Equal(secretValue, await provider.GetRawSecretAsync(nonPrefixedSecret));
+            }
+        }
     }
 }
