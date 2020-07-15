@@ -31,7 +31,7 @@ public class Program
                        // Uses the environment variables stored or retrieved from the HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment key in the Windows operating system registry.
                        builder.AddEnvironmentVariables(EnvironmentVariableTarget.Machine);
 
-                       // Uses the environemt variables starting with 'ARCUS_' from the environemnt block associated with the current process.
+                       // Uses the environment variables starting with 'ARCUS_' from the environment block associated with the current process.
                        builder.AddEnvironmentVariables(prefix: "ARCUS_");
                    })
                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
