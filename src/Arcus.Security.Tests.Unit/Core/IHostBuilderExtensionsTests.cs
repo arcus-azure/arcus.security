@@ -123,11 +123,11 @@ namespace Arcus.Security.Tests.Unit.Core
         {
             // Arrange
             string secretKey = "MySecret";
-            string secretValue = $"secret-{Guid.NewGuid()}";
+            string expected = $"secret-{Guid.NewGuid()}";
 
             var builder = new HostBuilder();
 
-            using (TemporaryEnvironmentVariable.Create(secretKey, secretValue))
+            using (TemporaryEnvironmentVariable.Create(secretKey, expected))
             {
                 // Act
                 builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables());
@@ -135,7 +135,9 @@ namespace Arcus.Security.Tests.Unit.Core
                 // Assert
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
-                Assert.Equal(secretValue, await provider.GetRawSecretAsync(secretKey));
+                
+                string actual = await provider.GetRawSecretAsync(secretKey);
+                Assert.Equal(expected, actual);
             }
         }
 
@@ -145,11 +147,11 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             string prefix = "ARCUS_";
             string secretKey = prefix + "MySecret";
-            string secretValue = $"secret-{Guid.NewGuid()}";
+            string expected = $"secret-{Guid.NewGuid()}";
 
             var builder = new HostBuilder();
 
-            using (TemporaryEnvironmentVariable.Create(secretKey, secretValue))
+            using (TemporaryEnvironmentVariable.Create(secretKey, expected))
             {
                 // Act
                 builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(prefix: prefix));
@@ -157,8 +159,32 @@ namespace Arcus.Security.Tests.Unit.Core
                 // Assert
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
+                
                 string nonPrefixedSecret = secretKey.Substring(prefix.Length);
-                Assert.Equal(secretValue, await provider.GetRawSecretAsync(nonPrefixedSecret));
+                string actual = await provider.GetRawSecretAsync(nonPrefixedSecret);
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_AddEnvironmentVariablesWithPrefix_CantFindEnvironmentVariableWithPrefix()
+        {
+            // Arrange
+            string unknownPrefix = "UNKNOWN_";
+            string secretKey = "MySecret";
+
+            var builder = new HostBuilder();
+
+            using (TemporaryEnvironmentVariable.Create(secretKey, value: $"secret-{Guid.NewGuid()}"))
+            {
+                // Act
+                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(prefix: unknownPrefix));
+
+                // Assert
+                IHost host = builder.Build();
+                var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretKey));
             }
         }
     }
