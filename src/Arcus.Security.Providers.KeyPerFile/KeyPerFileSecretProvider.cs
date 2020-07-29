@@ -17,6 +17,7 @@ namespace Arcus.Security.Providers.KeyPerFile
         {
             Guard.NotNull(configurationSource, nameof(configurationSource));
             _provider = new KeyPerFileConfigurationProvider(configurationSource);
+            _provider.Load();
         }
 
         /// <summary>
