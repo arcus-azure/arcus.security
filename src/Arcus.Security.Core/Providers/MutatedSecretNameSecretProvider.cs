@@ -46,7 +46,6 @@ namespace Arcus.Security.Core.Providers
             }
 
             return await rawSecretAsync;
-
         }
 
         /// <summary>
