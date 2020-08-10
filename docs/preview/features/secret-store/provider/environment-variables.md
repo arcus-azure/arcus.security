@@ -33,6 +33,9 @@ public class Program
 
                        // Uses the environment variables starting with 'ARCUS_' from the environment block associated with the current process.
                        builder.AddEnvironmentVariables(prefix: "ARCUS_");
+
+                       // Uses the environment variables, using underscores and capitals for secret name structure.
+                       builder.AddEnvironmentVariables(mutateSecretName: name => name.Replace(".", "_").ToUpper());
                    })
                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

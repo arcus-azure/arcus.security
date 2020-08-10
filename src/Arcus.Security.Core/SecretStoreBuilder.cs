@@ -6,6 +6,7 @@ using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
+using Arcus.Security.Core.Providers;
 using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,13 +47,24 @@ namespace Microsoft.Extensions.Hosting
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
         /// </summary>
         /// <param name="secretProvider">The provider which secrets are added to the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <returns>
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
-        public SecretStoreBuilder AddProvider(ISecretProvider secretProvider)
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreBuilder AddProvider(ISecretProvider secretProvider, Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
-            SecretStoreSources.Add(new SecretStoreSource(secretProvider));
+
+            if (mutateSecretName is null)
+            {
+                SecretStoreSources.Add(new SecretStoreSource(secretProvider));
+            }
+            else
+            {
+                var mutatedSecretProvider = new MutatedSecretNameSecretProvider(secretProvider, mutateSecretName);
+                SecretStoreSources.Add(new SecretStoreSource(mutatedSecretProvider));
+            }
 
             return this;
         }
