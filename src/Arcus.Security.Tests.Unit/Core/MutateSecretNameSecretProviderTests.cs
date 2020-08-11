@@ -18,15 +18,16 @@ namespace Arcus.Security.Tests.Unit.Core
             var expected = Guid.NewGuid().ToString();
             var stubProvider = new InMemorySecretProvider(("ARCUS_KEYVAULT_SECRET", expected));
 
-            IHost host = new HostBuilder()
-                .ConfigureSecretStore((config, stores) =>
-                {
-                    // Act
-                    stores.AddProvider(stubProvider, name => name.ToUpper().Replace(".", "_"));
-                })
-                .Build();
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider, name => name.ToUpper().Replace(".", "_"));
+            });
 
             // Assert
+            IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
             string actual = await provider.GetRawSecretAsync("Arcus.KeyVault.Secret");
             Assert.Equal(expected, actual);
@@ -40,16 +41,17 @@ namespace Arcus.Security.Tests.Unit.Core
             var stubProvider1 = new InMemorySecretProvider(("arcus.keyvault.first", Guid.NewGuid().ToString()));
             var stubProvider2 = new InMemorySecretProvider(("Arcus.KeyVault.Second", expected));
 
-            IHost host = new HostBuilder()
-                .ConfigureSecretStore((config, stores) =>
-                {
-                    // Act
-                    stores.AddProvider(stubProvider1, name => name.ToLower())
-                          .AddProvider(stubProvider2);
-                })
-                .Build();
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, name => name.ToLower())
+                      .AddProvider(stubProvider2);
+            });
 
             // Assert
+            IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
             Secret secret = await provider.GetSecretAsync("Arcus.KeyVault.Second");
             Assert.Equal(expected, secret.Value);
@@ -61,15 +63,16 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             var stubProvider = new InMemorySecretProvider(("Arcus.KeyVault.Secret", Guid.NewGuid().ToString()));
 
-            IHost host = new HostBuilder()
-                .ConfigureSecretStore((config, stores) =>
-                {
-                    // Act
-                    stores.AddProvider(stubProvider, name => $"Prefix-{name}");
-                })
-                .Build();
+            var builder = new HostBuilder();
+            
+            // Act    
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider, name => $"Prefix-{name}");
+            });
 
             // Assert
+            IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
             await Assert.ThrowsAsync<SecretNotFoundException>(
                 () => provider.GetRawSecretAsync("Arcus.KeyVault.Secret"));
