@@ -133,7 +133,7 @@ When you want secret names 'changed' or 'mutated' before they go through your se
 you can pass allong a custom mutation function during the registration:
 
 ```csharp
-public static class SecretBuilderExtensions
+public static class SecretStoreBuilderExtensions
 {
     public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
     {
@@ -142,6 +142,31 @@ public static class SecretBuilderExtensions
         return builder.AddProvider(secretProvider, secretName => secretName.Replace(".", "_").ToUpper());
     }
 }
+```
+
+Or allow users to specify this:
+
+```csharp
+public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddRegistry(
+    this SecretStoreBuilder builder, 
+    Func<string, string> mutateSecretName = null)
+    {
+        var provider = RegistrySecretProvider();
+
+        return builder.AddProvider(secretprovider, mutateSecretName);
+    }
+}
+```
+
+So they can provide a custom mutation:
+
+```csharp
+.ConfigureSecretStore((config, stores) =>
+{
+    stores.AddRegistry(secretName => secretName.Replace(".", "_").ToUpper());
+})
 ```
 
 ## Contribute your secret provider
