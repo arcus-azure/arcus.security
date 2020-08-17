@@ -5,6 +5,12 @@ layout: default
 
 # Create a new secret provider
 
+- [Prerequisites](#prerequisites)
+- [Developing a secret provider](#developing-a-secret-provider)
+- [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
+- [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
+- [Contribute your secret provider](#contribute-your-secret-provider)
+
 ## Prerequisites
 
 The secret providers are configured during the initial application build-up in the `Program.cs`:
