@@ -256,7 +256,6 @@ namespace Microsoft.Extensions.Hosting
 
             var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
             return builder.AddProvider(cachedSecretProvider, mutateSecretName);
-
         }
     }
 }
