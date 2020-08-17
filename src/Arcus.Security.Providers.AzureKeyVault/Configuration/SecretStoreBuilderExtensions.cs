@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Providers.AzureKeyVault;
@@ -22,22 +23,28 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="clientId">The identifier of the application requesting the authentication token.</param>
         /// <param name="certificate">The certificate that is used as credential.</param>
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> or <paramref name="clientId"/> is blank.</exception>
         public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
             X509Certificate2 certificate,
-            bool allowCaching = false)
+            bool allowCaching = false,
+            Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNull(clientId, nameof(clientId));
+            Guard.NotNull(builder, nameof(builder));
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
             Guard.NotNull(certificate, nameof(certificate));
 
             return AddAzureKeyVault(
                 builder,
                 new CertificateBasedAuthentication(clientId, certificate),
                 new KeyVaultConfiguration(rawVaultUri),
-                allowCaching);
+                allowCaching,
+                mutateSecretName);
         }
 
         /// <summary>
@@ -48,22 +55,28 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="clientId">The identifier of the application requesting the authentication token.</param>
         /// <param name="certificate">The certificate that is used as credential.</param>
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> or <paramref name="clientId"/> is blank.</exception>
         public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
             X509Certificate2 certificate,
-            ICacheConfiguration cacheConfiguration)
+            ICacheConfiguration cacheConfiguration,
+            Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNull(clientId, nameof(clientId));
+            Guard.NotNull(builder, nameof(builder));
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
             Guard.NotNull(certificate, nameof(certificate));
 
             return AddAzureKeyVault(
                 builder,
                 new CertificateBasedAuthentication(clientId, certificate),
                 new KeyVaultConfiguration(rawVaultUri),
-                cacheConfiguration: cacheConfiguration);
+                cacheConfiguration: cacheConfiguration,
+                mutateSecretName: mutateSecretName);
         }
 
         /// <summary>
@@ -74,20 +87,26 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
         /// <param name="azureADInstance">The azure AD instance to use to authenticate, if applicable.</param>
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string connectionString = null,
             string azureADInstance = null,
-            bool allowCaching = false)
+            bool allowCaching = false,
+            Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNull(builder, nameof(builder));
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
 
             return AddAzureKeyVault(
                 builder,
                 new ManagedServiceIdentityAuthentication(connectionString, azureADInstance),
                 new KeyVaultConfiguration(rawVaultUri),
-                allowCaching);
+                allowCaching,
+                mutateSecretName);
         }
 
         /// <summary>
@@ -98,20 +117,26 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
         /// <param name="connectionString">The connection string to use to authenticate, if applicable.</param>
         /// <param name="azureADInstance">The azure AD instance to use to authenticate, if applicable.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedServiceIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             ICacheConfiguration cacheConfiguration,
             string connectionString = null,
-            string azureADInstance = null)
+            string azureADInstance = null,
+            Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNull(builder, nameof(builder));
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
 
             return AddAzureKeyVault(
                 builder,
                 new ManagedServiceIdentityAuthentication(connectionString, azureADInstance),
                 new KeyVaultConfiguration(rawVaultUri),
-                cacheConfiguration);
+                cacheConfiguration,
+                mutateSecretName);
         }
 
         /// <summary>
@@ -122,22 +147,28 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.</exception>
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
             string clientKey,
-            bool allowCaching = false)
+            bool allowCaching = false,
+            Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNullOrEmpty(clientId, nameof(clientId));
-            Guard.NotNullOrEmpty(clientKey, nameof(clientKey));
+            Guard.NotNull(builder, nameof(builder));
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
+            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey));
 
             return AddAzureKeyVault(
                 builder,
                 new ServicePrincipalAuthentication(clientId, clientKey),
                 new KeyVaultConfiguration(rawVaultUri),
-                allowCaching);
+                allowCaching,
+                mutateSecretName);
         }
 
         /// <summary>
@@ -148,22 +179,28 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="clientId">The ClientId of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.</exception>
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
             string clientId,
             string clientKey,
-            ICacheConfiguration cacheConfiguration)
+            ICacheConfiguration cacheConfiguration,
+            Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNullOrEmpty(clientId, nameof(clientId));
-            Guard.NotNullOrEmpty(clientKey, nameof(clientKey));
+            Guard.NotNull(builder, nameof(builder));
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
+            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey));
 
             return AddAzureKeyVault(
                 builder,
                 new ServicePrincipalAuthentication(clientId, clientKey),
                 new KeyVaultConfiguration(rawVaultUri),
-                cacheConfiguration: cacheConfiguration);
+                cacheConfiguration: cacheConfiguration,
+                mutateSecretName: mutateSecretName);
         }
 
         /// <summary>
@@ -173,17 +210,21 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance.</param>
         /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="authentication"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             IKeyVaultAuthentication authentication,
             IKeyVaultConfiguration configuration,
-            bool allowCaching = false)
+            bool allowCaching = false,
+            Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder));
             Guard.NotNull(authentication, nameof(authentication));
             Guard.NotNull(configuration, nameof(configuration));
 
-            return AddAzureKeyVault(builder, authentication, configuration, allowCaching ? new CacheConfiguration() : null);
+            ICacheConfiguration cacheConfiguration = allowCaching ? new CacheConfiguration() : null;
+            return AddAzureKeyVault(builder, authentication, configuration, cacheConfiguration, mutateSecretName);
         }
 
         /// <summary>
@@ -193,11 +234,14 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance.</param>
         /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="authentication"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             IKeyVaultAuthentication authentication,
             IKeyVaultConfiguration configuration,
-            ICacheConfiguration cacheConfiguration)
+            ICacheConfiguration cacheConfiguration,
+            Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder));
             Guard.NotNull(authentication, nameof(authentication));
@@ -205,13 +249,14 @@ namespace Microsoft.Extensions.Hosting
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
 
-            if (cacheConfiguration != null)
+            if (cacheConfiguration is null)
             {
-                var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
-                return builder.AddProvider(cachedSecretProvider);
+                return builder.AddProvider(keyVaultSecretProvider, mutateSecretName);
             }
 
-            return builder.AddProvider(keyVaultSecretProvider);
+            var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
+            return builder.AddProvider(cachedSecretProvider, mutateSecretName);
+
         }
     }
 }

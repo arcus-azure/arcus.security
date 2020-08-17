@@ -16,7 +16,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
-        /// /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
+        /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         public static SecretStoreBuilder AddEnvironmentVariables(
             this SecretStoreBuilder builder,

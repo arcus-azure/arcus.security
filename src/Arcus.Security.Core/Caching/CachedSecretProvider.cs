@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace Arcus.Security.Core.Caching
 {
@@ -11,7 +10,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A Secret Provider that will cache secrets in memory, to improve performance
     /// </summary>
-    public class CachedSecretProvider : ICachedSecretProvider
+    public class CachedSecretProvider : ICachedSecretProvider, ISecretProviderDescription
     {
         private readonly ISecretProvider _secretProvider;
         private readonly IMemoryCache _memoryCache;
@@ -33,6 +32,15 @@ namespace Arcus.Security.Core.Caching
             _secretProvider = secretProvider;
             _memoryCache = memoryCache;
             _cacheConfiguration = cacheConfiguration;
+
+            if (_secretProvider is ISecretProviderDescription providerDescription && providerDescription.Description != null)
+            {
+                Description = $"Cached + {providerDescription.Description}";
+            }
+            else
+            {
+                Description = $"Cached + {_secretProvider.GetType().Name}"; 
+            }
         }
 
         /// <inheritdoc />
@@ -57,6 +65,11 @@ namespace Arcus.Security.Core.Caching
         /// Gets the cache-configuration for this instance.
         /// </summary>
         public ICacheConfiguration Configuration => _cacheConfiguration;
+
+        /// <summary>
+        /// Gets the description of the <see cref="ISecretProvider"/> that will be added to the exception message when a secret cannot be found.
+        /// </summary>
+        public string Description { get; }
 
         /// <summary>
         /// Retrieves the secret value, based on the given name

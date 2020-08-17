@@ -14,19 +14,29 @@ namespace Arcus.Security.Core
         public SecretStoreSource(ISecretProvider secretProvider)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
+            
             SecretProvider = secretProvider;
+
+            if (secretProvider is ICachedSecretProvider cachedSecretProvider)
+            {
+                CachedSecretProvider = cachedSecretProvider;
+            }
+
+            if (secretProvider is ISecretProviderDescription providerDescription && providerDescription.Description != null)
+            {
+                Description = providerDescription.Description;
+            }
+            else
+            {
+                Description = secretProvider.GetType().Name;
+            }
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
+        /// Gets the description of the <see cref="ISecretProvider"/> that will be added to the exception message when a secret cannot be found.
+        /// For example: 'Azure Key Vault'.
         /// </summary>
-        public SecretStoreSource(ICachedSecretProvider secretProvider)
-        {
-            Guard.NotNull(secretProvider, nameof(secretProvider));
-
-            SecretProvider = secretProvider;
-            CachedSecretProvider = secretProvider;
-        }
+        public string Description { get; }
 
         /// <summary>
         /// Gets the provider for this secret store.

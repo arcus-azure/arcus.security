@@ -9,7 +9,7 @@ namespace Arcus.Security.Providers.UserSecrets
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that provides user secrets.
     /// </summary>
-    public class UserSecretsSecretProvider : ISecretProvider
+    public class UserSecretsSecretProvider : ISecretProvider, ISecretProviderDescription
     {
         private readonly JsonConfigurationProvider _jsonProvider;
 
@@ -21,6 +21,11 @@ namespace Arcus.Security.Providers.UserSecrets
             Guard.NotNull(jsonProvider, nameof(jsonProvider));
             _jsonProvider = jsonProvider;
         }
+
+        /// <summary>
+        /// Gets the description of the <see cref="ISecretProvider"/> that will be added to the exception message when a secret cannot be found.
+        /// </summary>
+        public string Description { get; } = "User Secrets";
 
         /// <summary>
         /// Retrieves the secret value, based on the given name

@@ -7,7 +7,7 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// Represents an <see cref="ISecretProvider"/> that can mutate the secret name provided before looking up the secret.
     /// </summary>
-    public class MutatedSecretNameSecretProvider : ISecretProvider
+    public class MutatedSecretNameSecretProvider : ISecretProvider, ISecretProviderDescription
     {
         private readonly Func<string, string> _mutateSecretName;
         private readonly ISecretProvider _implementation;
@@ -25,6 +25,32 @@ namespace Arcus.Security.Core.Providers
 
             _mutateSecretName = mutateSecretName;
             _implementation = implementation;
+
+            if (implementation is ISecretProviderDescription providerDescription)
+            {
+                Description = $"Mutated + {providerDescription.Description}"; 
+            }
+            else
+            {
+                Description = $"Mutated + {_implementation.GetType().Name}";
+            }
+        }
+
+        /// <summary>
+        /// Gets the description of the <see cref="ISecretProvider"/> that this wrapped instance represents.
+        /// </summary>
+        public string Description { get; }
+
+        /// <summary>
+        /// Gets the mutated version of the secret name that will be send to the wrapped <see cref="ISecretProvider"/> implementation.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <returns>
+        ///     The resulting secret name that will be send to the concrete <see cref="ISecretProvider"/> implementation.
+        /// </returns>
+        public string MutateSecretName(string secretName)
+        {
+            return _mutateSecretName(secretName);
         }
 
         /// <summary>
@@ -45,7 +71,14 @@ namespace Arcus.Security.Core.Providers
                 throw new SecretNotFoundException(secretName);
             }
 
-            return await rawSecretAsync;
+            try
+            {
+                return await rawSecretAsync;
+            }
+            catch (Exception exception)
+            {
+                throw new SecretNotFoundException(secretName, exception);
+            }
         }
 
         /// <summary>
@@ -66,7 +99,15 @@ namespace Arcus.Security.Core.Providers
                 throw new SecretNotFoundException(secretName);
             }
 
-            return await secretAsync;
+            try
+            {
+                return await secretAsync;
+            }
+            catch (Exception exception)
+            {
+                throw new SecretNotFoundException(secretName, exception);
+                throw;
+            }
         }
     }
 }
