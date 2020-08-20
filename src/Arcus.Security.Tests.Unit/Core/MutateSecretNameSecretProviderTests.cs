@@ -5,6 +5,7 @@ using Arcus.Security.Core.Providers;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -82,14 +83,14 @@ namespace Arcus.Security.Tests.Unit.Core
         public void CreateProvider_WithoutImplementation_Throws()
         {
             Assert.ThrowsAny<ArgumentException>(
-                () => new MutatedSecretNameSecretProvider(implementation: null, mutateSecretName: name => name));
+                () => new MutatedSecretNameSecretProvider(implementation: null, mutateSecretName: name => name, logger: NullLogger<MutatedSecretNameSecretProvider>.Instance));
         }
 
         [Fact]
         public void CreateProvider_WithoutMutationFunction_Throws()
         {
             Assert.ThrowsAny<ArgumentException>(
-                () => new MutatedSecretNameSecretProvider(implementation: new InMemorySecretProvider(), mutateSecretName: null));
+                () => new MutatedSecretNameSecretProvider(implementation: new InMemorySecretProvider(), mutateSecretName: null, logger: NullLogger<MutatedSecretNameSecretProvider>.Instance));
         }
     }
 }
