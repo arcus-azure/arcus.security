@@ -110,7 +110,7 @@ stages:
             inputs:
               packageType: 'sdk'
               version: '$(DotNet.Sdk.VersionBC)'
-          - ps: |
+          - powershell: |
               mkdir -Force $env:TARGET_FOLDER | Out-Null
               $vault_zip = "vault_$($env:VAULT_VERSION)_windows_amd64.zip"
               $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
