@@ -181,7 +181,7 @@ namespace Arcus.Security.Core
                 }
                 catch (Exception exception)
                 {
-                    _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.Description, secretName);
+                    _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.SecretProvider.GetType(), secretName);
                 }
             }
 
