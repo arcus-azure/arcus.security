@@ -124,6 +124,7 @@ stages:
             env:
               TARGET_FOLDER: $(Build.SourcesDirectory)/vault
               VAULT_VERSION: 1.5.0
+            displayName: 'Download HashiCorp Vault'
           - template: test/run-integration-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'

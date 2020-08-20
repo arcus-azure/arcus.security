@@ -212,7 +212,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings: null, secretPaths: "secret/path");
+                stores.AddHashiCorpVault(settings: null, secretPath: "secret/path");
             });
 
             // Assert
@@ -230,7 +230,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPaths: "secret/path");
+                stores.AddHashiCorpVault(settings, secretPath: "secret/path");
             });
 
             // Assert
@@ -248,7 +248,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPaths: "secret/path");
+                stores.AddHashiCorpVault(settings, secretPath: "secret/path");
             });
 
             // Assert
