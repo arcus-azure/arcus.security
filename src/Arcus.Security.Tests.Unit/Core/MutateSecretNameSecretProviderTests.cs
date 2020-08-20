@@ -66,7 +66,7 @@ namespace Arcus.Security.Tests.Unit.Core
 
             var builder = new HostBuilder();
             
-            // Act    
+            // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddProvider(stubProvider, name => $"Prefix-{name}");

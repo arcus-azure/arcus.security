@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Caching.Configuration;
-using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Unit.Core.Stubs;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Moq;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -116,6 +111,47 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.Equal(secretValue1, await provider.GetRawSecretAsync(secretKey1));
             Assert.Equal(secretValue2, await provider.GetRawSecretAsync(secretKey2));
             Assert.Equal(secretValue3, await provider.GetRawSecretAsync(secretKey3));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithoutCachingProviderWithMutation_DoesntFindCachedProvider()
+        {
+            // Arrange
+            var stubProvider = new InMemorySecretProvider(("Arcus.KeyVault.Secret", Guid.NewGuid().ToString()));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider, secretName => "Arcus." + secretName);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(
+                () => cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCachingProviderWithMutation_DoesFindCachedProvider()
+        {
+            // Arrange
+            var expected = Guid.NewGuid().ToString();
+            var stubProvider = new InMemoryCachedSecretProvider(("Arcus.KeyVault.Secret", expected));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider, secretName => "Arcus." + secretName);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Secret secret = await cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false);
+            Assert.Equal(expected, secret.Value);
         }
     }
 }

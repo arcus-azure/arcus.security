@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.Hosting
         /// <remarks>
         ///     The series of secret stores is directly publicly available including the operations so future (consumer) extensions can easily manipulate this series during build-up.
         /// </remarks>
-        public IList<Func<IServiceProvider, SecretStoreSource>> CreateSecretStoreSources { get; } = new List<Func<IServiceProvider, SecretStoreSource>>();
+        public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
 
         /// <summary>
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
@@ -57,21 +57,7 @@ namespace Microsoft.Extensions.Hosting
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
 
-            if (mutateSecretName is null)
-            {
-                CreateSecretStoreSources.Add(provider => new SecretStoreSource(secretProvider));
-            }
-            else
-            {
-                CreateSecretStoreSources.Add(provider =>
-                {
-                    var logger = provider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
-                    var mutatedSecretProvider = new MutatedSecretNameSecretProvider(secretProvider, mutateSecretName, logger);
-
-                    return new SecretStoreSource(mutatedSecretProvider);
-                });
-            }
-
+            SecretStoreSources.Add(new SecretStoreSource(secretProvider, mutateSecretName));
             return this;
         }
         
@@ -80,13 +66,37 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         internal void RegisterSecretStore()
         {
-            foreach (Func<IServiceProvider, SecretStoreSource> createStore in CreateSecretStoreSources)
+            foreach (SecretStoreSource source in SecretStoreSources)
             {
-                Services.AddSingleton(serviceProvider => createStore(serviceProvider));
+                if (source.MutateSecretName is null)
+                {
+                    Services.AddSingleton(source);
+                }
+                else
+                {
+                    Services.AddSingleton(serviceProvider => WrapInMutatedSecretProvider(serviceProvider, source));
+
+                }
             }
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
+        }
+
+        private static SecretStoreSource WrapInMutatedSecretProvider(IServiceProvider serviceProvider, SecretStoreSource source)
+        {
+            var logger = serviceProvider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
+
+            if (source.CachedSecretProvider is null)
+            {
+                var secretProvider = new MutatedSecretNameSecretProvider(source.SecretProvider, source.MutateSecretName, logger);
+                return new SecretStoreSource(secretProvider);
+            }
+            else
+            {
+                var secretProvider = new MutatedSecretNameCachedSecretProvider(source.CachedSecretProvider, source.MutateSecretName, logger);
+                return new SecretStoreSource(secretProvider);
+            }
         }
     }
 }
