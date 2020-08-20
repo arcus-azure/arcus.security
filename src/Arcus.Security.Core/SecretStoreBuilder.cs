@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Core.Providers;
 using GuardNet;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -75,7 +70,6 @@ namespace Microsoft.Extensions.Hosting
                 else
                 {
                     Services.AddSingleton(serviceProvider => WrapInMutatedSecretProvider(serviceProvider, source));
-
                 }
             }
 
@@ -85,15 +79,15 @@ namespace Microsoft.Extensions.Hosting
 
         private static SecretStoreSource WrapInMutatedSecretProvider(IServiceProvider serviceProvider, SecretStoreSource source)
         {
-            var logger = serviceProvider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
-
             if (source.CachedSecretProvider is null)
             {
+                var logger = serviceProvider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
                 var secretProvider = new MutatedSecretNameSecretProvider(source.SecretProvider, source.MutateSecretName, logger);
                 return new SecretStoreSource(secretProvider);
             }
             else
             {
+                var logger = serviceProvider.GetService<ILogger<MutatedSecretNameCachedSecretProvider>>();
                 var secretProvider = new MutatedSecretNameCachedSecretProvider(source.CachedSecretProvider, source.MutateSecretName, logger);
                 return new SecretStoreSource(secretProvider);
             }
