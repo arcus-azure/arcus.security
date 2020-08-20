@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Guard.Net" Version="1.2.0" />
+    <PackageReference Include="Arcus.Testing.Logging" Version="0.1.0" />
   </ItemGroup>
 
 </Project>
