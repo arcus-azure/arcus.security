@@ -6,7 +6,7 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the environment.
     /// </summary>
-    public class EnvironmentVariableSecretProvider : ISecretProvider, ISecretProviderDescription
+    public class EnvironmentVariableSecretProvider : ISecretProvider
     {
         internal const EnvironmentVariableTarget DefaultTarget = EnvironmentVariableTarget.Process;
 
@@ -23,12 +23,6 @@ namespace Arcus.Security.Core.Providers
             _prefix = prefix ?? String.Empty;
             _target = target;
         }
-
-        /// <summary>
-        /// Gets the description of the <see cref="ISecretProvider"/> that will be added to the exception message when a secret cannot be found.
-        /// For example: 'Azure Key Vault'.
-        /// </summary>
-        public string Description { get; } = "Environment variables";
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
         /// <param name="secretName">The name of the secret key</param>

@@ -21,22 +21,7 @@ namespace Arcus.Security.Core
             {
                 CachedSecretProvider = cachedSecretProvider;
             }
-
-            if (secretProvider is ISecretProviderDescription providerDescription && providerDescription.Description != null)
-            {
-                Description = providerDescription.Description;
-            }
-            else
-            {
-                Description = secretProvider.GetType().Name;
-            }
         }
-
-        /// <summary>
-        /// Gets the description of the <see cref="ISecretProvider"/> that will be added to the exception message when a secret cannot be found.
-        /// For example: 'Azure Key Vault'.
-        /// </summary>
-        public string Description { get; }
 
         /// <summary>
         /// Gets the provider for this secret store.

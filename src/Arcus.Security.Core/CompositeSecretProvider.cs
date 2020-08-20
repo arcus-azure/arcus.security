@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
-using Arcus.Security.Core.Providers;
 using GuardNet;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -162,26 +161,19 @@ namespace Arcus.Security.Core
                 throw new SecretNotFoundException(secretName, noRegisteredException);
             }
 
-            var results = new Collection<(string description, string key, string outcome)>();
-
             foreach (SecretStoreSource source in _secretProviders)
             {
-                string secretKeyDescription = secretName;
                 try
                 {
-                    secretKeyDescription = GetMutatedOrNotSecretKeyDescription(secretName, source);
-
                     Task<T> resultAsync = callRegisteredStore(source);
                     if (resultAsync is null)
                     {
-                        results.Add((source.Description, secretKeyDescription, "NotFound"));
                         continue;
                     }
 
                     T result = await resultAsync;
                     if (result is null)
                     {
-                        results.Add((source.Description, secretKeyDescription, "NotFound"));
                         continue;
                     }
 
@@ -189,40 +181,12 @@ namespace Arcus.Security.Core
                 }
                 catch (Exception exception)
                 {
-                    results.Add((source.Description, secretKeyDescription, "Exception: " + exception.Message));
                     _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.Description, secretName);
                 }
             }
 
-            string resultsTable = 
-                String.Join(Environment.NewLine, results.Select(r => $"> {r.description} ({r.key}) = {r.outcome}"));
-            
-            var noneFoundException = 
-                new KeyNotFoundException("None of the configured secret providers contains the requested secret" + Environment.NewLine + resultsTable);
-            
+            var noneFoundException = new KeyNotFoundException("None of the configured secret providers contains the requested secret");
             throw new SecretNotFoundException(secretName, noneFoundException);
-        }
-
-        private string GetMutatedOrNotSecretKeyDescription(string secretName, SecretStoreSource source)
-        {
-            string key = secretName;
-            if (source.SecretProvider is MutatedSecretNameSecretProvider mutatedSecretProvider)
-            {
-                try
-                {
-                    string mutateSecretName = mutatedSecretProvider.MutateSecretName(secretName);
-                    key = $"'{secretName}' -> '{mutateSecretName}'";
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(
-                        exception, "Failure during secret name mutation of secret provider '{Type}' with name {SecretName}", source.Description, secretName);
-
-                    throw;
-                }
-            }
-
-            return key;
         }
     }
 }

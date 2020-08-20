@@ -15,7 +15,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
-    public class KeyVaultSecretProvider : ISecretProvider, ISecretProviderDescription
+    public class KeyVaultSecretProvider : ISecretProvider
     {
         private readonly IKeyVaultAuthentication _authentication;
 
@@ -27,11 +27,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         ///     Uri of the vault
         /// </summary>
         public string VaultUri { get; }
-
-        /// <summary>
-        /// Gets the type of the <see cref="ISecretProvider"/> that this wrapped instance represents.
-        /// </summary>
-        public string Description { get; } = "Azure Key Vault";
 
         /// <summary>
         ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault

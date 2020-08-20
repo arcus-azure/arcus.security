@@ -7,7 +7,7 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the <see cref="IConfiguration"/>. It is recommended to only use this for development purposes.
     /// </summary>
-    public class ConfigurationSecretProvider : ISecretProvider, ISecretProviderDescription
+    public class ConfigurationSecretProvider : ISecretProvider
     {
         private readonly IConfiguration _configuration;
 
@@ -21,12 +21,6 @@ namespace Arcus.Security.Core.Providers
 
             _configuration = configuration;
         }
-
-        /// <summary>
-        /// Gets the description of the <see cref="ISecretProvider"/> that will be added to the exception message when a secret cannot be found.
-        /// For example: 'Azure Key Vault'.
-        /// </summary>
-        public string Description { get; } = "Configuration";
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
         /// <param name="secretName">The name of the secret key</param>

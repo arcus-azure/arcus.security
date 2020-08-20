@@ -11,6 +11,7 @@ using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -41,7 +42,7 @@ namespace Microsoft.Extensions.Hosting
         /// <remarks>
         ///     The series of secret stores is directly publicly available including the operations so future (consumer) extensions can easily manipulate this series during build-up.
         /// </remarks>
-        public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
+        public IList<Func<IServiceProvider, SecretStoreSource>> CreateSecretStoreSources { get; } = new List<Func<IServiceProvider, SecretStoreSource>>();
 
         /// <summary>
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
@@ -58,12 +59,17 @@ namespace Microsoft.Extensions.Hosting
 
             if (mutateSecretName is null)
             {
-                SecretStoreSources.Add(new SecretStoreSource(secretProvider));
+                CreateSecretStoreSources.Add(provider => new SecretStoreSource(secretProvider));
             }
             else
             {
-                var mutatedSecretProvider = new MutatedSecretNameSecretProvider(secretProvider, mutateSecretName);
-                SecretStoreSources.Add(new SecretStoreSource(mutatedSecretProvider));
+                CreateSecretStoreSources.Add(provider =>
+                {
+                    var logger = provider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
+                    var mutatedSecretProvider = new MutatedSecretNameSecretProvider(secretProvider, mutateSecretName, logger);
+
+                    return new SecretStoreSource(mutatedSecretProvider);
+                });
             }
 
             return this;
@@ -74,9 +80,9 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         internal void RegisterSecretStore()
         {
-            foreach (SecretStoreSource source in SecretStoreSources)
+            foreach (Func<IServiceProvider, SecretStoreSource> createStore in CreateSecretStoreSources)
             {
-                Services.AddSingleton(source);
+                Services.AddSingleton(serviceProvider => createStore(serviceProvider));
             }
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
