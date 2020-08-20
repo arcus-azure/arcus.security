@@ -196,7 +196,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPaths: new[] { "secret/path" }, secretEngineVersion: secretEngineVersion);
+                stores.AddHashiCorpVault(settings, secretPath: "secret/path", secretEngineVersion: secretEngineVersion);
             });
 
             // Assert
@@ -212,7 +212,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings: null, secretPaths: new[] { "secret/path" });
+                stores.AddHashiCorpVault(settings: null, secretPaths: "secret/path");
             });
 
             // Assert
@@ -230,7 +230,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPaths: new[] { "secret/path" });
+                stores.AddHashiCorpVault(settings, secretPaths: "secret/path");
             });
 
             // Assert
@@ -248,59 +248,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPaths: new[] { "secret/path" });
-            });
-
-            // Assert
-            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
-        }
-
-        [Theory]
-        [MemberData(nameof(BlankSecretPaths))]
-        public void AddHashiCorp_WithoutSecretPaths_Throws(string[] secretPaths)
-        {
-            // Arrange
-            var builder = new HostBuilder();
-            var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo("username", "password"));
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddHashiCorpVault(settings, secretPaths);
-            });
-
-            // Assert
-            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
-        }
-
-        [Theory]
-        [MemberData(nameof(BlankSecretPaths))]
-        public void AddHashiCorpWithUserPass_WithoutSecretPaths_Throws(string[] secretPaths)
-        {
-            // Arrange
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", "password", secretPaths);
-            });
-
-            // Assert
-            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
-        }
-
-        [Theory]
-        [MemberData(nameof(BlankSecretPaths))]
-        public void AddHashiCorpWithKubernetes_WithoutSecretPaths_Throws(string[] secretPaths)
-        {
-            // Arrange
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddHashiCorpVaultWithKubernetes("https://vault.uri:456", "role name", "jwt", secretPaths);
+                stores.AddHashiCorpVault(settings, secretPaths: "secret/path");
             });
 
             // Assert

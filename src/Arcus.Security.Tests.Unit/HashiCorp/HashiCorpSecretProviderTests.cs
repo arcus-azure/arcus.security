@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Arcus.Security.Providers.HashiCorp;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.UserPass;
@@ -13,7 +12,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         public void CreateProvider_WithoutSettings_Throws()
         {
             Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings: null, secretEngineVersion: VaultKeyValueSecretEngineVersion.V2, secretPaths: new[] { "secrets/path" }));
+                () => new HashiCorpSecretProvider(settings: null, secretEngineVersion: VaultKeyValueSecretEngineVersion.V2, mountPoint: "kv-v2", secretPath: "secrets/path"));
         }
 
         [Fact]
@@ -21,7 +20,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             var settings = new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("username", "password"));
             Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1 | VaultKeyValueSecretEngineVersion.V2, new[] { "secret/path" }));
+                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1 | VaultKeyValueSecretEngineVersion.V2, "kv-v2", "secret/path"));
         }
 
         [Fact]
@@ -29,15 +28,15 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             var settings = new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("username", "password"));
             Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, secretPaths: null));
+                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, mountPoint:"kv-v2", secretPath: null));
         }
 
         [Fact]
-        public void CreateProvider_WithoutNoneSecretPaths_Throws()
+        public void CreateProvider_WithoutMountPoint_Throws()
         {
             var settings = new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("username", "password"));
             Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V2, secretPaths: Enumerable.Empty<string>()));
+                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V2, mountPoint: null, secretPath: "secret/path"));
         }
 
         [Fact]
@@ -45,7 +44,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             var settings = new VaultClientSettings("not a valid vault URI", new UserPassAuthMethodInfo("username", "password"));
             Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, secretPaths: new[] { "secret/path" }));
+                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, mountPoint: "kv-v2", secretPath: "secret/path"));
         }
 
         [Fact]
@@ -53,15 +52,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             var settings = new VaultClientSettings("https://vault.server:245", authMethodInfo: null);
             Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, secretPaths: new[] { "secret/path" }));
-        }
-
-        [Fact]
-        public void CreateProvider_WithNullSecretPath_Throws()
-        {
-            var settings = new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("username", "password"));
-            Assert.ThrowsAny<ArgumentException>(
-                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V2, secretPaths: new[] { "secret/path", null }));
+                () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, mountPoint: "kv-v2", secretPath: "secret/path"));
         }
     }
 }
