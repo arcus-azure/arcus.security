@@ -97,6 +97,8 @@ stages:
         displayName: 'Run integration tests'
         pool:
           vmImage: 'ubuntu-16.04'
+        variables:
+          Arcus.HashiCorp.VaultBin: '$(Build.SourcesDirectory)/vault/vault.exe'
         steps:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download build artifacts'
@@ -108,6 +110,20 @@ stages:
             inputs:
               packageType: 'sdk'
               version: '$(DotNet.Sdk.VersionBC)'
+          - ps: |
+              mkdir -Force $env:TARGET_FOLDER | Out-Null
+              $vault_zip = "vault_$($env:VAULT_VERSION)_windows_amd64.zip"
+              $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
+              $destination = "$($env:TARGET_FOLDER)\$vault_zip"
+              if (!(Test-Path $destination)) {
+                  Write-Output "Downloading $vault_url"
+                  [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+                  Start-FileDownload $vault_url -FileName $destination
+              }
+              Expand-Archive -LiteralPath $destination -DestinationPath $env:TARGET_FOLDER
+            env:
+              TARGET_FOLDER: $(Build.SourcesDirectory)/vault
+              VAULT_VERSION: 1.5.0
           - template: test/run-integration-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'

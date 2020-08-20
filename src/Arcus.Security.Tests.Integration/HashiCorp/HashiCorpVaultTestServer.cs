@@ -1,0 +1,247 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading.Tasks;
+using GuardNet;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Vault.Endpoints;
+using Vault.Endpoints.Sys;
+using Vault.Models.Auth.UserPass;
+using VaultSharp;
+using VaultSharp.V1.AuthMethods.Token;
+using VaultSharp.V1.SecretsEngines.KeyValue.V2;
+using VaultClient = Vault.VaultClient;
+
+namespace Arcus.Security.Tests.Integration.HashiCorp
+{
+    /// <summary>
+    /// Represents a HashiCorp Vault instance running in 'dev server' mode.
+    /// </summary>
+    public class HashiCorpVaultTestServer : IDisposable
+    {
+        private readonly Process _process;
+        private readonly ISysEndpoint _systemEndpoint;
+        private readonly IEndpoint _authenticationEndpoint;
+        private readonly ILogger _logger;
+
+        private bool _disposed;
+
+        private HashiCorpVaultTestServer(Process process, string rootToken, string listenAddress, ILogger logger)
+        {
+            Guard.NotNull(process, nameof(process));
+            Guard.NotNullOrWhitespace(rootToken, nameof(rootToken));
+            Guard.NotNullOrWhitespace(listenAddress, nameof(listenAddress));
+            Guard.NotNull(logger, nameof(logger));
+
+            _process = process;
+            _logger = logger;
+
+            ListenAddress = new UriBuilder(listenAddress).Uri;
+            var client = new VaultClient(ListenAddress, rootToken);
+            _systemEndpoint = client.Sys;
+            _authenticationEndpoint = client.Auth;
+
+            var settings = new VaultClientSettings(ListenAddress.ToString(), new TokenAuthMethodInfo(rootToken));
+            IVaultClient testClient = new VaultSharp.VaultClient(settings);
+            KeyValueV2 = testClient.V1.Secrets.KeyValue.V2;
+        }
+
+        /// <summary>
+        /// Gets the URI where the HashiCorp Vault test server is listening on.
+        /// </summary>
+        public Uri ListenAddress { get; }
+
+        /// <summary>
+        /// Gets the KeyVault V2 secret engine to control the secret store in the HashiCorp Vault.
+        /// </summary>
+        public IKeyValueSecretsEngineV2 KeyValueV2 { get; }
+
+        /// <summary>
+        /// Starts a new instance of the <see cref="HashiCorpVaultTestServer"/> using the 'dev server' settings, meaning the Vault will run fully in-memory.
+        /// </summary>
+        /// <param name="configuration">The configuration instance to retrieve the HashiCorp installation folder ('Arcus.HashiCorp.VaultBin').</param>
+        /// <param name="logger">The instance to log diagnostic trace messages during the lifetime of the test server.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> or <paramref name="logger"/> is <c>null</c>.</exception>
+        public static HashiCorpVaultTestServer StartServer(IConfiguration configuration, ILogger logger)
+        {
+            Guard.NotNull(logger, nameof(logger), 
+                "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
+            Guard.NotNull(configuration, nameof(configuration),
+                "Requires a configuration instance to retrieve the HashiCorp Vault installation folder");
+
+            var rootToken = Guid.NewGuid().ToString();
+            int port = GetRandomUnusedPort();
+            string listenAddress = $"127.0.0.1:{port}";
+            string vaultArgs = String.Join(" ", new List<string>
+            {
+                "server",
+                "-dev",
+                $"-dev-root-token-id={rootToken}",
+                $"-dev-listen-address={listenAddress}"
+            });
+
+            string vaultBin = 
+                configuration.GetValue<string>("Arcus.HashiCorp.VaultBin") 
+                    ?? Environment.GetEnvironmentVariable("VAULT_BIN") 
+                    ?? "vault";
+            
+            var startInfo = new ProcessStartInfo(vaultBin, vaultArgs)
+            {
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+
+            startInfo.EnvironmentVariables["HOME"] = Directory.GetCurrentDirectory();
+            var process = new Process { StartInfo = startInfo };
+
+            process.OutputDataReceived += (sender, args) => logger.LogTrace(args.Data);
+            process.ErrorDataReceived += (sender, args) => logger.LogError(args.Data);
+
+            try
+            {
+                StartHashiCorpVault(process, listenAddress, logger);
+                return new HashiCorpVaultTestServer(process, rootToken, listenAddress, logger);
+            }
+            catch (Exception exception)
+            {
+                var message = "An unexpected problem occured while trying to start the HashiCorp Vault";
+                logger.LogError(exception, message);
+                
+                throw new CouldNotStartHashiCorpVaultException(message, exception);
+            }
+            finally
+            {
+                process?.Dispose();
+            }
+        }
+
+        private static int GetRandomUnusedPort()
+        {
+            var listener = new TcpListener(IPAddress.Any, 0);
+            listener.Start();
+            int port = ((IPEndPoint) listener.LocalEndpoint).Port;
+            listener.Stop();
+            
+            return port;
+        }
+
+        private static void StartHashiCorpVault(Process process, string listenAddress, ILogger logger)
+        {
+            logger.LogTrace("Starting HashiCorp Vault at '{listenAddress}'...", listenAddress);
+
+            if (!process.Start())
+            {
+                throw new CouldNotStartHashiCorpVaultException($"Process did not start successfully: {process.StandardError}");
+            }
+
+            var isStarted = false;
+
+            string line = process.StandardOutput.ReadLine();
+            while (line != null)
+            {
+                if (line?.StartsWith("==> Vault server started!") == true)
+                {
+                    isStarted = true;
+                    break;
+                }
+
+                line = process.StandardOutput.ReadLine();
+            }
+
+            if (!isStarted)
+            {
+                throw new CouldNotStartHashiCorpVaultException("Process did not start successfully");
+            }
+
+            logger.LogInformation("HashiCorp Vault started at '{ListenAddress}'", listenAddress);
+        }
+
+        /// <summary>
+        /// Adds a new authorization policy to the running HashiCorp Vault.
+        /// </summary>
+        /// <param name="name">The name to identify the policy.</param>
+        /// <param name="path">The path where this policy will be applicable.</param>
+        /// <param name="capabilities">The capabilities that should be available in the policy.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/>, <paramref name="path"/>, or any of the <paramref name="capabilities"/> is blank.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="capabilities"/> is <c>null</c>.</exception>
+        public async Task AddPolicyAsync(string name, string path, string[] capabilities)
+        {
+            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a name to identify the policy");
+            Guard.NotNullOrWhitespace(path, nameof(path), "Requires a path where the policy will be applicable");
+            Guard.NotNull(capabilities, nameof(capabilities), "Requires a set of capabilities that should be available in this policy");
+            Guard.NotAny(capabilities, nameof(capabilities), "Requires a set of capabilities that should be available in this policy");
+            Guard.For<ArgumentException>(() => capabilities.Any(String.IsNullOrWhiteSpace), "Requires all the capabilities of the policy to be filled out (not blank)");
+
+            string joinedCapabilities = String.Join(", ", capabilities.Select(c => $"\"{c}\""));
+            string rules = $"path \"{path}/*\" {{  capabilities = [ {joinedCapabilities} ]}}";
+            
+            await _systemEndpoint.PutPolicy(name, rules);
+        }
+
+        /// <summary>
+        /// Enables an authentication type on the HashiCorp Vault.
+        /// </summary>
+        /// <param name="type">The type of the authentication to enable.</param>
+        /// <param name="description">The optional message that describes the authentication type (for user friendliness).</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="type"/> is blank.</exception>
+        public async Task EnableAuthenticationTypeAsync(string type, string description)
+        {
+            Guard.NotNullOrWhitespace(type, nameof(type), "Requires an authentication type to enable the authentication");
+
+            await _systemEndpoint.EnableAuth(path: type, authType: type, description: description);
+        }
+
+        /// <summary>
+        /// Adds a user to the UserPass authentication in HashiCorp Vault, related to a specific path
+        /// and only be able to do the capabilities defined in the policy with the <paramref name="policyName"/>.
+        /// </summary>
+        /// <param name="username">The username of the user.</param>
+        /// <param name="password">The password of the user.</param>
+        /// <param name="policyName">The name of the policy the user will be capable to do.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="username"/>, <paramref name="password"/>, or <paramref name="policyName"/> is blank.</exception>
+        public async Task AddUserPassUserAsync(string username, string password, string policyName)
+        {
+            Guard.NotNullOrWhitespace(username, nameof(username));
+            Guard.NotNullOrWhitespace(password, nameof(password));
+            Guard.NotNullOrWhitespace(policyName, nameof(policyName));
+
+            await _authenticationEndpoint.Write($"/userpass/users/{username}", new UsersRequest
+            {
+                Password = password,
+                Policies = new List<string> { policyName }
+            });
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                if (_process.HasExited)
+                {
+                    _process.Kill();
+                }
+            }
+
+            _disposed = true;
+        }
+    }
+}
