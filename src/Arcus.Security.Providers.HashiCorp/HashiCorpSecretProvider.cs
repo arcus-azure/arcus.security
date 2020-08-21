@@ -28,7 +28,7 @@ namespace Arcus.Security.Providers.HashiCorp
         /// </summary>
         /// <param name="settings">The configuration and authentication settings to successfully connect to the HashiCorp Vault instance.</param>
         /// <param name="secretEngineVersion">The client API version of the KeyValue secret engine to use when retrieving HashiCorp secrets.</param>
-        /// <param name="mountPoint">The point where HashiCorp Vault KeyVault secret engine is mounted.</param>
+        /// <param name="mountPoint">The point where HashiCorp Vault KeyValue secret engine is mounted.</param>
         /// <param name="secretPath">The HashiCorp secret path available in the KeyValue engine where this secret provider should look for secrets.</param>
         /// <exception cref="ArgumentNullException">
         ///     Thrown when the <paramref name="settings"/>,
@@ -42,6 +42,8 @@ namespace Arcus.Security.Providers.HashiCorp
         {
             Guard.NotNull(settings, nameof(settings), "Requires HashiCorp settings to successfully connect to the Vault");
             Guard.NotNull(settings.AuthMethodInfo, nameof(settings.AuthMethodInfo), "Requires a authentication method to connect to the HashiCorp Vault");
+            Guard.NotNullOrWhitespace(mountPoint, nameof(mountPoint), "Requires a point where the HashiCorp Vault KeyValue secret engine is mounted");
+            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault KeyValue secret engine should look for secrets");
             Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), secretEngineVersion), "Requires the client API version to be either V1 or V2");
 
