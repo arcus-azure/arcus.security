@@ -128,7 +128,7 @@ stages:
               }
               Expand-Archive -LiteralPath $vault_zip -DestinationPath $env:TARGET_FOLDER
               ls
-              if (Test-Path "$($env:TARGET_FOLDER)/vault.exe") {
+              if (Test-Path "$($env:TARGET_FOLDER)/vault") {
                 Write-Output "Extracted HashiCorp Vault to executatble file"
               } else {
                 Write-Error "Could not find extracted HashiCorp Vault executatble file"
