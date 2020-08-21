@@ -130,7 +130,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="settings"></param>
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <param name="keyValueVersion">The client API version to use when interacting with the KeyValue secret engine.</param>
-        /// <param name="mountPoint">The point where HashiCorp Vault KeyVault secret engine is mounted.</param>
+        /// <param name="keyValueMountPoint">The point where HashiCorp Vault KeyVault secret engine is mounted.</param>
         /// <exception cref="ArgumentNullException">
         ///     Thrown when the <paramref name="builder"/>, <paramref name="settings"/> or <paramref name="secretPath"/> is <c>null</c>.
         /// </exception>
@@ -138,14 +138,14 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Thrown when the <paramref name="settings"/> doesn't have a valid Vault server URI or a missing authentication method,
         ///     or the <paramref name="secretPath"/> is blank,
         ///     or the <paramref name="keyValueVersion"/> isn't within the bounds of the enumeration
-        ///     or the <paramref name="mountPoint"/> is blank.
+        ///     or the <paramref name="keyValueMountPoint"/> is blank.
         /// </exception>
         public static SecretStoreBuilder AddHashiCorpVault(
             this SecretStoreBuilder builder,
             VaultClientSettings settings,
             string secretPath,
             VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V2,
-            string mountPoint = SecretsEngineDefaultPaths.KeyValueV2)
+            string keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNull(settings, nameof(settings), "Requires HashiCorp Vault settings to correctly connect to the running HashiCorp Vault");
@@ -154,9 +154,9 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a secret path to look for secret values");
             Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), keyValueVersion), "Requires the client API version to be either V1 or V2");
-            Guard.NotNullOrWhitespace(mountPoint, nameof(mountPoint), "Requires a point where the KeyVault secret engine is mounted");
+            Guard.NotNullOrWhitespace(keyValueMountPoint, nameof(keyValueMountPoint), "Requires a point where the KeyVault secret engine is mounted");
 
-            var provider = new HashiCorpSecretProvider(settings, keyValueVersion, mountPoint, secretPath);
+            var provider = new HashiCorpSecretProvider(settings, keyValueVersion, keyValueMountPoint, secretPath);
             return builder.AddProvider(provider);
         }
     }
