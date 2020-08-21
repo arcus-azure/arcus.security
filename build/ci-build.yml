@@ -32,6 +32,7 @@ variables:
   - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
   - template: ./variables/build.yml
+  - template: ./variables/test.yml
 
 stages:
   - stage: Build
@@ -111,7 +112,7 @@ stages:
           - template: 'templates/download-hashicorp-vault.yml'
             parameters:
               targetFolder: '$(Build.SourcesDirectory)'
-              version: 1.5.2
+              version: $(HashiCorp.Vault.Version)
               vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
           - template: test/run-integration-tests.yml@templates
             parameters:

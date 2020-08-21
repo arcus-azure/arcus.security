@@ -1,0 +1,2 @@
+variables:
+  HashiCorp.Vault.Version: 1.5.2
