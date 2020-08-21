@@ -32,6 +32,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.local.json", optional: true)
                 .Build();
 
             return new TestConfig(configuration);

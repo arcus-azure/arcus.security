@@ -5,17 +5,21 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
+using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Tests.Integration.Fixture;
 using GuardNet;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Vault;
 using Vault.Endpoints;
 using Vault.Endpoints.Sys;
 using Vault.Models.Auth.UserPass;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.Token;
+using VaultSharp.V1.SecretsEngines.KeyValue.V1;
 using VaultSharp.V1.SecretsEngines.KeyValue.V2;
+using IVaultClient = VaultSharp.IVaultClient;
 using VaultClient = Vault.VaultClient;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp
@@ -26,6 +30,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
     public class HashiCorpVaultTestServer : IDisposable
     {
         private readonly Process _process;
+        private readonly string _rootToken;
         private readonly ISysEndpoint _systemEndpoint;
         private readonly IEndpoint _authenticationEndpoint;
         private readonly ILogger _logger;
@@ -40,6 +45,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             Guard.NotNull(logger, nameof(logger));
 
             _process = process;
+            _rootToken = rootToken;
             _logger = logger;
 
             ListenAddress = new UriBuilder(listenAddress).Uri;
@@ -49,6 +55,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             var settings = new VaultClientSettings(ListenAddress.ToString(), new TokenAuthMethodInfo(rootToken));
             IVaultClient testClient = new VaultSharp.VaultClient(settings);
+            KeyValueV1 = testClient.V1.Secrets.KeyValue.V1;
             KeyValueV2 = testClient.V1.Secrets.KeyValue.V2;
         }
 
@@ -58,7 +65,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         public Uri ListenAddress { get; }
 
         /// <summary>
-        /// Gets the KeyVault V2 secret engine to control the secret store in the HashiCorp Vault.
+        /// Gets the KeyValue V2 secret engine to control the secret store in the HashiCorp Vault.
+        /// </summary>
+        public IKeyValueSecretsEngineV1 KeyValueV1 { get; }
+
+        /// <summary>
+        /// Gets the KeyValue V2 secret engine to control the secret store in the HashiCorp Vault.
         /// </summary>
         public IKeyValueSecretsEngineV2 KeyValueV2 { get; }
 
@@ -159,6 +171,31 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             }
 
             logger.LogInformation("HashiCorp Vault started at '{ListenAddress}'", listenAddress);
+        }
+
+        /// <summary>
+        /// Mounts the KeyValue secret engine with a specific <paramref name="version"/> to a specific <paramref name="path"/>.
+        /// </summary>
+        /// <param name="path">The path to mount the secret engine to.</param>
+        /// <param name="version">The version of the KeyValue secret engine to mount.</param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown when the <paramref name="path"/> is blank or the <paramref name="version"/> is outside the bounds of the enumeration.
+        /// </exception>
+        public async Task MountKeyValueAsync(string path, VaultKeyValueSecretEngineVersion version)
+        {
+            Guard.NotNullOrWhitespace(path, nameof(path), "Requires a path to mount the KeyValue secret engine to");
+            Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), version), "Requires a KeyValue secret engine version that is either V1 or V2");
+
+            var content = new MountInfo
+            {
+                Type = "kv",
+                Description = "KeyValue v1 secret engine",
+                Options = new MountOptions { Version = ((int) version).ToString() }
+            };
+
+            var http = new VaultHttpClient();
+            var uri = new Uri(ListenAddress, "/v1/sys/mounts/" + path);
+            await http.PostVoid(uri, content, _rootToken, default(CancellationToken));
         }
 
         /// <summary>

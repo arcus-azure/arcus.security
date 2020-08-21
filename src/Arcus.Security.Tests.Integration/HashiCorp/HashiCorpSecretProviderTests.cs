@@ -29,7 +29,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         }
 
         [Fact]
-        public async Task AuthenticateWithUserPass_GetSecret_Succeeds()
+        public async Task AuthenticateWithUserPassKeyValueV2_GetSecret_Succeeds()
         {
             // Arrange
             string secretPath = "mysecret";
@@ -54,6 +54,44 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 var authentication = new UserPassAuthMethodInfo(userName, password);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
                 var provider = new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V2, DefaultDevMountPoint, secretPath);
+
+                // Act
+                string actual = await provider.GetRawSecretAsync(secretName);
+
+                // Assert
+                Assert.Equal(expected, actual);
+            }
+        }
+
+        [Fact]
+        public async Task AuthenticateWithUserPassKeyValueV1_GetSecret_Succeeds()
+        {
+            // Arrange
+            string secretPath = "mysecret";
+            string secretName = "my-value";
+            string expected = "s3cr3t";
+
+            string userName = "arcus";
+            string password = "123";
+
+            const string policyName = "my-policy";
+            const string mountPoint = "secret-v1";
+            const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
+
+            using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
+            {
+                await server.MountKeyValueAsync(mountPoint, keyValueVersion);
+                await server.AddPolicyAsync(policyName, mountPoint, new[] { "read" });
+                await server.EnableAuthenticationTypeAsync(AuthMethodDefaultPaths.UserPass, "Authenticating with username and password");
+                await server.AddUserPassUserAsync(userName, password, policyName);
+                await server.KeyValueV1.WriteSecretAsync(
+                    mountPoint: mountPoint,
+                    path: secretPath,
+                    values: new Dictionary<string, object> { [secretName] = expected });
+
+                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
+                var provider = new HashiCorpSecretProvider(settings, keyValueVersion, mountPoint, secretPath);
 
                 // Act
                 string actual = await provider.GetRawSecretAsync(secretName);
