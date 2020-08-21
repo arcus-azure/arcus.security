@@ -196,7 +196,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPath: "secret/path", secretEngineVersion: secretEngineVersion);
+                stores.AddHashiCorpVault(settings, secretPath: "secret/path", keyValueVersion: secretEngineVersion);
             });
 
             // Assert
