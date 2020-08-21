@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Tests.Integration.Fixture;
+using Arcus.Security.Tests.Integration.HashiCorp.Mounting;
 using GuardNet;
 using Microsoft.Extensions.Logging;
 using Vault;
