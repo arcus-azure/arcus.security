@@ -89,6 +89,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             FileInfo vaultFile = configuration.GetHashiCorpVaultBin();
             var startInfo = new ProcessStartInfo(vaultFile.FullName, vaultArgs)
             {
+                WorkingDirectory = Directory.GetCurrentDirectory(),
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
