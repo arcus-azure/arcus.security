@@ -97,8 +97,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             startInfo.EnvironmentVariables["HOME"] = Directory.GetCurrentDirectory();
             var process = new Process { StartInfo = startInfo };
-
-            process.OutputDataReceived += (sender, args) => logger.LogTrace(args.Data);
             process.ErrorDataReceived += (sender, args) => logger.LogError(args.Data);
 
             try
@@ -138,11 +136,14 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 throw new CouldNotStartHashiCorpVaultException($"Process did not start successfully: {process.StandardError}");
             }
 
+            process.BeginErrorReadLine();
+
             var isStarted = false;
 
             string line = await process.StandardOutput.ReadLineAsync();
             while (line != null)
             {
+                logger.LogTrace(line);
                 if (line?.StartsWith("==> Vault server started!") == true)
                 {
                     isStarted = true;
@@ -233,9 +234,16 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             if (disposing)
             {
-                if (_process.HasExited)
+                try
                 {
-                    _process.Kill();
+                    if (_process.HasExited)
+                    {
+                        _process.Kill();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Failure during stopping of the HashiCorp Vault");
                 }
             }
 
