@@ -119,6 +119,7 @@ stages:
                   Write-Output "Downloading $vault_url to $destination"
                   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
                   Invoke-WebRequest -Uri $vault_url -OutFile $vault_zip
+                  ls
                   if (Test-Path $vault_zip) {
                     Write-Output "Downloaded .zip file to $vault_zip"
                   } else {
@@ -126,6 +127,7 @@ stages:
                   }
               }
               Expand-Archive -LiteralPath $vault_zip -DestinationPath $env:TARGET_FOLDER
+              ls
               if (Test-Path "$($env:TARGET_FOLDER)/vault.exe") {
                 Write-Output "Extracted HashiCorp Vault to vault.exe file"
               } else {
