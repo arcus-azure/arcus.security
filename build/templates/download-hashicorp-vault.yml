@@ -53,9 +53,3 @@ steps:
       VAULT_VERSION: ${{ parameters.version }}
       VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
     displayName: 'Download HashiCorp Vault'
-  # - bash: |
-  #      chmod +x $VAULT_BIN
-  #   env:
-  #     VAULT_BIN: '${{ parameters.targetFolder }}/vault'
-  #   workingDirectory: ${{ parameters.targetFolder }}
-  #   displayName: 'Make HashiCorp Vault executable file runnable'
