@@ -5,6 +5,7 @@ using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
 using Arcus.Testing.Logging;
 using Microsoft.Extensions.Logging;
+using Vault.Endpoints.Sys;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.UserPass;

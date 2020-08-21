@@ -83,7 +83,7 @@ stages:
       - job: IntegrationTests
         displayName: 'Run integration tests'
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'windows-2019'
         steps:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download build artifacts'
