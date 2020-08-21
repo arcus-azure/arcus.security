@@ -140,13 +140,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             var isStarted = false;
 
-            string error = await process.StandardError.ReadToEndAsync();
-            string[] errors = error?.Split(Environment.NewLine) ?? Array.Empty<string>();
-            foreach (string err in errors)
-            {
-                logger.LogError(err);
-            }
-
             string line = await process.StandardOutput.ReadLineAsync();
             while (line != null)
             {
