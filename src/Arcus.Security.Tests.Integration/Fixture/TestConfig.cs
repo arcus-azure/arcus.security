@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +35,40 @@ namespace Arcus.Security.Tests.Integration.Fixture
                 .Build();
 
             return new TestConfig(configuration);
+        }
+
+        /// <summary>
+        /// Gets the configured HashiCorp Vault execution file.
+        /// </summary>
+        public FileInfo GetHashiCorpVaultBin()
+        {
+            const string key = "Arcus.HashiCorp.VaultBin";
+            string vaultBin = _configuration[key];
+
+            if (String.IsNullOrWhiteSpace(vaultBin))
+            {
+                throw new KeyNotFoundException(
+                    $"Could not find HashiCorp Vault execution file for key: '{key}', was blank");
+            }
+
+            FileInfo vaultFile;
+            try
+            {
+                vaultFile = new FileInfo(vaultBin);
+            }
+            catch (Exception exception)
+            {
+                throw new FileNotFoundException(
+                    $"File path returned for key '{key}' doesn't point to valid HashiCorp vault execution file", exception);
+            }
+
+            if (!vaultFile.Exists || vaultFile.Name != "vault.exe")
+            {
+                throw new FileNotFoundException(
+                    $"File path returned for key '{key}' doesn't point to valid HashiCorp vault execution file");
+            }
+
+            return vaultFile;
         }
 
         /// <summary>

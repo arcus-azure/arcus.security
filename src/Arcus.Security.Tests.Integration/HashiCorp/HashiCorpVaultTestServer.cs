@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Arcus.Security.Tests.Integration.Fixture;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -67,7 +68,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         /// <param name="configuration">The configuration instance to retrieve the HashiCorp installation folder ('Arcus.HashiCorp.VaultBin').</param>
         /// <param name="logger">The instance to log diagnostic trace messages during the lifetime of the test server.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> or <paramref name="logger"/> is <c>null</c>.</exception>
-        public static HashiCorpVaultTestServer StartServer(IConfiguration configuration, ILogger logger)
+        public static HashiCorpVaultTestServer StartServer(TestConfig configuration, ILogger logger)
         {
             Guard.NotNull(logger, nameof(logger), 
                 "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
@@ -85,12 +86,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 $"-dev-listen-address={listenAddress}"
             });
 
-            string vaultBin = 
-                configuration.GetValue<string>("Arcus.HashiCorp.VaultBin") 
-                    ?? Environment.GetEnvironmentVariable("VAULT_BIN") 
-                    ?? "vault";
-            
-            var startInfo = new ProcessStartInfo(vaultBin, vaultArgs)
+            FileInfo vaultFile = configuration.GetHashiCorpVaultBin();
+            var startInfo = new ProcessStartInfo(vaultFile.FullName, vaultArgs)
             {
                 UseShellExecute = false,
                 RedirectStandardError = true,
