@@ -111,7 +111,7 @@ stages:
               packageType: 'sdk'
               version: '$(DotNet.Sdk.VersionBC)'
           - powershell: |
-              New-Item $env:TARGET_FOLDER
+              # New-Item $env:TARGET_FOLDER
               $vault_zip = "vault_$($env:VAULT_VERSION)_windows_amd64.zip"
               $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
               $destination = "$($env:TARGET_FOLDER)/$vault_zip"
