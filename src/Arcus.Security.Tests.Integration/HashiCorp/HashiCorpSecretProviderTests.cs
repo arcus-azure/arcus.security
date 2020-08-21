@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Tests.Integration.Fixture;
+using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
 using Arcus.Testing.Logging;
 using Microsoft.Extensions.Logging;
 using VaultSharp;

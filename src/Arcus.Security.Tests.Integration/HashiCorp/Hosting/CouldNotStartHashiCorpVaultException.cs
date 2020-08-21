@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Arcus.Security.Tests.Integration.HashiCorp
+namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 {
     /// <summary>
     /// Exception thrown when the <see cref="HashiCorpVaultTestServer"/> cannot be started correctly.

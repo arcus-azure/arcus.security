@@ -20,9 +20,10 @@ using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.SecretsEngines.KeyValue.V1;
 using VaultSharp.V1.SecretsEngines.KeyValue.V2;
 using IVaultClient = VaultSharp.IVaultClient;
+using MountInfo = Arcus.Security.Tests.Integration.HashiCorp.Mounting.MountInfo;
 using VaultClient = Vault.VaultClient;
 
-namespace Arcus.Security.Tests.Integration.HashiCorp
+namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 {
     /// <summary>
     /// Represents a HashiCorp Vault instance running in 'dev server' mode.
