@@ -62,7 +62,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
                     $"File path returned for key '{key}' doesn't point to valid HashiCorp vault execution file", exception);
             }
 
-            if (!vaultFile.Exists || vaultFile.Name != "vault.exe")
+            if (!vaultFile.Exists || !vaultFile.Name.StartsWith("vault"))
             {
                 throw new FileNotFoundException(
                     $"File path returned for key '{key}' doesn't point to valid HashiCorp vault execution file");
