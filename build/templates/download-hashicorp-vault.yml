@@ -21,6 +21,7 @@ steps:
       TARGET_FOLDER: ${{ parameters.targetFolder }}
       VERSION: ${{ parameters.version }}
       VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
+    displayName: 'Check for required parameters in YAML template'
   - powershell: |
       # New-Item $env:TARGET_FOLDER
       $vault_zip = "vault_$($env:VAULT_VERSION)_linux_amd64.zip"
@@ -57,3 +58,4 @@ steps:
     env:
       VAULT_BIN: '${{ parameters.targetFolder }}/vault'
     workingDirectory: ${{ parameters.targetFolder }}
+    displayName: 'Make HashiCorp Vault executable file runnable'
