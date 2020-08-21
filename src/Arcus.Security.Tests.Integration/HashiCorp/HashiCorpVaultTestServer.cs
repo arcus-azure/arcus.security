@@ -68,7 +68,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         /// <param name="configuration">The configuration instance to retrieve the HashiCorp installation folder ('Arcus.HashiCorp.VaultBin').</param>
         /// <param name="logger">The instance to log diagnostic trace messages during the lifetime of the test server.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> or <paramref name="logger"/> is <c>null</c>.</exception>
-        public static HashiCorpVaultTestServer StartServer(TestConfig configuration, ILogger logger)
+        public static async Task<HashiCorpVaultTestServer> StartServerAsync(TestConfig configuration, ILogger logger)
         {
             Guard.NotNull(logger, nameof(logger), 
                 "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
@@ -103,7 +103,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             try
             {
-                StartHashiCorpVault(process, listenAddress, logger);
+                await StartHashiCorpVaultAsync(process, listenAddress, logger);
                 return new HashiCorpVaultTestServer(process, rootToken, listenAddress, logger);
             }
             catch (Exception exception)
@@ -129,7 +129,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             return port;
         }
 
-        private static void StartHashiCorpVault(Process process, string listenAddress, ILogger logger)
+        private static async Task StartHashiCorpVaultAsync(Process process, string listenAddress, ILogger logger)
         {
             logger.LogTrace("Starting HashiCorp Vault at '{listenAddress}'...", listenAddress);
 
@@ -140,7 +140,14 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             var isStarted = false;
 
-            string line = process.StandardOutput.ReadLine();
+            string error = await process.StandardError.ReadToEndAsync();
+            string[] errors = error?.Split(Environment.NewLine) ?? Array.Empty<string>();
+            foreach (string err in errors)
+            {
+                logger.LogError(err);
+            }
+
+            string line = await process.StandardOutput.ReadLineAsync();
             while (line != null)
             {
                 if (line?.StartsWith("==> Vault server started!") == true)
@@ -149,7 +156,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     break;
                 }
 
-                line = process.StandardOutput.ReadLine();
+                line = await process.StandardOutput.ReadLineAsync();
             }
 
             if (!isStarted)

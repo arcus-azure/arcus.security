@@ -41,7 +41,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             const string policyName = "my-policy";
 
-            using (var server = HashiCorpVaultTestServer.StartServer(_config, _logger))
+            using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
             {
                 await server.AddPolicyAsync(policyName, DefaultDevMountPoint, new[] { "read" });
                 await server.EnableAuthenticationTypeAsync(AuthMethodDefaultPaths.UserPass, "Authenticating with username and password");
