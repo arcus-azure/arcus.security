@@ -42,7 +42,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
         /// </summary>
         public FileInfo GetHashiCorpVaultBin()
         {
-            const string key = "Arcus.HashiCorp.VaultBin";
+            const string key = "Arcus:HashiCorp:VaultBin";
             string vaultBin = _configuration[key];
 
             if (String.IsNullOrWhiteSpace(vaultBin))
