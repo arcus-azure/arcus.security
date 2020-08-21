@@ -111,14 +111,14 @@ stages:
               packageType: 'sdk'
               version: '$(DotNet.Sdk.VersionBC)'
           - powershell: |
-              mkdir -Force $env:TARGET_FOLDER | Out-Null
+              New-Item $env:TARGET_FOLDER -Force | Out-Null
               $vault_zip = "vault_$($env:VAULT_VERSION)_windows_amd64.zip"
               $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
               $destination = "$($env:TARGET_FOLDER)\$vault_zip"
               if (!(Test-Path $destination)) {
                   Write-Output "Downloading $vault_url"
                   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
-                  Start-FileDownload $vault_url -FileName $destination
+                  Invoke-WebRequest -Uri $vault_url -OutFile $destination
               }
               Expand-Archive -LiteralPath $destination -DestinationPath $env:TARGET_FOLDER
             env:
