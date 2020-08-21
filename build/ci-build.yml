@@ -138,6 +138,11 @@ stages:
               TARGET_FOLDER: $(Build.SourcesDirectory)
               VAULT_VERSION: 1.5.0
             displayName: 'Download HashiCorp Vault'
+          - bash: |
+               chmod +x $VAULT_BIN
+            env:
+              VAULT_BIN: $(Arcus.HashiCorp.VaultBin)
+            workingDirectory: $(Build.SourcesDirectory)
           - template: test/run-integration-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
