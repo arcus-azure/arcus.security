@@ -114,7 +114,7 @@ stages:
               New-Item $env:TARGET_FOLDER
               $vault_zip = "vault_$($env:VAULT_VERSION)_windows_amd64.zip"
               $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
-              $destination = "$($env:TARGET_FOLDER)\$vault_zip"
+              $destination = "$($env:TARGET_FOLDER)/$vault_zip"
               if (!(Test-Path $destination)) {
                   Write-Output "Downloading $vault_url to $destination"
                   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
