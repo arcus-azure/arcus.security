@@ -57,7 +57,7 @@ public class Program
 
                         // Kubernetes authentication built-in overload:
                         // --------------------------------------------
-                        builder.AddHashiCorpWithKubernetes(
+                        builder.AddHashiCorpVaultWithKubernetes(
                             // URI where the HashiCorp Vault is running.
                              vaultServerUriWithPort: "https://uri.to.your.running.vault:5200",
                              // Role name of the Kubernetes service account.
@@ -69,28 +69,28 @@ public class Program
                         );
 
                         // Mount point of Kubernetes authentication (default: kubernetes).
-                        builder.AddHashiCorpWithKubernetes(..., kubernetesMountPoint: "mykubernetes");
+                        builder.AddHashiCorpVaultWithKubernetes(..., kubernetesMountPoint: "mykubernetes");
 
                          // Version of the KeyValue secret engine (default: V2).
-                         builder.AddHashiCorpWithKubernetes(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
+                         builder.AddHashiCorpVaultWithKubernetes(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
 
                         // Mount point of KeyValue secret engine (default: kv-v2).
-                        builder.AddHashiCorpWithKubernetes(..., keyValueMountPoint: "secret");
+                        builder.AddHashiCorpVaultWithKubernetes(..., keyValueMountPoint: "secret");
 
                         // Custom settings overload for when using the [VaultSharp](https://github.com/rajanadar/VaultSharp) settings directly.
                         // -------------------------
                         var tokenAuthentication = new TokenAuthMethodInfo("token");
                         var settings = VaultClientSettings("http://uri.to.your.running.vault.5200", tokenAuthentication);
-                        builder.AddHashiCorp(
+                        builder.AddHashiCorpVault(
                             settings, 
                             // Path where the secrets are stored in the KeyValue secret engine.
                             secretPath: "my-secrets");
 
                         // Version of the KeyValue secret engine (default: V2).
-                         builder.AddHashiCorp(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
+                         builder.AddHashiCorpVault(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
 
                         // Mount point of KeyValue secret engine (default: kv-v2).
-                        builder.AddHashiCorp(..., keyValueMountPoint: "secret");
+                        builder.AddHashiCorpVault(..., keyValueMountPoint: "secret");
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

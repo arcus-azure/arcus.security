@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Providers.HashiCorp.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -23,13 +22,6 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             new object[] { (VaultKeyValueSecretEngineVersion) 5 },
             new object[] { VaultKeyValueSecretEngineVersion.V1 | VaultKeyValueSecretEngineVersion.V2 },
-        };
-
-        public static IEnumerable<object[]> BlankSecretPaths => new[]
-        {
-            new object[] { null },
-            new object[] { Enumerable.Empty<string>() },
-            new object[] { new[] { "secret/path", null } }
         };
 
         [Theory]
@@ -153,7 +145,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
 
         [Theory]
         [MemberData(nameof(OutOfBoundsClientApiVersion))]
-        public void AddHashiCorpWithKubernetes_WithOutOfBoundsClientApiVersion_Throws(VaultKeyValueSecretEngineVersion secretEngineVersion)
+        public void AddHashiCorpWithKubernetes_WithOutOfBoundsKeyValueVersion_Throws(VaultKeyValueSecretEngineVersion secretEngineVersion)
         {
             // Arrange
             var builder = new HostBuilder();
@@ -170,7 +162,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
 
         [Theory]
         [MemberData(nameof(OutOfBoundsClientApiVersion))]
-        public void AddHashiCorpWithUserPass_WithOutOfBoundsClientApiVersion_Throws(VaultKeyValueSecretEngineVersion secretEngineVersion)
+        public void AddHashiCorpWithUserPass_WithOutOfBoundsKeyValueVerion_Throws(VaultKeyValueSecretEngineVersion secretEngineVersion)
         {
             // Arrange
             var builder = new HostBuilder();
@@ -187,7 +179,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
 
         [Theory]
         [MemberData(nameof(OutOfBoundsClientApiVersion))]
-        public void AddHashiCorp_WithOutOfBoundsClientApiVersion_Throws(VaultKeyValueSecretEngineVersion secretEngineVersion)
+        public void AddHashiCorp_WithOutOfBoundsKeyValueVersion_Throws(VaultKeyValueSecretEngineVersion secretEngineVersion)
         {
             // Arrange
             var builder = new HostBuilder();
@@ -249,6 +241,120 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddHashiCorpVault(settings, secretPath: "secret/path");
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Theory]
+        [MemberData(nameof(Blanks))]
+        public void AddHashiCorpWithUserPass_WithoutUserPassAuthenticationMountPoint_Throws(string userPassMountPoint)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVaultWithUserPass(
+                    "https://vault.uri:456",
+                    "username",
+                    "password",
+                    "secret/path",
+                    VaultKeyValueSecretEngineVersion.V2,
+                    userPassMountPoint: userPassMountPoint);
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Theory]
+        [MemberData(nameof(Blanks))]
+        public void AddHashiCorpWithKubernetes_WithoutKubernetesAuthenticationMountPoint_Throws(string kubernetesMountPoint)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVaultWithKubernetes(
+                    "https://vault.uri:456",
+                    "rolename",
+                    "jwt",
+                    "secret/path",
+                    VaultKeyValueSecretEngineVersion.V2,
+                    kubernetesMountPoint: kubernetesMountPoint);
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Theory]
+        [MemberData(nameof(Blanks))]
+        public void AddHashiCorpWithUserPass_WithoutKeyValueMountPoint_Throws(string keyValueMountPoint)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVaultWithUserPass(
+                    "https://vault.uri:456",
+                    "username",
+                    "password",
+                    "secret/path",
+                    VaultKeyValueSecretEngineVersion.V2,
+                    keyValueMountPoint: keyValueMountPoint);
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Theory]
+        [MemberData(nameof(Blanks))]
+        public void AddHashiCorpWithKubernetes_WithoutKeyValueMountPoint_Throws(string keyValueMountPoint)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVaultWithKubernetes(
+                    "https://vault.uri:456",
+                    "rolename",
+                    "jwt",
+                    "secret/path",
+                    VaultKeyValueSecretEngineVersion.V2,
+                    keyValueMountPoint: keyValueMountPoint);
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Theory]
+        [MemberData(nameof(Blanks))]
+        public void AddHashiCorp_WithoutKeyValueMountPoint_Throws(string keyValueMountPoint)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo("username", "password"));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVault(
+                    settings,
+                    "secret/path",
+                    VaultKeyValueSecretEngineVersion.V2,
+                    keyValueMountPoint: keyValueMountPoint);
             });
 
             // Assert
