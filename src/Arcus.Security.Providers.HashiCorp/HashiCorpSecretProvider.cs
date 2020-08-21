@@ -81,7 +81,8 @@ namespace Arcus.Security.Providers.HashiCorp
 
             if (result.Data.TryGetValue(secretName, out object value) && value != null)
             {
-                return new Secret(value.ToString(), result.Metadata?.Version.ToString());
+                var version = result.Metadata?.Version.ToString();
+                return new Secret(value.ToString(), version);
             }
 
             return null;
@@ -92,11 +93,15 @@ namespace Arcus.Security.Providers.HashiCorp
             switch (_secretEngineVersion)
             {
                 case VaultKeyValueSecretEngineVersion.V1:
-                    Secret<Dictionary<string, object>> secretV1 = await _vaultClient.V1.Secrets.KeyValue.V1.ReadSecretAsync(secretPath, mountPoint: _mountPoint);
+                    Secret<Dictionary<string, object>> secretV1 = 
+                        await _vaultClient.V1.Secrets.KeyValue.V1.ReadSecretAsync(secretPath, mountPoint: _mountPoint);
                     return new SecretData { Data = secretV1.Data };
+                
                 case VaultKeyValueSecretEngineVersion.V2:
-                    Secret<SecretData> secretV2 = await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath, mountPoint: _mountPoint);
+                    Secret<SecretData> secretV2 = 
+                        await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(secretPath, mountPoint: _mountPoint);
                     return secretV2.Data;
+                
                 default:
                     throw new ArgumentOutOfRangeException(nameof(_secretEngineVersion), _secretEngineVersion, "Unknown client API version");
             }
