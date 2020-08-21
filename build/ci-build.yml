@@ -97,8 +97,6 @@ stages:
         displayName: 'Run integration tests'
         pool:
           vmImage: 'ubuntu-16.04'
-        variables:
-          Arcus.HashiCorp.VaultBin: '$(Build.SourcesDirectory)/vault'
         steps:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download build artifacts'
@@ -110,39 +108,11 @@ stages:
             inputs:
               packageType: 'sdk'
               version: '$(DotNet.Sdk.VersionBC)'
-          - powershell: |
-              # New-Item $env:TARGET_FOLDER
-              $vault_zip = "vault_$($env:VAULT_VERSION)_linux_amd64.zip"
-              $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
-              $destination = "$($env:TARGET_FOLDER)/$vault_zip"
-              if (!(Test-Path $destination)) {
-                  Write-Output "Downloading $vault_url to $destination"
-                  [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
-                  Invoke-WebRequest -Uri $vault_url -OutFile $vault_zip
-                  ls
-                  if (Test-Path $vault_zip) {
-                    Write-Output "Downloaded .zip file to $vault_zip"
-                  } else {
-                    Write-Error "Could not find downloaded .zip file $vault_zip"
-                  }
-              }
-              Expand-Archive -LiteralPath $vault_zip -DestinationPath $env:TARGET_FOLDER
-              ls
-              if (Test-Path "$($env:TARGET_FOLDER)/vault") {
-                Write-Output "Extracted HashiCorp Vault to executatble file"
-              } else {
-                Write-Error "Could not find extracted HashiCorp Vault executatble file"
-              }
-            workingDirectory: $(Build.SourcesDirectory)
-            env:
-              TARGET_FOLDER: $(Build.SourcesDirectory)
-              VAULT_VERSION: 1.5.2
-            displayName: 'Download HashiCorp Vault'
-          - bash: |
-               chmod +x $VAULT_BIN
-            env:
-              VAULT_BIN: $(Arcus.HashiCorp.VaultBin)
-            workingDirectory: $(Build.SourcesDirectory)
+          - template: 'templates/download-hashicorp-vault.yml'
+            parameters:
+              targetFolder: '$(Build.SourcesDirectory)'
+              version: 1.5.2
+              vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
           - template: test/run-integration-tests.yml@templates
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'

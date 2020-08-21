@@ -1,0 +1,59 @@
+parameters:
+  targetFolder: '$(Build.SourcesDirectory)'
+  version: ''
+  vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
+
+steps:
+  - bash: |
+      if [ -z "$TARGET_FOLDER" ]; then
+        echo "##vso[task.logissue type=error;]Missing template parameter \"targetFolder\""
+        echo "##vso[task.complete result=Failed;]"
+      fi
+      if [ -z "$VERSION" ]; then
+        echo "##vso[task.logissue type=error;]Missing template parameter \"version\""
+        echo "##vso[task.complete result=Failed;]"
+      fi
+      if [ -z "$VARIABLE_NAME" ]; then
+        echo "##vso[task.logissue type=error;]Missing template parameter \"vaultBinVariableName\""
+        echo "##vso[task.complete result=Failed;]"
+      fi
+    env:
+      TARGET_FOLDER: ${{ parameters.targetFolder }}
+      VERSION: ${{ parameters.version }}
+      VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
+  - powershell: |
+      # New-Item $env:TARGET_FOLDER
+      $vault_zip = "vault_$($env:VAULT_VERSION)_linux_amd64.zip"
+      $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
+      $destination = "$($env:TARGET_FOLDER)/$vault_zip"
+      if (!(Test-Path $destination)) {
+          Write-Output "Downloading $vault_url to $destination"
+          [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+          Invoke-WebRequest -Uri $vault_url -OutFile $vault_zip
+          ls
+          if (Test-Path $vault_zip) {
+            Write-Output "Downloaded .zip file to $vault_zip"
+          } else {
+            Write-Error "Could not find downloaded .zip file $vault_zip"
+          }
+      }
+      Expand-Archive -LiteralPath $vault_zip -DestinationPath $env:TARGET_FOLDER
+      ls
+      $vault_bin = "$($env:TARGET_FOLDER)/vault"
+      if (Test-Path $vault_bin) {
+        Write-Output "Extracted HashiCorp Vault to executable file"
+      } else {
+        Write-Error "Could not find extracted HashiCorp Vault executable file"
+      }
+      Write-Host "##vso[task.setvariable variable=$($env:VARIABLE_NAME)]$vault_bin"
+    workingDirectory: ${{ parameters.targetFolder }}
+    env:
+      TARGET_FOLDER: ${{ parameters.targetFolder }}
+      VAULT_VERSION: ${{ parameters.version }}
+      VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
+    displayName: 'Download HashiCorp Vault'
+  - bash: |
+       chmod +x $VAULT_BIN
+    env:
+      VAULT_BIN: '${{ parameters.targetFolder }}/vault'
+    workingDirectory: ${{ parameters.targetFolder }}
