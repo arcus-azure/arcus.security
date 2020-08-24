@@ -106,6 +106,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 WorkingDirectory = Directory.GetCurrentDirectory(),
                 UseShellExecute = false,
+                CreateNoWindow = true,
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
@@ -284,7 +285,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             _process.CloseMainWindow();
 
-            if (_process.HasExited)
+            if (!_process.HasExited)
             {
 #if NETCOREAPP3_1
                 _process.Kill(entireProcessTree: true); 
