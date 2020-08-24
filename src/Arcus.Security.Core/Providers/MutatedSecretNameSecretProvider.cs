@@ -52,8 +52,25 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            string secretValue = await SafeguardMutateSecretNameAsync(secretName, mutated => _implementation.GetRawSecretAsync(mutated));
-            return secretValue;
+            string mutatedSecretName = MutateSecretName(secretName);
+            Task<string> rawSecretAsync = _implementation.GetRawSecretAsync(mutatedSecretName);
+
+            if (rawSecretAsync is null)
+            {
+                throw new SecretNotFoundException(mutatedSecretName);
+            }
+
+            try
+            {
+                return await rawSecretAsync;
+            }
+            catch (Exception exception)
+            {
+                Logger.LogError(
+                    exception, "Failure during retrieving secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
+
+                throw new SecretNotFoundException(mutatedSecretName, exception);
+            }
         }
 
         /// <summary>
@@ -68,46 +85,8 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            Secret secret = await SafeguardMutateSecretNameAsync(secretName, mutated => _implementation.GetSecretAsync(mutated));
-            return secret;
-        }
-
-        /// <summary>
-        /// Safeguards the previously specified mutated secret name function with built-in exception handling.
-        /// Handles the result of the <see cref="MutateSecretName"/> into the inner specified <see cref="ISecretProvider"/>.
-        /// </summary>
-        /// <param name="secretName">The name of the secret to be mutated.</param>
-        /// <param name="asyncFuncAfterMutation">The function to execute after the mutation.</param>
-        protected async Task SafeguardMutateSecretNameAsync(string secretName, Func<string, Task> asyncFuncAfterMutation)
-        {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
-            Guard.NotNull(asyncFuncAfterMutation, nameof(asyncFuncAfterMutation), "Requires a asynchronous function to execute after the secret name mutation");
-
-            await SafeguardMutateSecretNameAsync(secretName, async mutated =>
-            {
-                await asyncFuncAfterMutation(mutated);
-                
-                // Return something so we can use other overload.
-                return 0;
-            });
-        }
-
-        /// <summary>
-        /// Safeguards the previously specified mutated secret name function with built-in exception handling.
-        /// Handles the result of the <see cref="MutateSecretName"/> into the inner specified <see cref="ISecretProvider"/>.
-        /// </summary>
-        /// <param name="secretName">The name of the secret to be mutated.</param>
-        /// <param name="asyncFuncAfterMutation">The function to execute after the mutation.</param>
-        /// <returns>
-        ///     The value that was returned from the <paramref name="asyncFuncAfterMutation"/> given the mutated version of the given <paramref name="secretName"/>.
-        /// </returns>
-        protected async Task<T> SafeguardMutateSecretNameAsync<T>(string secretName, Func<string, Task<T>> asyncFuncAfterMutation)
-        {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
-            Guard.NotNull(asyncFuncAfterMutation, nameof(asyncFuncAfterMutation), "Requires a asynchronous function to execute after the secret name mutation");
-
             string mutatedSecretName = MutateSecretName(secretName);
-            Task<T> secretAsync = asyncFuncAfterMutation(mutatedSecretName);
+            Task<Secret> secretAsync = _implementation.GetSecretAsync(mutatedSecretName);
 
             if (secretAsync is null)
             {
@@ -121,8 +100,8 @@ namespace Arcus.Security.Core.Providers
             catch (Exception exception)
             {
                 Logger.LogError(
-                    exception, "Failure during using secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
-
+                    exception, "Failure during retrieving secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
+                
                 throw new SecretNotFoundException(mutatedSecretName, exception);
             }
         }
