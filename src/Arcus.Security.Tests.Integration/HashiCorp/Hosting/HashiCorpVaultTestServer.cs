@@ -21,8 +21,10 @@ using VaultSharp;
 using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.SecretsEngines.KeyValue.V1;
 using VaultSharp.V1.SecretsEngines.KeyValue.V2;
+using VaultSharp.V1.SystemBackend;
 using IVaultClient = VaultSharp.IVaultClient;
 using MountInfo = Arcus.Security.Tests.Integration.HashiCorp.Mounting.MountInfo;
+using Policy = Polly.Policy;
 using VaultClient = Vault.VaultClient;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
@@ -34,6 +36,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
     {
         private readonly Process _process;
         private readonly string _rootToken;
+        private readonly VaultSharp.VaultClient _apiClient;
         private readonly ISysEndpoint _systemEndpoint;
         private readonly IEndpoint _authenticationEndpoint;
         private readonly ILogger _logger;
@@ -57,9 +60,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             _authenticationEndpoint = client.Auth;
 
             var settings = new VaultClientSettings(ListenAddress.ToString(), new TokenAuthMethodInfo(rootToken));
-            IVaultClient testClient = new VaultSharp.VaultClient(settings);
-            KeyValueV1 = testClient.V1.Secrets.KeyValue.V1;
-            KeyValueV2 = testClient.V1.Secrets.KeyValue.V2;
+            _apiClient = new VaultSharp.VaultClient(settings);
+            KeyValueV1 = _apiClient.V1.Secrets.KeyValue.V1;
+            KeyValueV2 = _apiClient.V1.Secrets.KeyValue.V2;
         }
 
         /// <summary>
@@ -106,19 +109,16 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 WorkingDirectory = Directory.GetCurrentDirectory(),
                 UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
+                CreateNoWindow = true
             };
 
             startInfo.EnvironmentVariables["HOME"] = Directory.GetCurrentDirectory();
             var process = new Process { StartInfo = startInfo };
-            process.ErrorDataReceived += (sender, args) => logger.LogError(args.Data);
+            var server = new HashiCorpVaultTestServer(process, rootToken, listenAddress, logger);
 
             try
             {
-                await StartHashiCorpVaultAsync(process, listenAddress, logger);
-                return new HashiCorpVaultTestServer(process, rootToken, listenAddress, logger);
+                await server.StartHashiCorpVaultAsync();
             }
             catch (Exception exception)
             {
@@ -143,38 +143,25 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             return port;
         }
 
-        private static async Task StartHashiCorpVaultAsync(Process process, string listenAddress, ILogger logger)
+        private async Task StartHashiCorpVaultAsync()
         {
-            logger.LogTrace("Starting HashiCorp Vault at '{listenAddress}'...", listenAddress);
+            _logger.LogTrace("Starting HashiCorp Vault at '{listenAddress}'...", ListenAddress);
 
-            if (!process.Start())
+            PolicyResult<int?> result =
+                await Policy.HandleResult<int?>(statusCode => statusCode != 200)
+                            .WaitAndRetryAsync(5, index => TimeSpan.FromSeconds(5))
+                            .ExecuteAndCaptureAsync(async () =>
+                            {
+                                HealthStatus status = await _apiClient.V1.System.GetHealthStatusAsync();
+                                return status.HttpStatusCode;
+                            });
+
+            if (result.Outcome == OutcomeType.Failure)
             {
-                throw new CouldNotStartHashiCorpVaultException($"Process did not start successfully: {process.StandardError}");
+                throw new CouldNotStartHashiCorpVaultException("Vault did not start successfully");
             }
 
-            process.BeginErrorReadLine();
-
-            var isStarted = false;
-
-            string line = await process.StandardOutput.ReadLineAsync();
-            while (line != null)
-            {
-                logger.LogTrace(line);
-                if (line?.StartsWith("==> Vault server started!") == true)
-                {
-                    isStarted = true;
-                    break;
-                }
-
-                line = await process.StandardOutput.ReadLineAsync();
-            }
-
-            if (!isStarted)
-            {
-                throw new CouldNotStartHashiCorpVaultException("Process did not start successfully");
-            }
-
-            logger.LogInformation("HashiCorp Vault started at '{ListenAddress}'", listenAddress);
+            _logger.LogInformation("HashiCorp Vault started at '{ListenAddress}'", ListenAddress);
         }
 
         /// <summary>
@@ -276,7 +263,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             if (disposing)
             {
                 RetryAction(StopHashiCorpVault);
-                RetryAction(StopAllVaultProcesses);
             }
 
             _disposed = true;
@@ -294,28 +280,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             }
 
             _process.Dispose();
-        }
-
-        private void StopAllVaultProcesses()
-        {
-            var startInfo = new ProcessStartInfo("pkill", "-9 vault")
-            {
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using (Process p = Process.Start(startInfo))
-            {
-                p.WaitForExit(milliseconds: 1000);
-
-                if (!p.HasExited)
-                {
-#if NETCOREAPP3_1
-                    p.Kill(entireProcessTree: true);
-#endif
-
-                }
-            }
         }
 
         protected PolicyResult RetryAction(Action action, int timeoutInSeconds = 30, int retryIntervalInSeconds = 1)
