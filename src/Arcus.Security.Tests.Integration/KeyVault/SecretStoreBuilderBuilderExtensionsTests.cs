@@ -215,7 +215,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => secretName.ToUpper());
+                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
             });
 
             // Assert
@@ -313,7 +313,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentity(
-                    keyVaultUri, connectionString, mutateSecretName: secretName => secretName.ToUpper());
+                    keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
             });
 
             // Assert
