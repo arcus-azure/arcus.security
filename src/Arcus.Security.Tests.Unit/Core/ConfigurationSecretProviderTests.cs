@@ -70,7 +70,7 @@ namespace Arcus.Security.Tests.Unit.Core
             IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Arcus.SecretPrincipal.ClientId");
+            Secret secret = await provider.GetSecretAsync("Arcus.ServicePrincipal.ClientId");
             Assert.Equal(expected, secret.Value);
         }
 
