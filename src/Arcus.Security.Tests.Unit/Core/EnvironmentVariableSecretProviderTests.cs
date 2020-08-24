@@ -115,7 +115,7 @@ namespace Arcus.Security.Tests.Unit.Core
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddEnvironmentVariables(mutateSecretName: name => name.ToLower());
+                    stores.AddEnvironmentVariables(mutateSecretName: name => name.Replace("_", "."));
                 });
 
                 // Assert

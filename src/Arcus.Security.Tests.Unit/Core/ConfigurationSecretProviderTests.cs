@@ -85,7 +85,7 @@ namespace Arcus.Security.Tests.Unit.Core
                 }));
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddConfiguration(config, name => name.ToUpper()));
+            builder.ConfigureSecretStore((config, stores) => stores.AddConfiguration(config, name => name.Replace(":", ".")));
 
             // Assert
             IHost host = builder.Build();
