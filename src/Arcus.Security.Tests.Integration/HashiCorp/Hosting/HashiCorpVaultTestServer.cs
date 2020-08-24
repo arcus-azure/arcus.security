@@ -107,7 +107,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 WorkingDirectory = Directory.GetCurrentDirectory(),
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                RedirectStandardOutput = true
             };
 
             startInfo.EnvironmentVariables["HOME"] = Directory.GetCurrentDirectory();
@@ -147,18 +148,24 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             _logger.LogTrace("Starting HashiCorp Vault at '{listenAddress}'...", ListenAddress);
 
-            PolicyResult<int?> result =
-                await Policy.HandleResult<int?>(statusCode => statusCode != 200)
-                            .WaitAndRetryAsync(5, index => TimeSpan.FromSeconds(5))
-                            .ExecuteAndCaptureAsync(async () =>
-                            {
-                                HealthStatus status = await _apiClient.V1.System.GetHealthStatusAsync();
-                                return status.HttpStatusCode;
-                            });
+            var isStarted = false;
 
-            if (result.Outcome == OutcomeType.Failure)
+            string line = await _process.StandardOutput.ReadLineAsync();
+            while (line != null)
             {
-                throw new CouldNotStartHashiCorpVaultException("Vault did not start successfully");
+                _logger.LogTrace(line);
+                if (line?.StartsWith("==> Vault server started!") == true)
+                {
+                    isStarted = true;
+                    break;
+                }
+
+                line = await _process.StandardOutput.ReadLineAsync();
+            }
+
+            if (!isStarted)
+            {
+                throw new CouldNotStartHashiCorpVaultException("Process did not start successfully");
             }
 
             _logger.LogInformation("HashiCorp Vault started at '{ListenAddress}'", ListenAddress);
