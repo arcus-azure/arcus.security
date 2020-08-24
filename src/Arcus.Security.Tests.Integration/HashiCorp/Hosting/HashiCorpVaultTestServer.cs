@@ -12,6 +12,7 @@ using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.HashiCorp.Mounting;
 using GuardNet;
 using Microsoft.Extensions.Logging;
+using Polly;
 using Vault;
 using Vault.Endpoints;
 using Vault.Endpoints.Sys;
@@ -264,7 +265,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed)
             {
@@ -273,20 +274,36 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             if (disposing)
             {
-                try
-                {
-                    if (_process.HasExited)
-                    {
-                        _process.Kill();
-                    }
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogError(exception, "Failure during stopping of the HashiCorp Vault");
-                }
+                RetryAction(StopHashiCorpVault);
             }
 
             _disposed = true;
+        }
+
+        private void StopHashiCorpVault()
+        {
+            if (_process.HasExited)
+            {
+#if NETCOREAPP3_1
+                _process.Kill(entireProcessTree: true); 
+#else
+                _process.Kill();
+#endif
+            }
+
+            _process.Dispose();
+        }
+
+        protected PolicyResult RetryAction(Action action, int timeoutInSeconds = 30, int retryIntervalInSeconds = 1)
+        {
+            Guard.NotNull(action, nameof(action), "Requires disposing function to be retried");
+            Guard.NotLessThan(timeoutInSeconds, 0, nameof(timeoutInSeconds), "Requires a timeout (in sec) greater than zero");
+            Guard.NotLessThan(retryIntervalInSeconds, 0, nameof(retryIntervalInSeconds), "Requires a retry interval (in sec) greater than zero");
+
+            return Policy.Timeout(TimeSpan.FromSeconds(timeoutInSeconds))
+                         .Wrap(Policy.Handle<Exception>()
+                                     .WaitAndRetryForever(_ => TimeSpan.FromSeconds(retryIntervalInSeconds)))
+                         .ExecuteAndCapture(action);
         }
     }
 }
