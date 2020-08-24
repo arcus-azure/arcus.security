@@ -61,8 +61,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             var settings = new VaultClientSettings(ListenAddress.ToString(), new TokenAuthMethodInfo(rootToken));
             _apiClient = new VaultSharp.VaultClient(settings);
-            KeyValueV1 = _apiClient.V1.Secrets.KeyValue.V1;
-            KeyValueV2 = _apiClient.V1.Secrets.KeyValue.V2;
         }
 
         /// <summary>
@@ -73,12 +71,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <summary>
         /// Gets the KeyValue V2 secret engine to control the secret store in the HashiCorp Vault.
         /// </summary>
-        public IKeyValueSecretsEngineV1 KeyValueV1 { get; }
+        public IKeyValueSecretsEngineV1 KeyValueV1 => _apiClient.V1.Secrets.KeyValue.V1;
 
         /// <summary>
         /// Gets the KeyValue V2 secret engine to control the secret store in the HashiCorp Vault.
         /// </summary>
-        public IKeyValueSecretsEngineV2 KeyValueV2 { get; }
+        public IKeyValueSecretsEngineV2 KeyValueV2 => _apiClient.V1.Secrets.KeyValue.V2;
 
         /// <summary>
         /// Starts a new instance of the <see cref="HashiCorpVaultTestServer"/> using the 'dev server' settings, meaning the Vault will run fully in-memory.
@@ -88,7 +86,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> or <paramref name="logger"/> is <c>null</c>.</exception>
         public static async Task<HashiCorpVaultTestServer> StartServerAsync(TestConfig configuration, ILogger logger)
         {
-            Guard.NotNull(logger, nameof(logger), 
+            Guard.NotNull(logger, nameof(logger),
                 "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
             Guard.NotNull(configuration, nameof(configuration),
                 "Requires a configuration instance to retrieve the HashiCorp Vault installation folder");
@@ -131,6 +129,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 process?.Dispose();
             }
+
+            return server;
         }
 
         private static int GetRandomUnusedPort()
