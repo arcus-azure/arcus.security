@@ -108,7 +108,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true,
+                RedirectStandardOutput = true
             };
 
             startInfo.EnvironmentVariables["HOME"] = Directory.GetCurrentDirectory();
@@ -276,6 +276,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             if (disposing)
             {
                 RetryAction(StopHashiCorpVault);
+                RetryAction(StopAllVaultProcesses);
             }
 
             _disposed = true;
@@ -283,8 +284,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
         private void StopHashiCorpVault()
         {
-            _process.CloseMainWindow();
-
             if (!_process.HasExited)
             {
 #if NETCOREAPP3_1
@@ -297,6 +296,28 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             _process.Dispose();
         }
 
+        private void StopAllVaultProcesses()
+        {
+            var startInfo = new ProcessStartInfo("pkill", "-9 vault")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (Process p = Process.Start(startInfo))
+            {
+                p.WaitForExit(milliseconds: 1000);
+
+                if (!p.HasExited)
+                {
+#if NETCOREAPP3_1
+                    p.Kill(entireProcessTree: true);
+#endif
+
+                }
+            }
+        }
+
         protected PolicyResult RetryAction(Action action, int timeoutInSeconds = 30, int retryIntervalInSeconds = 1)
         {
             Guard.NotNull(action, nameof(action), "Requires disposing function to be retried");
@@ -305,7 +326,11 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             return Policy.Timeout(TimeSpan.FromSeconds(timeoutInSeconds))
                          .Wrap(Policy.Handle<Exception>()
-                                     .WaitAndRetryForever(_ => TimeSpan.FromSeconds(retryIntervalInSeconds)))
+                                     .WaitAndRetryForever(index =>
+                                     {
+                                         _logger.LogTrace("Retry after {Seconds} seconds the disposing action", retryIntervalInSeconds);
+                                         return TimeSpan.FromSeconds(retryIntervalInSeconds);
+                                     }))
                          .ExecuteAndCapture(action);
         }
     }
