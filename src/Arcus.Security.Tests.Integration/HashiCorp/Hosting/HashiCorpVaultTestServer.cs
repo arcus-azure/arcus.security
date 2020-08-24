@@ -282,6 +282,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
         private void StopHashiCorpVault()
         {
+            _process.CloseMainWindow();
+
             if (_process.HasExited)
             {
 #if NETCOREAPP3_1
