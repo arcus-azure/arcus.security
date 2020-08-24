@@ -30,6 +30,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             _logger = new XunitTestLogger(outputWriter);
         }
 
+#if NETCOREAPP3_1
         [Fact]
         public async Task AuthenticateWithUserPassKeyValueV2_GetSecret_Succeeds()
         {
@@ -102,5 +103,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 Assert.Equal(expected, actual);
             }
         }
+#endif
     }
 }
