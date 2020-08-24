@@ -148,6 +148,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             _logger.LogTrace("Starting HashiCorp Vault at '{listenAddress}'...", ListenAddress);
 
+            if (!_process.Start())
+            {
+                throw new CouldNotStartHashiCorpVaultException(
+                    $"Vault process did not start correctly, exit code: {_process.ExitCode}");
+            }
+
             var isStarted = false;
 
             string line = await _process.StandardOutput.ReadLineAsync();
@@ -165,7 +171,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             if (!isStarted)
             {
-                throw new CouldNotStartHashiCorpVaultException("Process did not start successfully");
+                throw new CouldNotStartHashiCorpVaultException(
+                    "Vault process wasn't configured correctly and could therefore not be started successfully");
             }
 
             _logger.LogInformation("HashiCorp Vault started at '{ListenAddress}'", ListenAddress);
