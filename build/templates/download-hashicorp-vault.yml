@@ -24,7 +24,7 @@ steps:
     displayName: 'Check for required parameters in YAML template'
   - powershell: |
       # New-Item $env:TARGET_FOLDER
-      $vault_zip = "vault_$($env:VAULT_VERSION)_windows_amd64.zip"
+      $vault_zip = "vault_$($env:VAULT_VERSION)_linux_amd64.zip"
       $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
       $destination = "$($env:TARGET_FOLDER)/$vault_zip"
       if (!(Test-Path $destination)) {
@@ -40,7 +40,7 @@ steps:
       }
       Expand-Archive -LiteralPath $vault_zip -DestinationPath $env:TARGET_FOLDER
       ls
-      $vault_bin = "$($env:TARGET_FOLDER)/vault.exe"
+      $vault_bin = "$($env:TARGET_FOLDER)/vault"
       if (Test-Path $vault_bin) {
         Write-Output "Extracted HashiCorp Vault to executable file"
       } else {
@@ -53,3 +53,8 @@ steps:
       VAULT_VERSION: ${{ parameters.version }}
       VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
     displayName: 'Download HashiCorp Vault'
+  - bash: |
+      chmod +x $VAULT_BIN
+    env:
+      VAULT_BIN: '${{ parameters.targetFolder }}/vault'
+    displayName: 'Make HashiCorp Vault executable runnable'
