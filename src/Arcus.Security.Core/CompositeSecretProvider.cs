@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
@@ -180,7 +181,7 @@ namespace Arcus.Security.Core
                 }
                 catch (Exception exception)
                 {
-                    _logger.LogTrace(exception, "Secret provider {Type} doesn't contain secret with name {SecretName}", source.SecretProvider.GetType().Name, secretName);
+                    _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.SecretProvider.GetType(), secretName);
                 }
             }
 

@@ -39,6 +39,10 @@ public class Program
 
                          // The user secrets ID which gets provided directly without looking up the `UserSecretsIdAttribute` in the assembly.
                          builder.AddUserSecrets("bee01c693fe44766b1f3ef1e1f1f7883");
+
+                         // The user secrets ID, using lower case transformation before looking up secrets.
+                         // Example - When looking up `Client.ID` it will be changed to `client.id`.
+                         builder.AddUserSecrets<Program>(secretName => secretName.ToLower());
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
