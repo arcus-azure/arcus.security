@@ -65,7 +65,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             }
         }
 
-        [Fact(Skip = "Succeeds but doesn't blocks after publishing for some reason")]
+        [Fact]
         public async Task AuthenticateWithUserPassKeyValueV1_GetSecret_Succeeds()
         {
             // Arrange
