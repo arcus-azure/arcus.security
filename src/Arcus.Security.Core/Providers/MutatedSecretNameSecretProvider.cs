@@ -52,25 +52,12 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            string mutatedSecretName = MutateSecretName(secretName);
-            Task<string> rawSecretAsync = _implementation.GetRawSecretAsync(mutatedSecretName);
-
-            if (rawSecretAsync is null)
+            string secretValue = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
-                throw new SecretNotFoundException(mutatedSecretName);
-            }
+                return _implementation.GetRawSecretAsync(mutatedSecretName);
+            });
 
-            try
-            {
-                return await rawSecretAsync;
-            }
-            catch (Exception exception)
-            {
-                Logger.LogError(
-                    exception, "Failure during retrieving secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
-
-                throw new SecretNotFoundException(mutatedSecretName, exception);
-            }
+            return secretValue;
         }
 
         /// <summary>
@@ -85,36 +72,74 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            string mutatedSecretName = MutateSecretName(secretName);
-            Task<Secret> secretAsync = _implementation.GetSecretAsync(mutatedSecretName);
-
-            if (secretAsync is null)
+            Secret secret = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
-                throw new SecretNotFoundException(mutatedSecretName);
+                return _implementation.GetSecretAsync(mutatedSecretName);
+            });
+
+            return secret;
+        }
+
+        /// <summary>
+        /// Safeguards an asynchronous function that will run after the given <paramref name="secretName"/> is mutated.
+        /// </summary>
+        /// <param name="secretName">The incoming secret name that must be mutated and will be passed along to the given <paramref name="asyncFuncAfterMutation"/>.</param>
+        /// <param name="asyncFuncAfterMutation">The function that runs with the mutated secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="asyncFuncAfterMutation"/> is <c>null</c>.</exception>
+        protected async Task SafeguardMutateSecretAsync(string secretName, Func<string, Task> asyncFuncAfterMutation)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            Guard.NotNull(asyncFuncAfterMutation, nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
+
+            await SafeguardMutateSecretAsync(secretName, async mutatedSecretName =>
+            {
+                await asyncFuncAfterMutation(mutatedSecretName);
+
+                // Return something unimportant because the method works with task results.
+                return 0;
+            });
+        }
+
+        /// <summary>
+        /// Safeguards an asynchronous function that will run after the given <paramref name="secretName"/> is mutated.
+        /// </summary>
+        /// <typeparam name="T">The return type of the asynchronous function.</typeparam>
+        /// <param name="secretName">The incoming secret name that must be mutated and will be passed along to the given <paramref name="asyncFuncAfterMutation"/>.</param>
+        /// <param name="asyncFuncAfterMutation">The function that runs with the mutated secret.</param>
+        /// <returns>
+        ///     The result of the <paramref name="asyncFuncAfterMutation"/> after it's run with the mutated version of the given <paramref name="secretName"/>.
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="asyncFuncAfterMutation"/> is <c>null</c>.</exception>
+        protected async Task<T> SafeguardMutateSecretAsync<T>(string secretName, Func<string, Task<T>> asyncFuncAfterMutation)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            Guard.NotNull(asyncFuncAfterMutation, nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
+
+            string mutatedSecretName = MutateSecretName(secretName);
+            Task<T> task = asyncFuncAfterMutation(mutatedSecretName);
+
+            if (task is null)
+            {
+                throw new InvalidOperationException(
+                    $"Asynchronous failure during calling the secret provider with the mutated secret '{mutatedSecretName}'");
             }
 
             try
             {
-                return await secretAsync;
+                return await task;
             }
             catch (Exception exception)
             {
-                Logger.LogError(
-                    exception, "Failure during retrieving secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
-                
+                Logger.LogWarning(
+                    exception, "Failure during using secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
+
                 throw new SecretNotFoundException(mutatedSecretName, exception);
             }
         }
 
-        /// <summary>
-        /// Transforms the given <paramref name="secretName"/> to a new structure in which way the <see cref="ISecretProvider"/> can retrieve the actual secret value.
-        /// </summary>
-        /// <param name="secretName">The incoming secret name.</param>
-        /// <returns>
-        ///     The mutated secret name that will be send to the actual <see cref="ISecretProvider"/> instance.
-        /// </returns>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
-        protected string MutateSecretName(string secretName)
+        private string MutateSecretName(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
@@ -128,7 +153,7 @@ namespace Arcus.Security.Core.Providers
             }
             catch (Exception exception)
             {
-                Logger.LogError(exception, "Failure during secret name mutation of '{SecretName}'", secretName);
+                Logger.LogWarning(exception, "Failure during secret name mutation of '{SecretName}'", secretName);
                 throw new NotSupportedException(
                     $"The secret '{secretName}' was not correct input for the secret name mutation expression", exception);
             }

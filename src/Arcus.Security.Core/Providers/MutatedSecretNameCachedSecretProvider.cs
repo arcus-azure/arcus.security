@@ -51,25 +51,12 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            string mutatedSecretName = MutateSecretName(secretName);
-            Task<string> rawSecretAsync = _implementation.GetRawSecretAsync(mutatedSecretName, ignoreCache);
-
-            if (rawSecretAsync is null)
+            string secretValue = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
-                throw new SecretNotFoundException(mutatedSecretName);
-            }
+                return _implementation.GetRawSecretAsync(mutatedSecretName, ignoreCache);
+            });
 
-            try
-            {
-                return await rawSecretAsync;
-            }
-            catch (Exception exception)
-            {
-                Logger.LogError(
-                    exception, "Failure during retrieving secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
-
-                throw new SecretNotFoundException(mutatedSecretName, exception);
-            }
+            return secretValue;
         }
 
         /// <summary>
@@ -85,25 +72,12 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            string mutatedSecretName = MutateSecretName(secretName);
-            Task<Secret> secretAsync = _implementation.GetSecretAsync(mutatedSecretName, ignoreCache);
-
-            if (secretAsync is null)
+            Secret secret = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
-                throw new SecretNotFoundException(mutatedSecretName);
-            }
+                return _implementation.GetSecretAsync(mutatedSecretName, ignoreCache);
+            });
 
-            try
-            {
-                return await secretAsync;
-            }
-            catch (Exception exception)
-            {
-                Logger.LogError(
-                    exception, "Failure during retrieving secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
-
-                throw new SecretNotFoundException(mutatedSecretName, exception);
-            }
+            return secret;
         }
 
         /// <summary>
@@ -115,25 +89,10 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
 
-            string mutatedSecretName = MutateSecretName(secretName);
-            Task invalidateSecretAsync = _implementation.InvalidateSecretAsync(mutatedSecretName);
-
-            if (invalidateSecretAsync is null)
+            await SafeguardMutateSecretAsync(secretName, async mutatedSecretName => 
             {
-                throw new SecretNotFoundException(mutatedSecretName);
-            }
-
-            try
-            {
-                await invalidateSecretAsync;
-            }
-            catch (Exception exception)
-            {
-                Logger.LogError(
-                    exception, "Failure during invalidating secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
-
-                throw new SecretNotFoundException(mutatedSecretName, exception);
-            }
+                await _implementation.InvalidateSecretAsync(mutatedSecretName);
+            });
         }
     }
 }
