@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Primitives;
 
 namespace Arcus.Security.Core.Caching
 {

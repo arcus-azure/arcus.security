@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Caching.Configuration;
+using Arcus.Security.Core.Providers;
 using GuardNet;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -46,14 +43,16 @@ namespace Microsoft.Extensions.Hosting
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
         /// </summary>
         /// <param name="secretProvider">The provider which secrets are added to the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <returns>
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
-        public SecretStoreBuilder AddProvider(ISecretProvider secretProvider)
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreBuilder AddProvider(ISecretProvider secretProvider, Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider));
-            SecretStoreSources.Add(new SecretStoreSource(secretProvider));
 
+            SecretStoreSources.Add(new SecretStoreSource(secretProvider, mutateSecretName));
             return this;
         }
         
@@ -64,11 +63,34 @@ namespace Microsoft.Extensions.Hosting
         {
             foreach (SecretStoreSource source in SecretStoreSources)
             {
-                Services.AddSingleton(source);
+                if (source.MutateSecretName is null)
+                {
+                    Services.AddSingleton(source);
+                }
+                else
+                {
+                    Services.AddSingleton(serviceProvider => WrapInMutatedSecretProvider(serviceProvider, source));
+                }
             }
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
+        }
+
+        private static SecretStoreSource WrapInMutatedSecretProvider(IServiceProvider serviceProvider, SecretStoreSource source)
+        {
+            if (source.CachedSecretProvider is null)
+            {
+                var logger = serviceProvider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
+                var secretProvider = new MutatedSecretNameSecretProvider(source.SecretProvider, source.MutateSecretName, logger);
+                return new SecretStoreSource(secretProvider);
+            }
+            else
+            {
+                var logger = serviceProvider.GetService<ILogger<MutatedSecretNameCachedSecretProvider>>();
+                var secretProvider = new MutatedSecretNameCachedSecretProvider(source.CachedSecretProvider, source.MutateSecretName, logger);
+                return new SecretStoreSource(secretProvider);
+            }
         }
     }
 }

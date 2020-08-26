@@ -35,7 +35,7 @@ namespace Arcus.Security.Core.Providers
             string secretValue = await GetRawSecretAsync(secretName);
             return new Secret(secretValue);
         }
-        
+
         /// <summary>Retrieves the secret value, based on the given name</summary>
         /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns the secret key.</returns>

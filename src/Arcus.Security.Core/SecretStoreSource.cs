@@ -1,4 +1,5 @@
-﻿using Arcus.Security.Core.Caching;
+﻿using System;
+using Arcus.Security.Core.Caching;
 using GuardNet;
 
 namespace Arcus.Security.Core 
@@ -11,21 +12,21 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
         /// </summary>
-        public SecretStoreSource(ISecretProvider secretProvider)
+        /// <param name="secretProvider">The secret provider to add to the secret store.</param>
+        /// <param name="mutateSecretName">The optional mutation function to transform secret names.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreSource(ISecretProvider secretProvider, Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider));
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to register it in the secret store");
+            
             SecretProvider = secretProvider;
-        }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
-        /// </summary>
-        public SecretStoreSource(ICachedSecretProvider secretProvider)
-        {
-            Guard.NotNull(secretProvider, nameof(secretProvider));
+            if (secretProvider is ICachedSecretProvider cachedSecretProvider)
+            {
+                CachedSecretProvider = cachedSecretProvider;
+            }
 
-            SecretProvider = secretProvider;
-            CachedSecretProvider = secretProvider;
+            MutateSecretName = mutateSecretName;
         }
 
         /// <summary>
@@ -34,8 +35,13 @@ namespace Arcus.Security.Core
         public ISecretProvider SecretProvider { get; }
 
         /// <summary>
-        /// Gets the cached provider for this secret store.
+        /// Gets the cached provider for this secret store, if the <see cref="SecretProvider"/> is a <see cref="ICachedSecretProvider"/> implementation.
         /// </summary>
         public ICachedSecretProvider CachedSecretProvider { get; }
+
+        /// <summary>
+        /// Gets the (optional) mutation function that transforms secret names.
+        /// </summary>
+        internal Func<string, string> MutateSecretName { get; }
     }
 }
