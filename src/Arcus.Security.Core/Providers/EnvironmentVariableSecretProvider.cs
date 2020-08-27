@@ -11,13 +11,16 @@ namespace Arcus.Security.Core.Providers
         internal const EnvironmentVariableTarget DefaultTarget = EnvironmentVariableTarget.Process;
 
         private readonly EnvironmentVariableTarget _target;
+        private readonly string _prefix;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvironmentVariableSecretProvider"/> class.
         /// </summary>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
-        public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget)
+        /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
+        public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget, string prefix = null)
         {
+            _prefix = prefix ?? String.Empty;
             _target = target;
         }
 
@@ -32,7 +35,7 @@ namespace Arcus.Security.Core.Providers
             string secretValue = await GetRawSecretAsync(secretName);
             return new Secret(secretValue);
         }
-        
+
         /// <summary>Retrieves the secret value, based on the given name</summary>
         /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns the secret key.</returns>
@@ -41,7 +44,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            return Task.FromResult(Environment.GetEnvironmentVariable(secretName, _target));
+            return Task.FromResult(Environment.GetEnvironmentVariable(_prefix + secretName, _target));
         }
     }
 }

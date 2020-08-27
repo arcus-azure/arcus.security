@@ -25,7 +25,18 @@ public class Program
         return Host.CreateDefaultBuilder(args)
                    .ConfigureSecretStore((context, config, builder) =>
                    {
+                       // Uses the environment variables from the environment block associated with the current process.
                        builder.AddEnvironmentVariables();
+
+                       // Uses the environment variables stored or retrieved from the HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment key in the Windows operating system registry.
+                       builder.AddEnvironmentVariables(EnvironmentVariableTarget.Machine);
+
+                       // Uses the environment variables starting with 'ARCUS_' from the environment block associated with the current process.
+                       builder.AddEnvironmentVariables(prefix: "ARCUS_");
+
+                       // Uses the environment variables, using underscores and capitals for secret name structure.
+                       // Example - When looking up Queue.Name it will be changed to ARCUS_QUEUE_NAME.
+                       builder.AddEnvironmentVariables(mutateSecretName: name => $"ARCUS_{name.Replace(".", "_").ToUpper()}");
                    })
                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
