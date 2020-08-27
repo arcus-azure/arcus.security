@@ -40,6 +40,27 @@ namespace Arcus.Security.Tests.Integration.KeyPerFile
             Assert.Equal(expectedValue, actualValue);
         }
 
+        [Fact]
+        public async Task KeyPerFileSecrets_HierarchicalKeys_AreSupported()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            var secretKey = "ConnectionStrings__PersonDb";
+            await SetSecretAsync(secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddKeyPerFile(_secretLocation));
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync("ConnectionStrings:PersonDb");
+            Assert.Equal(expectedValue, actualValue);
+        }
+
         private async Task SetSecretAsync(string secretKey, string secretValue)
         {
             await File.WriteAllTextAsync(Path.Combine(_secretLocation, secretKey), secretValue);
