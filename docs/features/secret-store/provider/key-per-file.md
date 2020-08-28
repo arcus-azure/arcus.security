@@ -76,7 +76,7 @@ public class PersonController
     {
         var connectionstring = _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
 
-        using( var connection = new SqlDbConnection(connectionstring))
+        using (var connection = new SqlDbConnection(connectionstring))
         {
             var person = new PersonRepository(connection).GetPersonById(personId);
             return Ok(new { Id = person.Id, Name = person.Name });
