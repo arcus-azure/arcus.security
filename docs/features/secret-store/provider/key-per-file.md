@@ -72,7 +72,7 @@ public class PersonController
     }
 
     [HttpGet]
-    public async Task GetPerson( Guid personId )
+    public async Task GetPerson(Guid personId)
     {
         var connectionstring = _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
 
