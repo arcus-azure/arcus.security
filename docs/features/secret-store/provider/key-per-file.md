@@ -5,7 +5,7 @@ layout: default
 
 # KeyPerFile secret provider
 The _KeyPerFile_  secret provider allows working with Docker secrets.  When using Docker secrets in Docker Swarm, the secrets are injected in the Docker container as files.  
-The _KeyPerFile_ secret provider provides access to those secrets via the `ISecretStore`.
+The _KeyPerFile_ secret provider provides access to those secrets via the secret store.
 
 ## Installation
 Adding secrets from the User Secrets manager into the secret store requires following package:
