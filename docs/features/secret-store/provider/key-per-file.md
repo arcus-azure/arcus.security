@@ -66,7 +66,7 @@ public class PersonController
 {
     private readonly ISecretProvider _secrets;
 
-    public PersonController( ISecretProvider secrets )
+    public PersonController(ISecretProvider secrets)
     {
         _secrets = secrets;
     }
