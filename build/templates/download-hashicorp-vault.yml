@@ -23,10 +23,9 @@ steps:
       VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
     displayName: 'Check for required parameters in YAML template'
   - powershell: |
-      # New-Item $env:TARGET_FOLDER
-      $vault_zip = "vault_$($env:VAULT_VERSION)_linux_amd64.zip"
-      $vault_url = "https://releases.hashicorp.com/vault/$($env:VAULT_VERSION)/$vault_zip"
-      $destination = "$($env:TARGET_FOLDER)/$vault_zip"
+      $vault_zip = "vault_${{ parameters.version }}_linux_amd64.zip"
+      $vault_url = "https://releases.hashicorp.com/vault/${{ parameters.version }}/$vault_zip"
+      $destination = "${{ parameters.targetFolder }}/$vault_zip"
       if (!(Test-Path $destination)) {
           Write-Output "Downloading $vault_url to $destination"
           [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
@@ -38,20 +37,16 @@ steps:
             Write-Error "Could not find downloaded .zip file $vault_zip"
           }
       }
-      Expand-Archive -LiteralPath $vault_zip -DestinationPath $env:TARGET_FOLDER
+      Expand-Archive -LiteralPath $vault_zip -DestinationPath ${{ parameters.targetFolder }}
       ls
-      $vault_bin = "$($env:TARGET_FOLDER)/vault"
+      $vault_bin = "${{ parameters.targetFolder }}/vault"
       if (Test-Path $vault_bin) {
         Write-Output "Extracted HashiCorp Vault to executable file"
       } else {
         Write-Error "Could not find extracted HashiCorp Vault executable file"
       }
-      Write-Host "##vso[task.setvariable variable=$($env:VARIABLE_NAME)]$vault_bin"
+      Write-Host "##vso[task.setvariable variable=${{ parameters.vaultBinVariableName }}]$vault_bin"
     workingDirectory: ${{ parameters.targetFolder }}
-    env:
-      TARGET_FOLDER: ${{ parameters.targetFolder }}
-      VAULT_VERSION: ${{ parameters.version }}
-      VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
     displayName: 'Download HashiCorp Vault'
   - bash: |
       chmod +x $VAULT_BIN
