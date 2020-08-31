@@ -169,8 +169,8 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
             builder.AddCriticalException<VaultApiException>(exception =>
             {
-                return exception.HttpStatusCode == HttpStatusCode.Forbidden
-                       || exception.HttpStatusCode == HttpStatusCode.BadRequest;
+                return exception.HttpStatusCode == HttpStatusCode.BadRequest
+                       || exception.HttpStatusCode == HttpStatusCode.Forbidden;
             });
 
             var provider = new HashiCorpSecretProvider(settings, keyValueVersion, keyValueMountPoint, secretPath);
