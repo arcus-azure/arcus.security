@@ -1,27 +1,14 @@
 parameters:
-  targetFolder: '$(Build.SourcesDirectory)'
-  version: ''
-  vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
+  - name: targetFolder
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  - name: version
+    type: string
+  - name: vaultBinVariableName
+    type: string
+    default: 'Arcus.HashiCorp.VaultBin'
 
 steps:
-  - bash: |
-      if [ -z "$TARGET_FOLDER" ]; then
-        echo "##vso[task.logissue type=error;]Missing template parameter \"targetFolder\""
-        echo "##vso[task.complete result=Failed;]"
-      fi
-      if [ -z "$VERSION" ]; then
-        echo "##vso[task.logissue type=error;]Missing template parameter \"version\""
-        echo "##vso[task.complete result=Failed;]"
-      fi
-      if [ -z "$VARIABLE_NAME" ]; then
-        echo "##vso[task.logissue type=error;]Missing template parameter \"vaultBinVariableName\""
-        echo "##vso[task.complete result=Failed;]"
-      fi
-    env:
-      TARGET_FOLDER: ${{ parameters.targetFolder }}
-      VERSION: ${{ parameters.version }}
-      VARIABLE_NAME: ${{ parameters.vaultBinVariableName }}
-    displayName: 'Check for required parameters in YAML template'
   - powershell: |
       $vault_zip = "vault_${{ parameters.version }}_linux_amd64.zip"
       $vault_url = "https://releases.hashicorp.com/vault/${{ parameters.version }}/$vault_zip"
