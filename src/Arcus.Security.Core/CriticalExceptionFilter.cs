@@ -42,7 +42,7 @@ namespace Arcus.Security.Core
         public bool IsCritical(Exception exception)
         {
             Guard.NotNull(exception, nameof(exception), "Requires an exception instance to determine if it's considered a critical one");
-            return _exceptionFilter.Invoke(exception);
+            return _exceptionFilter(exception);
         }
     }
 }
