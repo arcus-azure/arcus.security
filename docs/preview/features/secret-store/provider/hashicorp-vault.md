@@ -77,8 +77,8 @@ public class Program
                         // Mount point of KeyValue secret engine (default: kv-v2).
                         builder.AddHashiCorpVaultWithKubernetes(..., keyValueMountPoint: "secret");
 
-                        // Custom settings overload for when using the [VaultSharp](https://github.com/rajanadar/VaultSharp) settings directly.
-                        // -------------------------
+                        // Custom settings overload for when using the [VaultSharp](https://github.com/rajanadar/VaultSharp) settings directly:
+                        // --------------------------------------------------------------------------------------------------------------------
                         var tokenAuthentication = new TokenAuthMethodInfo("token");
                         var settings = VaultClientSettings("http://uri.to.your.running.vault.5200", tokenAuthentication);
                         builder.AddHashiCorpVault(
