@@ -19,7 +19,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exceptionType"/> or the <paramref name="exceptionFilter"/> is <c>null</c>.</exception>
         public CriticalExceptionFilter(Type exceptionType, Func<Exception, bool> exceptionFilter)
         {
-            Guard.NotNull(exceptionFilter, nameof(exceptionType), "Requires an exception type to create an critical exception filter");
+            Guard.NotNull(exceptionType, nameof(exceptionType), "Requires an exception type to create an critical exception filter");
             Guard.NotNull(exceptionFilter, nameof(exceptionFilter), "Requires an exception filter to determine whether an exception is considered critical");
             
             _exceptionFilter = exceptionFilter;
