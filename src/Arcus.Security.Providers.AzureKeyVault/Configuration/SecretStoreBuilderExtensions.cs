@@ -265,9 +265,9 @@ namespace Microsoft.Extensions.Hosting
             // Thrown during failure with Key Vault authorization.
             builder.AddCriticalException<KeyVaultErrorException>(exception =>
             {
-                return exception.Response.StatusCode == HttpStatusCode.Forbidden
+                return exception.Response.StatusCode == HttpStatusCode.BadRequest
                        || exception.Response.StatusCode == HttpStatusCode.Unauthorized
-                       || exception.Response.StatusCode == HttpStatusCode.BadRequest;
+                       || exception.Response.StatusCode == HttpStatusCode.Forbidden;
             });
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
