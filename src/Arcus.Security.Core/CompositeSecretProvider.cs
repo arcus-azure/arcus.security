@@ -215,7 +215,7 @@ namespace Arcus.Security.Core
             }
 
             throw new AggregateException(
-                $"None of the configured secret providers was able to retrieve the secret while {criticalExceptions.Count} critical exceptions where thrown", 
+                $"None of the configured secret providers was able to retrieve the secret while {criticalExceptions.Count} critical exceptions were thrown", 
                 criticalExceptions);
         }
 
