@@ -89,33 +89,20 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string userName = "arcus";
             string password = "123";
 
-            const string policyName = "my-policy";
-
             var builder = new HostBuilder();
 
-            using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
             {
-                await server.AddPolicyAsync(policyName, DefaultDevMountPoint, new[] { "read" });
-                await server.EnableAuthenticationTypeAsync(AuthMethodDefaultPaths.UserPass, "Authenticating with username and password");
-                await server.AddUserPassUserAsync(userName, password, policyName);
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { [secretName] = expected });
+                stores.AddHashiCorpVaultWithUserPass("https://invalid.hashicorp.URI", userName, password, secretPath, keyValueMountPoint: secretPath);
+            });
 
-                // Act
-                builder.ConfigureSecretStore((config, stores) =>
-                {
-                    stores.AddHashiCorpVaultWithUserPass("https://invalid.hashicorp.URI", userName, password, secretPath, keyValueMountPoint: secretPath);
-                });
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-                var exception = await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetRawSecretAsync(secretName));
-                Assert.Equal("No such host is known.", exception.Message);
-            }
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetRawSecretAsync(secretName));
+            Assert.Equal("No such host is known.", exception.Message);
         }
 
         [Fact]

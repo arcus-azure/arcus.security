@@ -260,7 +260,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
 
@@ -437,7 +437,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task AddAzureKeyVault_WithWrongKeyVaultUri_ThrowsBadRequestKeyVaultException()
+        public async Task AddAzureKeyVault_WithWrongKeyVaultUri_Throws()
         {
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
@@ -462,7 +462,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task AddAzureKeyVault_WithWrongServicePrincipalCredentials_ThrowsBadRequestKeyVaultException()
+        public async Task AddAzureKeyVault_WithWrongServicePrincipalCredentials_Throws()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -485,31 +485,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task AddAzureKeyVault_WithWrongServicePrincipalPass_ThrowsBadRequestKeyVaultException()
-        {
-            // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, "wrong-access-key");
-            });
-
-            // Assert
-            IHost host = builder.Build();
-            var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-            var exception = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal("unauthorized_client", exception.ErrorCode);
-        }
-
-        [Fact]
-        public async Task AddAzureKeyVault_WithWrongUnauthorizedServicePrincipal_ThrowsBadRequestKeyVaultException()
+        public async Task AddAzureKeyVault_WithWrongUnauthorizedServicePrincipal_Throws()
         {
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:ApplicationId");
