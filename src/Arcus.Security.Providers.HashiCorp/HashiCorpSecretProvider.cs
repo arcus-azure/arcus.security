@@ -63,6 +63,9 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), 
+                $"Requires a non-blank secret name to look up the secret in the HashiCorp Vault {_secretEngineVersion} KeyValue secret engine");
+
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
         }
@@ -77,6 +80,9 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName),
+                $"Requires a non-blank secret name to look up the secret in the HashiCorp Vault {_secretEngineVersion} KeyValue secret engine");
+
             SecretData result = await ReadSecretDataAsync(_secretPath);
 
             if (result.Data.TryGetValue(secretName, out object value) && value != null)

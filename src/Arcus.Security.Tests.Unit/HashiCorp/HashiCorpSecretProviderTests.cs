@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Arcus.Security.Providers.HashiCorp;
 using VaultSharp;
+using VaultSharp.V1.AuthMethods.Token;
 using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
 
@@ -53,6 +55,40 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             var settings = new VaultClientSettings("https://vault.server:245", authMethodInfo: null);
             Assert.ThrowsAny<ArgumentException>(
                 () => new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V1, mountPoint: "kv-v2", secretPath: "secret/path"));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public async Task GetSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            var provider = new HashiCorpSecretProvider(
+                new VaultClientSettings("https://vault.server:246", new TokenAuthMethodInfo("vault.token")),
+                mountPoint: "secret",
+                secretPath: "secret/path",
+                secretEngineVersion: VaultKeyValueSecretEngineVersion.V1);
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetSecretAsync(secretName));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public async Task GetRawSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            var provider = new HashiCorpSecretProvider(
+                new VaultClientSettings("https://vault.server:246", new TokenAuthMethodInfo("vault.token")),
+                mountPoint: "secret",
+                secretPath: "secret/path",
+                secretEngineVersion: VaultKeyValueSecretEngineVersion.V2);
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetRawSecretAsync(secretName));
         }
     }
 }
