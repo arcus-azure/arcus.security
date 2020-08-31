@@ -37,7 +37,7 @@ namespace Arcus.Security.Providers.UserSecrets
                 return Task.FromResult(value);
             }
 
-            return null;
+            return Task.FromResult<string>(null);
         }
 
         /// <summary>
