@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Caching.Configuration;
-using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Unit.Core.Stubs;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Moq;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -119,73 +114,44 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
-        public async Task ConfigureSecretStore_AddEnvironmentVariables_UsesEnvironmentVariableSecrets()
+        public async Task ConfigureSecretStore_WithoutCachingProviderWithMutation_DoesntFindCachedProvider()
         {
             // Arrange
-            string secretKey = "MySecret";
-            string expected = $"secret-{Guid.NewGuid()}";
-
+            var stubProvider = new InMemorySecretProvider(("Arcus.KeyVault.Secret", Guid.NewGuid().ToString()));
             var builder = new HostBuilder();
 
-            using (TemporaryEnvironmentVariable.Create(secretKey, expected))
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
             {
-                // Act
-                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables());
+                stores.AddProvider(stubProvider, secretName => "Arcus." + secretName);
+            });
 
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-                
-                string actual = await provider.GetRawSecretAsync(secretKey);
-                Assert.Equal(expected, actual);
-            }
+            // Assert
+            IHost host = builder.Build();
+            var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(
+                () => cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false));
         }
 
         [Fact]
-        public async Task ConfigureSecretStore_AddEnvironmentVariablesWithPrefix_UsesEnvironmentVariableSecrets()
+        public async Task ConfigureSecretStore_WithCachingProviderWithMutation_DoesFindCachedProvider()
         {
             // Arrange
-            string prefix = "ARCUS_";
-            string secretKey = prefix + "MySecret";
-            string expected = $"secret-{Guid.NewGuid()}";
-
+            var expected = Guid.NewGuid().ToString();
+            var stubProvider = new InMemoryCachedSecretProvider(("Arcus.KeyVault.Secret", expected));
             var builder = new HostBuilder();
 
-            using (TemporaryEnvironmentVariable.Create(secretKey, expected))
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
             {
-                // Act
-                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(prefix: prefix));
+                stores.AddProvider(stubProvider, secretName => "Arcus." + secretName);
+            });
 
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-                
-                string nonPrefixedSecret = secretKey.Substring(prefix.Length);
-                string actual = await provider.GetRawSecretAsync(nonPrefixedSecret);
-                Assert.Equal(expected, actual);
-            }
-        }
-
-        [Fact]
-        public async Task ConfigureSecretStore_AddEnvironmentVariablesWithPrefix_CantFindEnvironmentVariableWithPrefix()
-        {
-            // Arrange
-            string unknownPrefix = "UNKNOWN_";
-            string secretKey = "MySecret";
-
-            var builder = new HostBuilder();
-
-            using (TemporaryEnvironmentVariable.Create(secretKey, value: $"secret-{Guid.NewGuid()}"))
-            {
-                // Act
-                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(prefix: unknownPrefix));
-
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretKey));
-            }
+            // Assert
+            IHost host = builder.Build();
+            var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Secret secret = await cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false);
+            Assert.Equal(expected, secret.Value);
         }
     }
 }
