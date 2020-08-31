@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
 using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Hosting;
 using VaultSharp;
+using VaultSharp.Core;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.Kubernetes;
 using VaultSharp.V1.AuthMethods.UserPass;
@@ -155,6 +158,20 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), keyValueVersion), "Requires the client API version to be either V1 or V2");
             Guard.NotNullOrWhitespace(keyValueMountPoint, nameof(keyValueMountPoint), "Requires a point where the KeyVault secret engine is mounted");
+
+            // Thrown when the HashiCorp Vault instance cannot be found.
+            builder.AddCriticalException<HttpRequestException>(exception =>
+            {
+                return exception.Source == "System.Net.Http" 
+                       && exception.Message == "No such host is known.";
+            });
+
+            // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
+            builder.AddCriticalException<VaultApiException>(exception =>
+            {
+                return exception.HttpStatusCode == HttpStatusCode.Forbidden
+                       || exception.HttpStatusCode == HttpStatusCode.BadRequest;
+            });
 
             var provider = new HashiCorpSecretProvider(settings, keyValueVersion, keyValueMountPoint, secretPath);
             return builder.AddProvider(provider);

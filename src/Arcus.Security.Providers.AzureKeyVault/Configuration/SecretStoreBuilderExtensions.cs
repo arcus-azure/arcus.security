@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
@@ -6,6 +8,8 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using GuardNet;
+using Microsoft.Azure.KeyVault.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -246,6 +250,25 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(builder, nameof(builder));
             Guard.NotNull(authentication, nameof(authentication));
             Guard.NotNull(configuration, nameof(configuration));
+
+            // Thrown during failure with Active Directory authentication.
+            builder.AddCriticalException<AdalServiceException>();
+            
+            // Thrown during calling invalid Key Vault URI.
+            builder.AddCriticalException<HttpRequestException>(exception =>
+            {
+                // Make sure it was thrown from this namespace.
+                return exception.Source == "Microsoft.Rest.ClientRuntime"
+                       && exception.Message == "No such host is known.";
+            });
+
+            // Thrown during failure with Key Vault authorization.
+            builder.AddCriticalException<KeyVaultErrorException>(exception =>
+            {
+                return exception.Response.StatusCode == HttpStatusCode.Forbidden
+                       || exception.Response.StatusCode == HttpStatusCode.Unauthorized
+                       || exception.Response.StatusCode == HttpStatusCode.BadRequest;
+            });
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
 

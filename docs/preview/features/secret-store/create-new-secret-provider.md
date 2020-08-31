@@ -169,6 +169,38 @@ So they can provide a custom mutation:
 })
 ```
 
+### Adding critical exceptions
+
+When implementing your own `ISecretProvider`, you may come across situations where you want to throw an 'critical' exception (for example: authentication, authorization failures...)
+and that this 'critical' exception is eventually throwed by the secret store when you're looking up secrets.
+
+When the authentication (for example) only happens when your secret provider _actually_ looks for secrets, then you may want to benefit from this feature.
+If you don't provide any 'critical' exceptions yourself, the exception may only be logged and you may end up with only a `SecretNotFoundException`.
+
+Adding these 'critical' exception can be done during the registration of your secret provider:
+
+```csharp
+.public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+    {
+        // Make sure that ALL exceptions of this type is considered 'critical'.
+        builder.AddCriticalException<AuthenticationException>();
+
+        // Make sure that only exceptions of this type where the given filter succeeds is considered 'critical'.
+        builder.AddCriticalException<HttpOperationException>(exception => 
+        {
+            return exception.Response.HttpStatusCode == HttpStatusCode.Forbidden;
+        });
+
+        return builder.AddProvider(new RegistrySecretProvider());
+    }
+}
+```
+
+> Note that when multiple secret providers in the secret store are throwing critical exceptions upon retrieving a secret, then these critical exceptions will be wrapped inside a `AggregateException`.
+> In the other case the single critical exception is being throwed.
+
 ## Contribute your secret provider
 
 We are open for contributions and are more than happy to receive pull requests with new secret providers!
