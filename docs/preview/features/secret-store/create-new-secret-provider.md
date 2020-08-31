@@ -182,7 +182,7 @@ Adding these 'critical' exception can be done during the registration of your se
 ```csharp
 .public static class SecretStoreBuilderExtensions
 {
-    public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+    public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder)
     {
         // Make sure that ALL exceptions of this type is considered 'critical'.
         builder.AddCriticalException<AuthenticationException>();
