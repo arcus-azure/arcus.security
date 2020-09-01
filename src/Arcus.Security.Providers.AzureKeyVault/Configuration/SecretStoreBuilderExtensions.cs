@@ -254,14 +254,6 @@ namespace Microsoft.Extensions.Hosting
             // Thrown during failure with Active Directory authentication.
             builder.AddCriticalException<AdalServiceException>();
             
-            // Thrown during calling invalid Key Vault URI.
-            builder.AddCriticalException<HttpRequestException>(exception =>
-            {
-                // Make sure it was thrown from this namespace.
-                return exception.Source == "Microsoft.Rest.ClientRuntime"
-                       && exception.Message == "No such host is known.";
-            });
-
             // Thrown during failure with Key Vault authorization.
             builder.AddCriticalException<KeyVaultErrorException>(exception =>
             {

@@ -79,33 +79,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         }
 
         [Fact]
-        public async Task AuthenticateWithNotFoundHashiCorpInstanceUserPassKeyValue_GetSecret_Fails()
-        {
-            // Arrange
-            string secretPath = "mysecret";
-            string secretName = "my-value";
-            string expected = "s3cr3t";
-
-            string userName = "arcus";
-            string password = "123";
-
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddHashiCorpVaultWithUserPass("https://invalid.hashicorp:5000", userName, password, secretPath, keyValueMountPoint: secretPath);
-            });
-
-            // Assert
-            IHost host = builder.Build();
-            var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-            var exception = await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetRawSecretAsync(secretName));
-            Assert.Equal("No such host is known.", exception.Message);
-        }
-
-        [Fact]
         public async Task AuthenticateWithUnauthorizedUserPassUserKeyValue_GetSecret_Fails()
         {
             // Arrange

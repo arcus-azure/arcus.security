@@ -437,31 +437,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task AddAzureKeyVault_WithWrongKeyVaultUri_Throws()
-        {
-            // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddAzureKeyVaultWithServicePrincipal("https://invalid.KeyVault", applicationId, clientKey);
-            });
-
-            // Assert
-            IHost host = builder.Build();
-            var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-            var exception = await Assert.ThrowsAsync<HttpRequestException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal("No such host is known.", exception.Message);
-        }
-
-        [Fact]
         public async Task AddAzureKeyVault_WithWrongServicePrincipalCredentials_Throws()
         {
             // Arrange

@@ -159,13 +159,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), keyValueVersion), "Requires the client API version to be either V1 or V2");
             Guard.NotNullOrWhitespace(keyValueMountPoint, nameof(keyValueMountPoint), "Requires a point where the KeyVault secret engine is mounted");
 
-            // Thrown when the HashiCorp Vault instance cannot be found.
-            builder.AddCriticalException<HttpRequestException>(exception =>
-            {
-                return exception.Source == "System.Net.Http" 
-                       && exception.Message == "No such host is known.";
-            });
-
             // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
             builder.AddCriticalException<VaultApiException>(exception =>
             {
