@@ -94,7 +94,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://invalid.hashicorp.URI", userName, password, secretPath, keyValueMountPoint: secretPath);
+                stores.AddHashiCorpVaultWithUserPass("https://invalid.hashicorp:5000", userName, password, secretPath, keyValueMountPoint: secretPath);
             });
 
             // Assert

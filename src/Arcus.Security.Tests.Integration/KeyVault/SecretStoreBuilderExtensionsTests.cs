@@ -450,7 +450,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal("https://invalid.Key.Vault.URI", applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal("https://invalid.KeyVault", applicationId, clientKey);
             });
 
             // Assert
