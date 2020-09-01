@@ -107,6 +107,34 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
 
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public async Task GetSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            IConfiguration configuration = new ConfigurationBuilder().Build();
+            var provider = new ConfigurationSecretProvider(configuration);
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetSecretAsync(secretName));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public async Task GetRawSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            IConfiguration configuration = new ConfigurationBuilder().Build();
+            var provider = new ConfigurationSecretProvider(configuration);
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetRawSecretAsync(secretName));
+        }
+
         [Fact]
         public void CreateProvider_WithoutConfiguration_Throws()
         {

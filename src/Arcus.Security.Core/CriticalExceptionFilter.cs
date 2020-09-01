@@ -5,7 +5,8 @@ namespace Arcus.Security.Core
 {
     /// <summary>
     /// Represents an <see cref="Exception"/> filter that will be registered in the dependency container,
-    /// so the <see cref="CompositeSecretProvider"/> is able to collect all the available exception filters.
+    /// so the <see cref="CompositeSecretProvider"/> is able to collect all the available exception filters
+    /// and determine whether or not a critical exception was thrown during interacting with the secret sources.
     /// </summary>
     public class CriticalExceptionFilter
     {

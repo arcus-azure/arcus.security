@@ -166,8 +166,8 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddCriticalException<AuthenticationException>();
-                stores.AddProvider(stubProvider);
+                stores.AddCriticalException<AuthenticationException>()
+                      .AddProvider(stubProvider);
             });
 
             // Assert
@@ -189,10 +189,10 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddCriticalException<CryptographicException>();
-                stores.AddCriticalException<AuthenticationException>();
-                stores.AddProvider(stubProvider1);
-                stores.AddProvider(stubProvider2);
+                stores.AddCriticalException<CryptographicException>()
+                      .AddCriticalException<AuthenticationException>()
+                      .AddProvider(stubProvider1)
+                      .AddProvider(stubProvider2);
             });
 
             // Assert
@@ -218,9 +218,9 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddCriticalException<AuthenticationException>(ex => ex.Message == expectedMessage);
-                stores.AddProvider(stubProvider1);
-                stores.AddProvider(stubProvider2);
+                stores.AddCriticalException<AuthenticationException>(ex => ex.Message == expectedMessage)
+                      .AddProvider(stubProvider1)
+                      .AddProvider(stubProvider2);
             });
 
             // Assert
