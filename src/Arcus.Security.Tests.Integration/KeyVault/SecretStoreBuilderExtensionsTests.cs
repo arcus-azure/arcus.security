@@ -114,7 +114,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -220,7 +220,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -318,7 +318,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentity(
-                    keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -426,7 +426,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentity(
-                    keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
