@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
@@ -17,8 +18,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private readonly IKeyVaultAuthentication _authentication;
+        private const string VaultUriPattern = "^https:\\/\\/[0-9a-zA-Z\\-]{3,24}\\.vault.azure.net(\\/)?$",
+                             SecretNamePattern = "^[a-zA-Z][a-zA-Z0-9\\-]{0,126}$";
 
+        private readonly IKeyVaultAuthentication _authentication;
+        private readonly Regex _vaultUriRegex = new Regex(VaultUriPattern, RegexOptions.Compiled),
+                               _secretNameRegex = new Regex(SecretNamePattern, RegexOptions.Compiled);
+        
         private IKeyVaultClient _keyVaultClient;
 
         private static readonly SemaphoreSlim LockCreateKeyVaultClient = new SemaphoreSlim(initialCount: 1, maxCount: 1);
@@ -37,10 +43,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration)
         {
-            Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration));
-            Guard.NotNull(authentication, nameof(authentication));
+            Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
+            Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
+            Guard.For<UriFormatException>(
+                () => !_vaultUriRegex.IsMatch(VaultUri), 
+                "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _authentication = authentication;
         }
@@ -56,6 +65,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            Guard.For<FormatException>(() => !_secretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
+
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
         }
@@ -71,7 +83,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrEmpty(secretName, nameof(secretName));
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            Guard.For<FormatException>(() => !_secretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
+
             try
             {
                 IKeyVaultClient keyVaultClient = await GetClientAsync();
