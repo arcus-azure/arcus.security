@@ -178,6 +178,14 @@ namespace Arcus.Security.Core
             {
                 try
                 {
+                    /* TODO: use 'Arcus.Observability.Telemetry.Core' 'LogSecurityEvent' instead once the SQL dependency is moved
+                        -> https://github.com/arcus-azure/arcus.observability/issues/131 */
+                    _logger.LogInformation("Events {EventName} (Context: {@EventContext})", "Get Secret", new Dictionary<string, object>
+                    {
+                        ["SecretName"] = secretName,
+                        ["SecretProviderType"] = source.SecretProvider.GetType().Name
+                    });
+
                     Task<T> resultAsync = callRegisteredStore(source);
                     if (resultAsync is null)
                     {
