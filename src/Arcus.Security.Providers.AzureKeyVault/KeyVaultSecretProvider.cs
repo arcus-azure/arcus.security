@@ -18,21 +18,31 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
-        private const string VaultUriPattern = "^https:\\/\\/[0-9a-zA-Z\\-]{3,24}\\.vault.azure.net(\\/)?$",
-                             SecretNamePattern = "^[a-zA-Z][a-zA-Z0-9\\-]{0,126}$";
+        /// <summary>
+        /// Gets the pattern which the Azure Key Vault URI should match against. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
+        /// </summary>
+        protected const string VaultUriPattern = "^https:\\/\\/[0-9a-zA-Z\\-]{3,24}\\.vault.azure.net(\\/)?$";
+
+        /// <summary>
+        /// Gets the pattern which a Azure Key Vault secret name should match against. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
+        /// </summary>
+        protected const string SecretNamePattern = "^[a-zA-Z][a-zA-Z0-9\\-]{0,126}$";
+
+        /// <summary>
+        /// Gets the regular expression that can check if the Azure Key Vault URI matches the <see cref="VaultUriPattern"/>. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
+        /// </summary>
+        protected readonly Regex VaultUriRegex = new Regex(VaultUriPattern, RegexOptions.Compiled);
+
+        /// <summary>
+        /// Gets the regular expression that can check if the Azure Key Vault URI matches the <see cref="SecretNamePattern"/>. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
+        /// </summary>
+        protected readonly Regex SecretNameRegex = new Regex(SecretNamePattern, RegexOptions.Compiled);
 
         private readonly IKeyVaultAuthentication _authentication;
-        private readonly Regex _vaultUriRegex = new Regex(VaultUriPattern, RegexOptions.Compiled),
-                               _secretNameRegex = new Regex(SecretNamePattern, RegexOptions.Compiled);
-        
+
         private IKeyVaultClient _keyVaultClient;
 
         private static readonly SemaphoreSlim LockCreateKeyVaultClient = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-
-        /// <summary>
-        ///     Uri of the vault
-        /// </summary>
-        public string VaultUri { get; }
 
         /// <summary>
         ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
@@ -48,11 +58,16 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
             Guard.For<UriFormatException>(
-                () => !_vaultUriRegex.IsMatch(VaultUri), 
+                () => !VaultUriRegex.IsMatch(VaultUri), 
                 "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _authentication = authentication;
         }
+
+        /// <summary>
+        ///     Gets the URI of the Azure Key Vault.
+        /// </summary>
+        public string VaultUri { get; }
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
@@ -66,7 +81,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.For<FormatException>(() => !_secretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
+            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
@@ -84,7 +99,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.For<FormatException>(() => !_secretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
+            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             try
             {

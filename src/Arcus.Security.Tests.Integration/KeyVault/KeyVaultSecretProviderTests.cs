@@ -52,7 +52,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var notExistingKeyName = $"secret-{Guid.NewGuid().ToString("N").Substring(0, 120)}";
+            var notExistingKeyName = $"secret-{Guid.NewGuid():N}";
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 authentication: new ServicePrincipalAuthentication(applicationId, clientKey), 
@@ -92,7 +92,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var notExistingKeyName = $"secret-{Guid.NewGuid().ToString("N").Substring(0, 120)}";
+            var notExistingKeyName = $"secret-{Guid.NewGuid():N}";
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 authentication: new ManagedServiceIdentityAuthentication(connectionString: connectionString),
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
@@ -134,7 +134,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var notExistingKeyName = $"secret-{Guid.NewGuid().ToString("N").Substring(0, 120)}";
+            var notExistingKeyName = $"secret-{Guid.NewGuid():N}";
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 authentication: new ManagedServiceIdentityAuthentication(),
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
