@@ -18,20 +18,19 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         public void KeyVaultSecretProvider_CreateWithEmptyUri_ShouldFailWithUriFormatException()
         {
             // Arrange
-            string uri = string.Empty;
+            string uri = String.Empty;
 
             // Act & Assert
             Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(new AzureKeyVaultAuthenticatorDummy(), new KeyVaultConfiguration(uri)));
         }
 
         [Fact]
-        public void KeyVaultSecretProvider_CreateWithHttpScheme_ShouldFailWithUriFormatException()
+        public void KeyVaultSecretProvider_CreateWithoutCorrectVaultUriSuffix_ShouldFailWithFormatException()
         {
-            // Arrange
-            string uri = $"http://{Guid.NewGuid():N}.vault.azure.net/";
-
-            // Act & Assert
-            Assert.ThrowsAny<UriFormatException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<UriFormatException>(
+                () => new KeyVaultSecretProvider(
+                    new AzureKeyVaultAuthenticatorDummy(), 
+                    new KeyVaultConfiguration("https://something-without-vault-azure-net-suffix")));
         }
 
         [Fact]
@@ -63,6 +62,38 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             // Act & Assert
             var secretProvider = new KeyVaultSecretProvider(new AzureKeyVaultAuthenticatorDummy(), new KeyVaultConfiguration(uri));
             Assert.NotNull(secretProvider);
+        }
+
+        [Theory]
+        [InlineData("Secret.With.Dots")]
+        [InlineData("secret-with-%")]
+        [InlineData("4secret-starting-with-number")]
+        [InlineData("secret-over-126-chars-rULfPJou27VPdaN4DNHO7KLO2nMP0s357XnRcfWUiqmPVnuaK7mqUVPAfKlCzUf1bTfhpOtPX82kAMfV96P8G7pD8SQvxnLOHR3alksdjfaksdfjP6v86e")]
+        public async Task KeyVaultSecretProvider_GetsRawSecretWithIncorrectSecretNameFormat_Throws(string secretName)
+        {
+            // Arrange
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation("some ignored secret value");
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<FormatException>(() => provider.GetRawSecretAsync(secretName));
+        }
+
+        [Theory]
+        [InlineData("Secret-with-dashes")]
+        [InlineData("s3cret-w1th-numbers")]
+        [InlineData("e")]
+        [InlineData("secret-with-126-chars-rULfPJou27VPdaN4DNHO7KLO2nMP0s357XnRcfWUiqmPVnuaK7mqUVPAfKlCzUf1bTfhpOtPX82kAMfV96P8G7pD8SQvxnLOHR3P6v86")]
+        public async Task KeyVaultSecretProvider_GetsRawSecretWithCorrectFormat(string secretName)
+        {
+            // Arrange
+            string expected = $"secret-{Guid.NewGuid()}";
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
+
+            // Act
+            string actual = await provider.GetRawSecretAsync(secretName);
+
+            // Assert
+            Assert.Equal(actual, expected);
         }
 
         [Fact]
@@ -124,7 +155,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
 
         private static string GenerateVaultUri()
         {
-            return $"https://{Guid.NewGuid():N}.vault.azure.net/";
+            return $"https://{Guid.NewGuid().ToString("N").Substring(0, 24)}.vault.azure.net/";
         }
     }
 }
