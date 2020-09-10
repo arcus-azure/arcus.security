@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
@@ -159,7 +160,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "Unknown-Secret-Name";
+            var keyName = "Unknown.Secret.Name";
 
             var builder = new HostBuilder();
 
@@ -173,8 +174,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exception = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal(HttpStatusCode.BadRequest, exception.Response.StatusCode);
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
         }
 
         [Fact]
