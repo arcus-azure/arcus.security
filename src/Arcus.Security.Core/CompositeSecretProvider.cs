@@ -101,11 +101,8 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
-            string secretValue = await WithCachedSecretStoreAsync(secretName, async source =>
-            {
-                string found = await source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache);
-                return found;
-            });
+            string secretValue = await WithCachedSecretStoreAsync(
+                secretName, source => source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache));
 
             return secretValue;
         }
@@ -123,11 +120,8 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
-            Secret secret = await WithCachedSecretStoreAsync(secretName, async source =>
-            {
-                Secret found = await source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache);
-                return found;
-            });
+            Secret secret = await WithCachedSecretStoreAsync(
+                secretName, source => source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache));
 
             return secret;
         }
@@ -143,7 +137,13 @@ namespace Arcus.Security.Core
 
             ICachedSecretProvider provider = await WithCachedSecretStoreAsync(secretName, async source =>
             {
-                Secret secret = await source.CachedSecretProvider.GetSecretAsync(secretName);
+                Task<Secret> secretAsync = source.CachedSecretProvider.GetSecretAsync(secretName);
+                if (secretAsync is null)
+                {
+                    return null;
+                }
+
+                Secret secret = await secretAsync;
                 return secret is null ? null : source.CachedSecretProvider;
             });
 
@@ -152,7 +152,7 @@ namespace Arcus.Security.Core
 
         private async Task<T> WithCachedSecretStoreAsync<T>(
             string secretName,
-            Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
         {
             return await  WithSecretStoreAsync(secretName, async source =>
             {
@@ -161,11 +161,11 @@ namespace Arcus.Security.Core
                     return null;
                 }
 
-                return await callRegisteredStore(source);
+                return await callRegisteredProvider(source);
             });
         }
 
-        private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
+        private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
         {
             if (!_secretProviders.Any())
             {
@@ -178,26 +178,13 @@ namespace Arcus.Security.Core
             {
                 try
                 {
-                    /* TODO: use 'Arcus.Observability.Telemetry.Core' 'LogSecurityEvent' instead once the SQL dependency is moved
-                        -> https://github.com/arcus-azure/arcus.observability/issues/131 */
-                    _logger.LogInformation("Events {EventName} (Context: {@EventContext})", "Get Secret", new Dictionary<string, object>
-                    {
-                        ["SecretName"] = secretName,
-                        ["SecretProviderType"] = source.SecretProvider.GetType().Name
-                    });
-
-                    Task<T> resultAsync = callRegisteredStore(source);
-                    if (resultAsync is null)
-                    {
-                        continue;
-                    }
-
-                    T result = await resultAsync;
+                    T result = await GetSecretFromProviderAsync(secretName, source, callRegisteredProvider);
                     if (result is null)
                     {
                         continue;
                     }
 
+                    LogPossibleCriticalExceptions(secretName, criticalExceptions);
                     return result;
                 }
                 catch (Exception exception) when (IsCriticalException(exception))
@@ -241,6 +228,44 @@ namespace Arcus.Security.Core
                     return false;
                 }
             });
+        }
+
+        private async Task<T> GetSecretFromProviderAsync<T>(
+            string secretName, 
+            SecretStoreSource source, 
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
+        {
+            /* TODO: use 'Arcus.Observability.Telemetry.Core' 'LogSecurityEvent' instead once the SQL dependency is moved
+                        -> https://github.com/arcus-azure/arcus.observability/issues/131 */
+            _logger.LogInformation("Events {EventName} (Context: {@EventContext})", "Get Secret", new Dictionary<string, object>
+            {
+                ["SecretName"] = secretName,
+                ["SecretProviderType"] = source.SecretProvider.GetType().Name
+            });
+
+            Task<T> resultAsync = callRegisteredProvider(source);
+            if (resultAsync is null)
+            {
+                return null;
+            }
+
+            T result = await resultAsync;
+            return result;
+        }
+
+        private void LogPossibleCriticalExceptions(string secretName, IEnumerable<Exception> criticalExceptions)
+        {
+            if (criticalExceptions.Any())
+            {
+                _logger.LogWarning("Found secret with name '{SecretName}' but with at the cost of {ExceptionCount} critical exceptions", secretName, criticalExceptions.Count());
+
+                foreach (Exception criticalException in criticalExceptions)
+                {
+                    _logger.LogWarning(criticalException, "Critical exception thrown during retrieval of secret with name '{SecretName}'", secretName);
+                }
+            }
+
+            _logger.LogInformation("Found secret with name '{SecretName}'", secretName);
         }
     }
 }
