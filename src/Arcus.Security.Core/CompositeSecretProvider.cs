@@ -135,19 +135,17 @@ namespace Arcus.Security.Core
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
-            ICachedSecretProvider provider = await WithCachedSecretStoreAsync(secretName, async source =>
+            await WithCachedSecretStoreAsync(secretName, async source =>
             {
-                Task<Secret> secretAsync = source.CachedSecretProvider.GetSecretAsync(secretName);
-                if (secretAsync is null)
+                Task invalidateSecretAsync = source.CachedSecretProvider.InvalidateSecretAsync(secretName);
+                if (invalidateSecretAsync is null)
                 {
                     return null;
                 }
 
-                Secret secret = await secretAsync;
-                return secret is null ? null : source.CachedSecretProvider;
+                await invalidateSecretAsync;
+                return "ignored result";
             });
-
-            await provider.InvalidateSecretAsync(secretName);
         }
 
         private async Task<T> WithCachedSecretStoreAsync<T>(
@@ -210,7 +208,7 @@ namespace Arcus.Security.Core
             }
 
             throw new AggregateException(
-                $"None of the configured secret providers was able to retrieve the secret while {criticalExceptions.Count} critical exceptions were thrown", 
+                $"None of the configured secret providers was able to retrieve the secret with name '{secretName}' while {criticalExceptions.Count} critical exceptions were thrown", 
                 criticalExceptions);
         }
 
@@ -257,7 +255,7 @@ namespace Arcus.Security.Core
         {
             if (criticalExceptions.Any())
             {
-                _logger.LogWarning("Found secret with name '{SecretName}' but with at the cost of {ExceptionCount} critical exceptions", secretName, criticalExceptions.Count());
+                _logger.LogWarning("Found secret with name '{SecretName}' but at the cost of {ExceptionCount} critical exceptions", secretName, criticalExceptions.Count());
 
                 foreach (Exception criticalException in criticalExceptions)
                 {
