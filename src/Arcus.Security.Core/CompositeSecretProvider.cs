@@ -159,7 +159,13 @@ namespace Arcus.Security.Core
                     return null;
                 }
 
-                return await callRegisteredProvider(source);
+                Task<T> registeredProvider = callRegisteredProvider(source);
+                if (registeredProvider is null)
+                {
+                    return null;
+                }
+
+                return await registeredProvider;
             });
         }
 
