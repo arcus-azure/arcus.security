@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -171,11 +172,7 @@ namespace Arcus.Security.Core
 
         private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
         {
-            if (!_secretProviders.Any())
-            {
-                var noRegisteredException = new KeyNotFoundException("No secret providers are configured to retrieve the secret from");
-                throw new SecretNotFoundException(secretName, noRegisteredException);
-            }
+            EnsureAnySecretProvidersConfigured(secretName);
 
             var criticalExceptions = new Collection<Exception>();
             foreach (SecretStoreSource source in _secretProviders)
@@ -202,36 +199,19 @@ namespace Arcus.Security.Core
                 }
             }
 
-            if (criticalExceptions.Count <= 0)
-            {
-                var noneFoundException = new KeyNotFoundException("None of the configured secret providers was able to retrieve the requested secret");
-                throw new SecretNotFoundException(secretName, noneFoundException);
-            }
-
-            if (criticalExceptions.Count == 1)
-            {
-                throw criticalExceptions[0];
-            }
-
-            throw new AggregateException(
-                $"None of the configured secret providers was able to retrieve the secret with name '{secretName}' while {criticalExceptions.Count} critical exceptions were thrown", 
-                criticalExceptions);
+            throw DetermineSecretStoreException(secretName, criticalExceptions);
         }
 
-        private bool IsCriticalException(Exception exceptionCandidate)
+        private void EnsureAnySecretProvidersConfigured(string secretName)
         {
-            return _criticalExceptionFilters.Any(filter =>
+            if (!_secretProviders.Any())
             {
-                try
-                {
-                    return filter.IsCritical(exceptionCandidate);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogWarning(exception, "Failed to determining critical exception for exception type '{ExceptionType}'", filter.ExceptionType.Name);
-                    return false;
-                }
-            });
+                _logger.LogError("No secret providers are configured in the secret store to retrieve the secret from, please configure at least one secret provider with the '{Extension}' extension in the startup of your application",
+                                 nameof(IHostBuilderExtensions.ConfigureSecretStore));
+
+                var noRegisteredException = new KeyNotFoundException("No secret providers are configured to retrieve the secret from");
+                throw new SecretNotFoundException(secretName, noRegisteredException);
+            }
         }
 
         private async Task<T> GetSecretFromProviderAsync<T>(
@@ -270,6 +250,43 @@ namespace Arcus.Security.Core
             }
 
             _logger.LogInformation("Found secret with name '{SecretName}'", secretName);
+        }
+
+        private bool IsCriticalException(Exception exceptionCandidate)
+        {
+            return _criticalExceptionFilters.Any(filter =>
+            {
+                try
+                {
+                    return filter.IsCritical(exceptionCandidate);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "Failed to determining critical exception for exception type '{ExceptionType}'", filter.ExceptionType.Name);
+                    return false;
+                }
+            });
+        }
+
+        private Exception DetermineSecretStoreException(string secretName, IEnumerable<Exception> criticalExceptions)
+        {
+            if (!criticalExceptions.Any())
+            {
+                _logger.LogError("None of the configured {Count} configured secret providers was able to retrieve the requested secret with name '{SecretName}'",
+                                 _secretProviders.Count(), secretName);
+
+                var noneFoundException = new KeyNotFoundException($"None of the {_secretProviders.Count()} configured secret providers was able to retrieve the requested secret with name '{secretName}'");
+                return new SecretNotFoundException(secretName, noneFoundException);
+            }
+
+            if (criticalExceptions.Count() == 1)
+            {
+                return criticalExceptions.First();
+            }
+
+            return new AggregateException(
+                $"None of the configured secret providers was able to retrieve the secret with name '{secretName}' while {criticalExceptions.Count} critical exceptions were thrown",
+                criticalExceptions);
         }
     }
 }
