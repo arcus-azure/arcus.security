@@ -27,6 +27,8 @@ namespace Arcus.Security.Core
             Func<IServiceProvider, ISecretProvider> createSecretProvider, 
             Func<string, string> mutateSecretName = null)
         {
+            Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create an secret provider instance to register it in the secret store");
+            
             _createSecretProvider = createSecretProvider;
 
             MutateSecretName = mutateSecretName;
