@@ -22,7 +22,8 @@ namespace Arcus.Security.Tests.Unit.Core
             builder.ConfigureSecretStore((config, stores) => stores.AddProvider(serviceProvider => null));
 
             // Assert
-            Assert.Throws<InvalidOperationException>(() => builder.Build());
+            IHost host = builder.Build();
+            Assert.Throws<InvalidOperationException>(() => host.Services.GetService<ISecretProvider>());
         }
 
         [Fact]
@@ -38,7 +39,8 @@ namespace Arcus.Security.Tests.Unit.Core
             });
 
             // Assert
-            Assert.Throws<TestClassException>(() => builder.Build());
+            IHost host = builder.Build();
+            Assert.Throws<TestClassException>(() => host.Services.GetService<ISecretProvider>());
         }
 
         [Fact]
