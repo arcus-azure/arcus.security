@@ -81,7 +81,7 @@ namespace Arcus.Security.Core
         ///     The instance to provide the registered services to create as dependencies for the to-be-created <see cref="ISecretProvider"/> and possible <see cref="ICachedSecretProvider"/>.
         /// </param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="serviceProvider"/> is <c>null</c>.</exception>
-        internal void EnsureSecretProviderCreated(IServiceProvider serviceProvider)
+        public void EnsureSecretProviderCreated(IServiceProvider serviceProvider)
         {
             Guard.NotNull(serviceProvider, nameof(serviceProvider), 
                 $"Requires an instance to provide the registered services to create the {nameof(ISecretProvider)} and possible {nameof(ICachedSecretProvider)}");
