@@ -7,11 +7,33 @@ Security for Azure development in a breeze.
 ![Arcus](https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png)
 
 # Installation
-Soon you will be able to install it via NuGet:
+Easy to install it via NuGet:
+
+- **Azure Key Vault secret provider**
 
 ```shell
-PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
+PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
+
+- **HashiCorp Vault secret provider**
+
+```shell
+PM > Install-Package Arcus.Security.Providers.HashiCorp
+```
+
+- **Secret store**
+
+```shell
+PM > Install-Package Arcus.Security.Core
+```
+
+- **Secret store for Azure Functions**
+
+```shell
+PM > Install-Package Arcus.Security.AzureFunctions
+```
+
+For a more thorough overview, we recommend reading [our documentation](#documentation).
 
 # Documentation
 All documentation can be found on [here](https://security.arcus-azure.net/).
