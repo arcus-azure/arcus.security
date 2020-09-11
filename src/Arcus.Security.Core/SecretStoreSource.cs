@@ -54,7 +54,6 @@ namespace Arcus.Security.Core
             MutateSecretName = mutateSecretName;
         }
 
-
         /// <summary>
         /// Gets the provider for this secret store.
         /// </summary>
