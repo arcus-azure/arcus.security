@@ -15,6 +15,8 @@ namespace Arcus.Security.Core
     {
         private readonly Func<IServiceProvider, ISecretProvider> _createSecretProvider;
 
+        private ISecretProvider _secretProvider;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
         /// </summary>
@@ -40,7 +42,7 @@ namespace Arcus.Security.Core
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to register it in the secret store");
             
-            SecretProvider = secretProvider;
+            _secretProvider = secretProvider;
 
             if (secretProvider is ICachedSecretProvider cachedSecretProvider)
             {
@@ -50,14 +52,29 @@ namespace Arcus.Security.Core
             MutateSecretName = mutateSecretName;
         }
 
+
         /// <summary>
         /// Gets the provider for this secret store.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when the <see cref="EnsureSecretProviderCreated"/> was not yet called after creating a lazy secret provider source.</exception>
         /// <remarks>
         ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
         ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="ISecretProvider"/>.
         /// </remarks>
-        public ISecretProvider SecretProvider { get; private set; }
+        public ISecretProvider SecretProvider
+        {
+            get
+            {
+                if (_secretProvider is null)
+                {
+                    throw new InvalidOperationException(
+                        "Secret provider is not ready because secret provider source was created via a lazy initialization. "
+                        + $"Please call '{nameof(EnsureSecretProviderCreated)}' before accessing this member");
+                }
+
+                return _secretProvider;
+            }
+        }
 
         /// <summary>
         /// Gets the cached provider for this secret store, if the <see cref="SecretProvider"/> is a <see cref="ICachedSecretProvider"/> implementation.
@@ -86,7 +103,7 @@ namespace Arcus.Security.Core
             Guard.NotNull(serviceProvider, nameof(serviceProvider), 
                 $"Requires an instance to provide the registered services to create the {nameof(ISecretProvider)} and possible {nameof(ICachedSecretProvider)}");
 
-            if (SecretProvider is null)
+            if (_secretProvider is null)
             {
                 ISecretProvider secretProvider = LoggedCreateSecretProvider(serviceProvider);
                 if (secretProvider is null)
@@ -96,7 +113,7 @@ namespace Arcus.Security.Core
                         + "Please check if the secret providers are correctly registered in the secret store");
                 }
 
-                SecretProvider = secretProvider;
+                _secretProvider = secretProvider;
 
                 if (secretProvider is ICachedSecretProvider cachedSecretProvider)
                 {
