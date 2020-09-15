@@ -20,6 +20,17 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
+        public void AddProviderFunction_WithoutFunction_Throws()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var builder = new SecretStoreBuilder(services);
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.AddProvider(createSecretProvider: null));
+        }
+
+        [Fact]
         public void AddCriticalException_WithoutExceptionFilter_Throws()
         {
             // Arrange

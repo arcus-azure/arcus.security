@@ -98,6 +98,26 @@ This section describes how a new secret store source can be added to the pipelin
    }
    ```
 
+### Adding dependency services to your secret provider
+
+When your secret provider requires additional services, configured in the dependency container, you can choose to pick an method overload that provides access to the `IServiceProvider`:
+
+The example below shows how an `ILogger` instance is passed to the secret provider.
+
+```csharp
+public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+    {
+        return builder.AddProvider((IServiceProvider serviceProvider) =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILogger<RegistrySecretProvider>>();
+            return new RegistrySecretProvider(logger);
+        });
+    }
+}
+```
+
 ### Adding caching to your secret provider
 
 When your secret provider requires caching, you can wrap the provider in a `CachedSecretProvider` at registration:
