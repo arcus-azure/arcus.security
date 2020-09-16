@@ -20,6 +20,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         /// Initializes a new instance of the <see cref="ManagedServiceIdentityAuthentication"/> class.
         /// </summary>
         public ManagedServiceIdentityAuthentication()
+            : this(NullLogger<ManagedServiceIdentityAuthentication>.Instance)
         {
         }
 
