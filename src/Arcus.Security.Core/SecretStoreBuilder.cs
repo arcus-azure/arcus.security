@@ -37,7 +37,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <remarks>
         ///     The series of secret stores is directly publicly available including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
-        ///     Though, for almost all use-cases, the <see cref="AddProvider(ISecretProvider,Func{string,string})"/> should be sufficient.
+        ///     Though, for almost all use-cases, the <see cref="AddProvider(ISecretProvider,Func{string,string})"/> and the <see cref="AddProvider(Func{IServiceProvider,ISecretProvider},Func{string,string})"/> should be sufficient.
         /// </remarks>
         public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
 
@@ -47,7 +47,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <remarks>
         ///     The series of exception filters is directly publicly available including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
-        ///     Though, for almost all use-cases, the <see cref="AddCriticalException{TException}()"/> and <see cref="AddCriticalException{TException}(System.Func{TException,bool})"/> should be sufficient.
+        ///     Though, for almost all use-cases, the <see cref="AddCriticalException{TException}()"/> and <see cref="AddCriticalException{TException}(Func{TException,bool})"/> should be sufficient.
         /// </remarks>
         public IList<CriticalExceptionFilter> CriticalExceptionFilters { get; } = new List<CriticalExceptionFilter>();
 
