@@ -109,7 +109,7 @@ namespace Arcus.Security.Providers.HashiCorp
                     return secretV2.Data;
                 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(_secretEngineVersion), _secretEngineVersion, "Unknown client API version");
+                    throw new ArgumentOutOfRangeException(nameof(_secretEngineVersion), _secretEngineVersion, "Unknown HashiCorp Vault KeyValue secret engine version");
             }
         }
     }
