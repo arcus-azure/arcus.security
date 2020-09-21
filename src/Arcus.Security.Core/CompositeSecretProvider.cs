@@ -223,6 +223,7 @@ namespace Arcus.Security.Core
                         -> https://github.com/arcus-azure/arcus.observability/issues/131 */
             _logger.LogInformation("Events {EventName} (Context: {@EventContext})", "Get Secret", new Dictionary<string, object>
             {
+                ["EventType"] = "Security",
                 ["SecretName"] = secretName,
                 ["SecretProviderType"] = source.SecretProvider.GetType().Name
             });
