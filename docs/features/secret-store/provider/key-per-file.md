@@ -5,7 +5,7 @@ layout: default
 
 # KeyPerFile secret provider
 The _KeyPerFile_  secret provider allows working with Docker secrets.  When using Docker secrets in Docker Swarm, the secrets are injected in the Docker container as files.  
-The _KeyPerFile_ secret provider provides access to those secrets via the `ISecretStore`.
+The _KeyPerFile_ secret provider provides access to those secrets via the secret store.
 
 ## Installation
 Adding secrets from the User Secrets manager into the secret store requires following package:
@@ -66,17 +66,17 @@ public class PersonController
 {
     private readonly ISecretProvider _secrets;
 
-    public PersonController( ISecretProvider secrets )
+    public PersonController(ISecretProvider secrets)
     {
         _secrets = secrets;
     }
 
     [HttpGet]
-    public async Task GetPerson( Guid personId )
+    public async Task GetPerson(Guid personId)
     {
         var connectionstring = _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
 
-        using( var connection = new SqlDbConnection(connectionstring))
+        using (var connection = new SqlDbConnection(connectionstring))
         {
             var person = new PersonRepository(connection).GetPersonById(personId);
             return Ok(new { Id = person.Id, Name = person.Name });

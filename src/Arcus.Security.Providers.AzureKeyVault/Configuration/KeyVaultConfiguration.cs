@@ -23,7 +23,9 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         public KeyVaultConfiguration(Uri vaultUri)
         {
             Guard.NotNull(vaultUri, nameof(vaultUri));
-            Guard.For<UriFormatException>(() => vaultUri.Scheme != Uri.UriSchemeHttps);
+            Guard.For<UriFormatException>(
+                () => vaultUri.Scheme != Uri.UriSchemeHttps,
+                "Requires the vault URI to have a 'https' scheme");
 
             VaultUri = vaultUri;
         }

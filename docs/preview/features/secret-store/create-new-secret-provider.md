@@ -5,6 +5,12 @@ layout: default
 
 # Create a new secret provider
 
+- [Prerequisites](#prerequisites)
+- [Developing a secret provider](#developing-a-secret-provider)
+- [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
+- [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
+- [Contribute your secret provider](#contribute-your-secret-provider)
+
 ## Prerequisites
 
 The secret providers are configured during the initial application build-up in the `Program.cs`:
@@ -92,32 +98,76 @@ This section describes how a new secret store source can be added to the pipelin
    }
    ```
 
-5. Note that when your secret provider requires caching, you can wrap the provider in a `CachedSecretProvider` at registration:
-   ex:
-   ```csharp
-   public static class SecretStoreBuilderExtensions
-   {
-       public static SecretStoreBuilder AddCachedRegistry(this SecretStoreBuilder builder)
-       {
-           var provider = new RegistrySecretProvider();
-           var configuration = new CacheConfiguration(TimeSpan.FromSeconds(5));
-           
-           return builder.AddProvider(new CachedSecretProvider(provider, configuration));
-       }
-   }
-   ```
+### Adding caching to your secret provider
 
-   When accessing the provider in the application, you can use the `ICachedSecretProvider` to have access to the cache-specific methods.
-   ex:
-   ```csharp
-   [ApiController]
-   public class OrderController : ControllerBase
-   {
-       public class OrderController(ICachedSecretProvider secretProvider)
-       {
-       }
-   }
-   ```
+When your secret provider requires caching, you can wrap the provider in a `CachedSecretProvider` at registration:
+
+```csharp
+public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddCachedRegistry(this SecretStoreBuilder builder)
+    {
+        var provider = new RegistrySecretProvider();
+        var configuration = new CacheConfiguration(TimeSpan.FromSeconds(5));
+        
+        return builder.AddProvider(new CachedSecretProvider(provider, configuration));
+    }
+}
+```
+
+When accessing the provider in the application, you can use the `ICachedSecretProvider` to have access to the cache-specific methods.
+ex:
+```csharp
+[ApiController]
+public class OrderController : ControllerBase
+{
+    public class OrderController(ICachedSecretProvider secretProvider)
+    {
+    }
+}
+```
+
+### Adding secret name mutation before looking up secret
+
+When you want secret names 'changed' or 'mutated' before they go through your secret provider (ex. changing `Arcus.Secret` to `ARCUS_SECRET`);
+you can pass allong a custom mutation function during the registration:
+
+```csharp
+public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+    {
+        var provider = RegistrySecretProvider();
+        
+        return builder.AddProvider(secretProvider, secretName => secretName.Replace(".", "_").ToUpper());
+    }
+}
+```
+
+Or allow users to specify this:
+
+```csharp
+public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddRegistry(
+    this SecretStoreBuilder builder, 
+    Func<string, string> mutateSecretName = null)
+    {
+        var provider = RegistrySecretProvider();
+
+        return builder.AddProvider(secretprovider, mutateSecretName);
+    }
+}
+```
+
+So they can provide a custom mutation:
+
+```csharp
+.ConfigureSecretStore((config, stores) =>
+{
+    stores.AddRegistry(secretName => secretName.Replace(".", "_").ToUpper());
+})
+```
 
 ## Contribute your secret provider
 
