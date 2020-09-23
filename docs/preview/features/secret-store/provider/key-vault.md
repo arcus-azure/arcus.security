@@ -49,7 +49,7 @@ public class Program
                         var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(1));
                         builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, cacheConfiguration);
 
-                        // Adding the Azure Key Vault secret provider, using `.` instead of `:` when looking up secrets.
+                        // Adding the Azure Key Vault secret provider, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `ServicePrincipal:ClientKey` it will be changed to `ServicePrincipal-ClientKey`.
                         builder.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, mutateSecretName: secretName => secretName.Replace(":", "-"));
                     })
