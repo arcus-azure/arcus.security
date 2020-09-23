@@ -1,7 +1,7 @@
-﻿using System;
-using Arcus.Security.Core;
+﻿using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
