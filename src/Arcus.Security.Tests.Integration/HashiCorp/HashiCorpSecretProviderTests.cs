@@ -101,7 +101,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
             string userName = "arcus", password = "123";
-
+            const string secretNamePrefix = "Test-";
+            
             var builder = new HostBuilder();
 
             using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
@@ -116,13 +117,13 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 {
                     stores.AddHashiCorpVaultWithUserPass(
                         server.ListenAddress.ToString(), userName, password, secretPath, keyValueMountPoint: DefaultDevMountPoint, 
-                        mutateSecretName: secretName => secretName.Remove(0, 5));
+                        mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length));
                 });
 
                 // Assert
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
-                string actual = await provider.GetRawSecretAsync("Test-" + secretKey);
+                string actual = await provider.GetRawSecretAsync(secretNamePrefix + secretKey);
 
                 Assert.Equal(expected, actual);
             }
@@ -135,7 +136,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
             string userName = "arcus", password = "123";
-
+            
             var builder = new HostBuilder();
 
             using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
@@ -150,7 +151,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 {
                     stores.AddHashiCorpVaultWithUserPass(
                         server.ListenAddress.ToString(), userName, password, secretPath, keyValueMountPoint: DefaultDevMountPoint,
-                        mutateSecretName: secretName => "Test-" + secretName);
+                        mutateSecretName: secretName =>  "Test-" + secretName);
                 });
 
                 // Assert
@@ -167,7 +168,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
             string userName = "arcus", password = "123";
-
+            const string secretNamePrefix = "Test-";
+            
             var builder = new HostBuilder();
 
             using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
@@ -184,13 +186,13 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 builder.ConfigureSecretStore((config, stores) =>
                 {
                     stores.AddHashiCorpVault(settings, secretPath, keyValueMountPoint: DefaultDevMountPoint, 
-                        mutateSecretName: secretName => secretName.Remove(0, 5));
+                        mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length));
                 });
 
                 // Assert
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
-                string actual = await provider.GetRawSecretAsync("Test-" + secretKey);
+                string actual = await provider.GetRawSecretAsync(secretNamePrefix + secretKey);
 
                 Assert.Equal(expected, actual);
             }
