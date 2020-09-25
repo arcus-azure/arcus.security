@@ -130,14 +130,14 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     await ThrottleTooManyRequestsAsync(
                         async () =>
                         {
-                            Logger.LogTrace("Getting a secret from Azure Key Vault...");
+                            Logger.LogTrace("Getting a secret from Azure Key Vault '{VaultUri}'...", VaultUri);
                             SecretBundle bundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
-                            Logger.LogInformation("Got secret from Azure Key Vault");
+                            Logger.LogTrace("Got secret from Azure Key Vault '{VaultUri}'", VaultUri);
 
                             return bundle;
                         });
 
-                if (secretBundle == null)
+                if (secretBundle is null)
                 {
                     return null;
                 }
@@ -150,8 +150,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
             catch (KeyVaultErrorException keyVaultErrorException)
             {
                 Logger.LogError(keyVaultErrorException,
-                    "Failure during retrieving a secret from the Azure Key Vault resulted in {StatusCode} {ReasonPhrase}", 
-                    keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
+                    "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}", 
+                    VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
 
                 if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -168,22 +168,22 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns></returns>
         protected async Task<IKeyVaultClient> GetClientAsync()
         {
-            Logger.LogTrace("Authenticating with the Azure Key Vault...");
+            Logger.LogTrace("Authenticating with the Azure Key Vault '{VaultUri}'...", VaultUri);
             await LockCreateKeyVaultClient.WaitAsync();
 
             try
             {
-                if (_keyVaultClient == null)
+                if (_keyVaultClient is null)
                 {
                     _keyVaultClient = await _authentication.AuthenticateAsync();
                 }
 
-                Logger.LogInformation("Authenticated with the Azure Key Vault");
+                Logger.LogTrace("Authenticated with the Azure Key Vault '{VaultUri}'", VaultUri);
                 return _keyVaultClient;
             }
             catch (Exception exception)
             {
-                Logger.LogError(exception, "Failure during authenticating with the Azure Key Vault");
+                Logger.LogError(exception, "Failure during authenticating with the Azure Key Vault '{VaultUri}'", VaultUri);
                 throw;
             }
             finally
