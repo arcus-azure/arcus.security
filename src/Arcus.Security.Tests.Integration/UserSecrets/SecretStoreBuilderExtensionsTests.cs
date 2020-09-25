@@ -373,16 +373,6 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             File.WriteAllText(secretsFilePath, contents.ToString(), Encoding.UTF8);
         }
 
-        private string CreateSecretsDirectory(string id)
-        {
-            string secretsFilePath = PathHelper.GetSecretsPathFromSecretsId(id);
-            string secretsDirPath = Path.GetDirectoryName(secretsFilePath);
-            Directory.CreateDirectory(secretsDirPath);
-            _tempDirectories.Add(secretsDirPath);
-            
-            return secretsFilePath;
-        }
-
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>

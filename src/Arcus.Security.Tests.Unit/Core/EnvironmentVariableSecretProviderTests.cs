@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
+using Arcus.Security.Core.Providers;
 using Arcus.Security.Tests.Core.Fixture;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -124,6 +125,55 @@ namespace Arcus.Security.Tests.Unit.Core
 
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync("ARCUS_ENVIRONMENT_SECRET"));
             }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithOutOfBoundsTarget_Throws()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddEnvironmentVariables(target: (EnvironmentVariableTarget) 4);
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public async Task GetSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            var provider = new EnvironmentVariableSecretProvider();
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetSecretAsync(secretName));
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("  ")]
+        public async Task GetRawSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            var provider = new EnvironmentVariableSecretProvider();
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetRawSecretAsync(secretName));
+        }
+        
+        [Fact]
+        public void CreateProvider_WithOutOfBoundsTarget_Throws()
+        {
+            Assert.ThrowsAny<ArgumentException>(
+                () => new EnvironmentVariableSecretProvider(target: (EnvironmentVariableTarget) 4));
         }
     }
 }

@@ -1,18 +1,23 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Integration.Fixture;
+using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.KeyVault
 {
     [Trait(name: "Category", value: "Integration")]
-    public class SecretStoreBuilderBuilderExtensionsTests : IntegrationTest
+    public class SecretStoreBuilderExtensionsTests : IntegrationTest
     {
-        public SecretStoreBuilderBuilderExtensionsTests(ITestOutputHelper testOutput) : base(testOutput)
+        public SecretStoreBuilderExtensionsTests(ITestOutputHelper testOutput) : base(testOutput)
         {
         }
 
@@ -50,7 +55,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
 
@@ -110,7 +115,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -215,7 +220,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -255,7 +260,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
 
@@ -313,7 +318,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentity(
-                    keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -421,7 +426,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentity(
-                    keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING_WRONG_" + secretName);
+                    keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -429,6 +434,54 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+        }
+
+        [Fact]
+        public async Task AddAzureKeyVault_WithWrongServicePrincipalCredentials_Throws()
+        {
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, "wrong-app-id", "wrong-access-key");
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            var exception = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetSecretAsync(keyName));
+            Assert.Equal("unauthorized_client", exception.ErrorCode);
+        }
+
+        [Fact]
+        public async Task AddAzureKeyVault_WithWrongUnauthorizedServicePrincipal_Throws()
+        {
+            // Arrange
+            string applicationId = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:ApplicationId");
+            var clientKey = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, clientKey);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            var exception = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetSecretAsync(keyName));
+            Assert.Equal(HttpStatusCode.Forbidden, exception.Response.StatusCode);
         }
     }
 }

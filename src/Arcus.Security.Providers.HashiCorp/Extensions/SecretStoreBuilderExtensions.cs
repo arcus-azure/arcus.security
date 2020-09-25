@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
 using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Hosting;
 using VaultSharp;
+using VaultSharp.Core;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.Kubernetes;
 using VaultSharp.V1.AuthMethods.UserPass;
@@ -31,6 +34,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="keyValueVersion">The client API version to use when interacting with the KeyValue secret engine.</param>
         /// <param name="keyValueMountPoint">The point where HashiCorp Vault KeyValue secret engine is mounted (default: kv-v2).</param>
         /// <param name="userPassMountPoint">The point where the HashiCorp Vault UserPass authentication is mounted (default: userpass).</param>
+        /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="secretPath"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">
         ///     Thrown when the <paramref name="vaultServerUriWithPort"/> is blank or doesn't represent a valid URI,
@@ -48,7 +52,8 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string secretPath,
             VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V2,
             string keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2,
-            string userPassMountPoint = AuthMethodDefaultPaths.UserPass)
+            string userPassMountPoint = AuthMethodDefaultPaths.UserPass,
+            Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort));
@@ -61,7 +66,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             IAuthMethodInfo authenticationMethod = new UserPassAuthMethodInfo(userPassMountPoint, username, password);
             var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
 
-            return AddHashiCorpVault(builder, settings, secretPath, keyValueVersion, keyValueMountPoint);
+            return AddHashiCorpVault(builder, settings, secretPath, keyValueVersion, keyValueMountPoint, mutateSecretName);
         }
 
         /// <summary>
@@ -84,6 +89,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="keyValueVersion">The client API version to use when interacting with the KeyValue secret engine.</param>
         /// <param name="keyValueMountPoint">The point where HashiCorp Vault KeyVault secret engine is mounted.</param>
         /// <param name="kubernetesMountPoint">The point where the HashiCorp Vault Kubernetes authentication is mounted.</param>
+        /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>.</exception>
         /// <exception cref="ArgumentException">
         ///     Thrown when the <paramref name="vaultServerUriWithPort"/> is blank or doesn't represent a valid URI,
@@ -101,7 +107,8 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string secretPath,
             VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V2,
             string keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2,
-            string kubernetesMountPoint = AuthMethodDefaultPaths.Kubernetes)
+            string kubernetesMountPoint = AuthMethodDefaultPaths.Kubernetes,
+            Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
@@ -115,7 +122,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             IAuthMethodInfo authenticationMethod = new KubernetesAuthMethodInfo(kubernetesMountPoint, roleName, jsonWebToken);
             var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
 
-            return AddHashiCorpVault(builder, settings, secretPath, keyValueVersion, keyValueMountPoint);
+            return AddHashiCorpVault(builder, settings, secretPath, keyValueVersion, keyValueMountPoint, mutateSecretName);
         }
 
         /// <summary>
@@ -131,6 +138,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <param name="keyValueVersion">The client API version to use when interacting with the KeyValue secret engine.</param>
         /// <param name="keyValueMountPoint">The point where HashiCorp Vault KeyVault secret engine is mounted.</param>
+        /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">
         ///     Thrown when the <paramref name="builder"/>, <paramref name="settings"/> or <paramref name="secretPath"/> is <c>null</c>.
         /// </exception>
@@ -145,7 +153,8 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             VaultClientSettings settings,
             string secretPath,
             VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V2,
-            string keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2)
+            string keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2,
+            Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNull(settings, nameof(settings), "Requires HashiCorp Vault settings to correctly connect to the running HashiCorp Vault");
@@ -156,8 +165,15 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), keyValueVersion), "Requires the client API version to be either V1 or V2");
             Guard.NotNullOrWhitespace(keyValueMountPoint, nameof(keyValueMountPoint), "Requires a point where the KeyVault secret engine is mounted");
 
+            // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
+            builder.AddCriticalException<VaultApiException>(exception =>
+            {
+                return exception.HttpStatusCode == HttpStatusCode.BadRequest
+                       || exception.HttpStatusCode == HttpStatusCode.Forbidden;
+            });
+
             var provider = new HashiCorpSecretProvider(settings, keyValueVersion, keyValueMountPoint, secretPath);
-            return builder.AddProvider(provider);
+            return builder.AddProvider(provider, mutateSecretName);
         }
     }
 }
