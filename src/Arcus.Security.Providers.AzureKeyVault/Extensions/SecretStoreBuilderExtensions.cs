@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
@@ -276,17 +277,6 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
             Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
 
-            // Thrown during failure with Active Directory authentication.
-            builder.AddCriticalException<AdalServiceException>();
-            
-            // Thrown during failure with Key Vault authorization.
-            builder.AddCriticalException<KeyVaultErrorException>(exception =>
-            {
-                return exception.Response.StatusCode == HttpStatusCode.Forbidden
-                       || exception.Response.StatusCode == HttpStatusCode.Unauthorized
-                       || exception.Response.StatusCode == HttpStatusCode.BadRequest;
-            });
-
             return AddAzureKeyVault(builder, serviceProvider => authentication, configuration, cacheConfiguration, mutateSecretName);
         }
 
@@ -308,6 +298,20 @@ namespace Microsoft.Extensions.Hosting
             ICacheConfiguration cacheConfiguration,
             Func<string, string> mutateSecretName = null)
         {
+            // Thrown by our own authentication implementations when there's a problem with authentication to Azure Key Vault.
+            builder.AddCriticalException<AuthenticationException>();
+
+            // Thrown during failure with Active Directory authentication.
+            builder.AddCriticalException<AdalServiceException>();
+            
+            // Thrown during failure with Key Vault authorization.
+            builder.AddCriticalException<KeyVaultErrorException>(exception =>
+            {
+                return exception.Response.StatusCode == HttpStatusCode.Forbidden
+                       || exception.Response.StatusCode == HttpStatusCode.Unauthorized
+                       || exception.Response.StatusCode == HttpStatusCode.BadRequest;
+            });
+
             return builder.AddProvider(serviceProvider =>
             {
                 IKeyVaultAuthentication authentication = createAuthentication(serviceProvider);
