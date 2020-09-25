@@ -55,6 +55,10 @@ public class Program
                         // Mount point of KeyValue secret engine (default: kv-v2).
                         builder.AddHashiCorpVaultWithUserPass(..., keyValueMountPoint: "secret");
 
+                        // Adding the HashiCorp Vault secret provider with UserPass authentication, using `-` instead of `:` when looking up secrets.
+                        // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
+                        builder.AddHashiCorpVaultWithUserPass(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
+
                         // Kubernetes authentication built-in overload:
                         // --------------------------------------------
                         builder.AddHashiCorpVaultWithKubernetes(
@@ -77,6 +81,10 @@ public class Program
                         // Mount point of KeyValue secret engine (default: kv-v2).
                         builder.AddHashiCorpVaultWithKubernetes(..., keyValueMountPoint: "secret");
 
+                        // Adding the HashiCorp Vault secret provider with Kubernetes authentication, using `-` instead of `:` when looking up secrets.
+                        // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
+                        builder.AddHashiCorpVaultWithKubernetes(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
+
                         // Custom settings overload for when using the [VaultSharp](https://github.com/rajanadar/VaultSharp) settings directly:
                         // --------------------------------------------------------------------------------------------------------------------
                         var tokenAuthentication = new TokenAuthMethodInfo("token");
@@ -91,6 +99,10 @@ public class Program
 
                         // Mount point of KeyValue secret engine (default: kv-v2).
                         builder.AddHashiCorpVault(..., keyValueMountPoint: "secret");
+
+                        // Adding the HashiCorp Vault secret provider, using `-` instead of `:` when looking up secrets.
+                        // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
+                        builder.AddHashiCorpVault(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
