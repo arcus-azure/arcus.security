@@ -9,7 +9,6 @@ using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Vault.Endpoints.Sys;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.UserPass;
@@ -18,6 +17,7 @@ using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp
 {
+    [Trait(name: "Category", value: "Integration")]
     public class HashiCorpSecretProviderTests
     {
         private const string DefaultDevMountPoint = "secret";

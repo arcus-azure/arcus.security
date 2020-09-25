@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Providers;
@@ -77,6 +78,27 @@ namespace Arcus.Security.Tests.Unit.Core
             var provider = host.Services.GetRequiredService<ISecretProvider>();
             await Assert.ThrowsAsync<SecretNotFoundException>(
                 () => provider.GetRawSecretAsync("Arcus.KeyVault.Secret"));
+        }
+
+        [Fact]
+        public async Task GetSecret_WithCriticalException_ThrowsThroughMutatedSecretProvider()
+        {
+            // Arrange
+            var saboteurProvider = new SaboteurSecretProvider(new AuthenticationException("Some authentication failure"));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(saboteurProvider, name => "Extra.Ignored.Prefix-" + name)
+                      .AddCriticalException<AuthenticationException>();
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<AuthenticationException>(() => provider.GetSecretAsync("some secret name"));
         }
 
         [Fact]

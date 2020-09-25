@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
@@ -237,6 +239,120 @@ namespace Arcus.Security.Tests.Unit.Core
             var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
             Secret secret = await cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false);
             Assert.Equal(expected, secret.Value);
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithSpecificCriticalException_ThrowsCriticalExceptionWhenThrownInSecretProvider()
+        {
+            // Arrange
+            var stubProvider = new SaboteurSecretProvider(new AuthenticationException("Some authentication failure"));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCriticalException<AuthenticationException>()
+                      .AddProvider(stubProvider);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<AuthenticationException>(() => provider.GetRawSecretAsync("some secret name"));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithMultipleSpecificCriticalExceptions_ThrowsAggregateExceptionWithAllThrownCriticalExceptionsWhenThrownInSecretProvider()
+        {
+            // Arrange
+            var stubProvider1 = new SaboteurSecretProvider(new CryptographicException("Some cryptographic failure"));
+            var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("Some authentication failure"));
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCriticalException<CryptographicException>()
+                      .AddCriticalException<AuthenticationException>()
+                      .AddProvider(stubProvider1)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            var exception = await Assert.ThrowsAsync<AggregateException>(() => provider.GetSecretAsync("some secret name"));
+            Assert.Collection(exception.InnerExceptions, 
+                ex => Assert.IsType<CryptographicException>(ex),
+                ex => Assert.IsType<AuthenticationException>(ex));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithSpecificCriticalExceptionFilter_ThrowsSpecificCriticalExceptionThatMatchesFilter()
+        {
+            // Arrange
+            const string expectedMessage = "This is a specific message";
+            var stubProvider1 = new SaboteurSecretProvider(new AuthenticationException(expectedMessage));
+            var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("This is a different message"));
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCriticalException<AuthenticationException>(ex => ex.Message == expectedMessage)
+                      .AddProvider(stubProvider1)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            var exception = await Assert.ThrowsAsync<AuthenticationException>(() => provider.GetRawSecretAsync("some secret name"));
+            Assert.Equal(expectedMessage, exception.Message);
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithInvalidExceptionFilter_CatchesGeneral()
+        {
+            // Arrange
+            var stubProvider = new InMemorySecretProvider();
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCriticalException<CryptographicException>(
+                    ex => throw new Exception("Throw something to let the exception filter fail"));
+
+                stores.AddProvider(stubProvider);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync("some secret name"));
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithoutExceptionFilter_Throws()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCriticalException<AuthenticationException>(exceptionFilter: null);
+            });
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
 
         [Fact]

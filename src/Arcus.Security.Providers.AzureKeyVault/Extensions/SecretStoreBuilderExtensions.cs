@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
@@ -6,6 +8,8 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using GuardNet;
+using Microsoft.Azure.KeyVault.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -34,10 +38,10 @@ namespace Microsoft.Extensions.Hosting
             bool allowCaching = false,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
-            Guard.NotNull(certificate, nameof(certificate));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
+            Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
 
             return AddAzureKeyVault(
                 builder,
@@ -66,10 +70,10 @@ namespace Microsoft.Extensions.Hosting
             ICacheConfiguration cacheConfiguration,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
-            Guard.NotNull(certificate, nameof(certificate));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
+            Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
 
             return AddAzureKeyVault(
                 builder,
@@ -98,8 +102,8 @@ namespace Microsoft.Extensions.Hosting
             bool allowCaching = false,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
 
             return AddAzureKeyVault(
                 builder,
@@ -128,8 +132,8 @@ namespace Microsoft.Extensions.Hosting
             string azureADInstance = null,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
 
             return AddAzureKeyVault(
                 builder,
@@ -158,10 +162,10 @@ namespace Microsoft.Extensions.Hosting
             bool allowCaching = false,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
-            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add the secret provider to the secret store");
+            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey), "Requires a non-blank client access key of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add to the secret provider to the secret store");
 
             return AddAzureKeyVault(
                 builder,
@@ -190,10 +194,10 @@ namespace Microsoft.Extensions.Hosting
             ICacheConfiguration cacheConfiguration,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri));
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId));
-            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add the secret provider to the secret store");
+            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey), "Requires a non-blank client access key of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add to the secret provider to the secret store");
 
             return AddAzureKeyVault(
                 builder,
@@ -219,9 +223,9 @@ namespace Microsoft.Extensions.Hosting
             bool allowCaching = false,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNull(authentication, nameof(authentication));
-            Guard.NotNull(configuration, nameof(configuration));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
+            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
 
             ICacheConfiguration cacheConfiguration = allowCaching ? new CacheConfiguration() : null;
             return AddAzureKeyVault(builder, authentication, configuration, cacheConfiguration, mutateSecretName);
@@ -243,9 +247,20 @@ namespace Microsoft.Extensions.Hosting
             ICacheConfiguration cacheConfiguration,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder));
-            Guard.NotNull(authentication, nameof(authentication));
-            Guard.NotNull(configuration, nameof(configuration));
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
+            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
+
+            // Thrown during failure with Active Directory authentication.
+            builder.AddCriticalException<AdalServiceException>();
+            
+            // Thrown during failure with Key Vault authorization.
+            builder.AddCriticalException<KeyVaultErrorException>(exception =>
+            {
+                return exception.Response.StatusCode == HttpStatusCode.Forbidden
+                       || exception.Response.StatusCode == HttpStatusCode.Unauthorized
+                       || exception.Response.StatusCode == HttpStatusCode.BadRequest;
+            });
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
 
