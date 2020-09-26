@@ -12,7 +12,6 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public static class SecretStoreBuilderExtensions
     {
-        
         /// <summary>
         /// Adds Docker secrets (mounted as files in the Docker container) to the secret store.
         /// </summary>
