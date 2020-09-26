@@ -1,0 +1,42 @@
+parameters:
+  - name: targetFolder
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  - name: version
+    type: string
+  - name: vaultBinVariableName
+    type: string
+    default: 'Arcus.HashiCorp.VaultBin'
+
+steps:
+  - powershell: |
+      $vault_zip = "vault_${{ parameters.version }}_linux_amd64.zip"
+      $vault_url = "https://releases.hashicorp.com/vault/${{ parameters.version }}/$vault_zip"
+      $destination = "${{ parameters.targetFolder }}/$vault_zip"
+      if (!(Test-Path $destination)) {
+          Write-Output "Downloading $vault_url to $destination"
+          [Net.ServicePointManager]::SecurityProtocol = 'Tls12'
+          Invoke-WebRequest -Uri $vault_url -OutFile $vault_zip
+          ls
+          if (Test-Path $vault_zip) {
+            Write-Output "Downloaded .zip file to $vault_zip"
+          } else {
+            Write-Error "Could not find downloaded .zip file $vault_zip"
+          }
+      }
+      Expand-Archive -LiteralPath $vault_zip -DestinationPath ${{ parameters.targetFolder }}
+      ls
+      $vault_bin = "${{ parameters.targetFolder }}/vault"
+      if (Test-Path $vault_bin) {
+        Write-Output "Extracted HashiCorp Vault to executable file"
+      } else {
+        Write-Error "Could not find extracted HashiCorp Vault executable file"
+      }
+      Write-Host "##vso[task.setvariable variable=${{ parameters.vaultBinVariableName }}]$vault_bin"
+    workingDirectory: ${{ parameters.targetFolder }}
+    displayName: 'Download HashiCorp Vault'
+  - bash: |
+      chmod +x $VAULT_BIN
+    env:
+      VAULT_BIN: '${{ parameters.targetFolder }}/vault'
+    displayName: 'Make HashiCorp Vault executable runnable'

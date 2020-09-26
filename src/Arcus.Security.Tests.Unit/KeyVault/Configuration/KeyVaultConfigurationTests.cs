@@ -7,10 +7,17 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
     public class KeyVaultConfigurationTests
     {
         [Fact]
+        public void Constructor_UriWithoutVaultSuffix_Fails()
+        {
+            Assert.ThrowsAny<UriFormatException>(
+                () => new KeyVaultConfiguration("https://something-without-azure-vault-suffix"));
+        }
+
+        [Fact]
         public void Constructor_ValidRawUri_Succeeds()
         {
             // Arrange
-            string vaultUri = $"https://{Guid.NewGuid():N}.vault.azure.net/";
+            string vaultUri = $"https://{Guid.NewGuid().ToString("N").Substring(0, 24)}.vault.azure.net/";
             var expectedVaultUri = new Uri(vaultUri);
 
             // Act
@@ -25,7 +32,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
         public void Constructor_ValidUri_Succeeds()
         {
             // Arrange
-            var expectedVaultUri = new Uri($"https://{Guid.NewGuid():N}.vault.azure.net/");
+            var expectedVaultUri = new Uri($"https://{Guid.NewGuid().ToString("N").Substring(0, 24)}.vault.azure.net/");
 
             // Act
             var keyVaultConfiguration = new KeyVaultConfiguration(expectedVaultUri);

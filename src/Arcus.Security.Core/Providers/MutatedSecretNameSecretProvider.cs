@@ -135,7 +135,7 @@ namespace Arcus.Security.Core.Providers
                 Logger.LogWarning(
                     exception, "Failure during using secret '{MutatedSecretName}' that was mutated from '{OriginalSecretName}'", mutatedSecretName, secretName);
 
-                throw new SecretNotFoundException(mutatedSecretName, exception);
+                throw;
             }
         }
 

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
@@ -17,12 +17,13 @@
   <ItemGroup>
     <PackageReference Include="Guard.Net" Version="1.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+    <PackageReference Include="Vault" Version="0.9.1.3" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
-    <ProjectReference Include="..\Arcus.Security.Providers.KeyPerFile\Arcus.Security.Providers.KeyPerFile.csproj" />
+    <ProjectReference Include="..\Arcus.Security.Providers.HashiCorp\Arcus.Security.Providers.HashiCorp.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj" />
   </ItemGroup>

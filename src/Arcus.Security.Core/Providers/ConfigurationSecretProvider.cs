@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 
@@ -15,9 +16,10 @@ namespace Arcus.Security.Core.Providers
         /// Initializes a new instance of the <see cref="ConfigurationSecretProvider"/> class.
         /// </summary>
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> is <c>null</c>.</exception>
         public ConfigurationSecretProvider(IConfiguration configuration)
         {
-            Guard.NotNull(configuration, nameof(configuration));
+            Guard.NotNull(configuration, nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
 
             _configuration = configuration;
         }
@@ -30,6 +32,8 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+
             string secretValue = await GetRawSecretAsync(secretName);
             return new Secret(secretValue);
         }
@@ -42,6 +46,8 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+
             string secretValue = _configuration[secretName];
             return Task.FromResult(secretValue);
         }

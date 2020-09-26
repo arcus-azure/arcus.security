@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -17,17 +18,29 @@ namespace Arcus.Security.Core
     internal class CompositeSecretProvider : ICachedSecretProvider
     {
         private readonly IEnumerable<SecretStoreSource> _secretProviders;
+        private readonly IEnumerable<CriticalExceptionFilter> _criticalExceptionFilters;
         private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeSecretProvider"/> class.
         /// </summary>
-        public CompositeSecretProvider(IEnumerable<SecretStoreSource> secretProviderSources, ILogger<CompositeSecretProvider> logger)
+        /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
+        /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
+        /// <param name="logger">The logger instance to write diagnostic messages during the retrieval of secrets via the registered <paramref name="secretProviderSources"/>.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> of the <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
+        public CompositeSecretProvider(
+            IEnumerable<SecretStoreSource> secretProviderSources, 
+            IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
+            ILogger<CompositeSecretProvider> logger)
         {
-            Guard.NotNull(secretProviderSources, nameof(secretProviderSources));
-            Guard.For<ArgumentException>(() => secretProviderSources.Any(source => source?.SecretProvider is null), "None of the registered secret providers should be 'null'");
+            Guard.NotNull(secretProviderSources, nameof(secretProviderSources), "Requires a series of registered secret provider registrations to retrieve secrets");
+            Guard.NotNull(criticalExceptionFilters, nameof(criticalExceptionFilters), "Requires a series of registered critical exception filters to determine if a thrown exception is critical");
+            Guard.For<ArgumentException>(() => secretProviderSources.Any(source => source is null), "Requires all registered secret provider registrations to be not 'null'");
+            Guard.For<ArgumentException>(() => criticalExceptionFilters.Any(filter => filter is null), "Requires all registered critical exception filters to be not 'null'");
             
             _secretProviders = secretProviderSources;
+            _criticalExceptionFilters = criticalExceptionFilters;
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
         }
 
@@ -35,10 +48,16 @@ namespace Arcus.Security.Core
         /// Gets the cache-configuration for this instance.
         /// </summary>
         /// <remarks>
-        ///     Will always return <c>null</c> because several cached secret providers can be registered with different caching configuration,
+        ///     Will always throw an <see cref="NotSupportedException"/> because several cached secret providers can be registered with different caching configuration,
         ///     and there also could be none configured for caching.
         /// </remarks>
-        public ICacheConfiguration Configuration => null;
+        /// <exception cref="NotSupportedException">
+        ///     Thrown every time because the <see cref="CompositeSecretProvider"/> cannot determine the caching configuration from the different registered <see cref="ICachedSecretProvider"/>s.
+        /// </exception>
+        public ICacheConfiguration Configuration =>
+            throw new NotSupportedException(
+                "Getting the cache configuration directly from the secret store is not supported, "
+                + $"please use another way to access the configuration or implement your own '{nameof(ICachedSecretProvider)}' to use this within your secret provider");
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
@@ -50,7 +69,7 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrEmpty(secretName, nameof(secretName));
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
             string secretValue = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetRawSecretAsync(secretName));
@@ -68,7 +87,7 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrEmpty(secretName, nameof(secretName));
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
             Secret secret = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetSecretAsync(secretName));
@@ -87,13 +106,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName));
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
-            string secretValue = await WithCachedSecretStoreAsync(secretName, async source =>
-            {
-                string found = await source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache);
-                return found;
-            });
+            string secretValue = await WithCachedSecretStoreAsync(
+                secretName, source => source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache));
 
             return secretValue;
         }
@@ -109,13 +125,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName));
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
-            Secret secret = await WithCachedSecretStoreAsync(secretName, async source =>
-            {
-                Secret found = await source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache);
-                return found;
-            });
+            Secret secret = await WithCachedSecretStoreAsync(
+                secretName, source => source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache));
 
             return secret;
         }
@@ -127,20 +140,24 @@ namespace Arcus.Security.Core
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
         public async Task InvalidateSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName));
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
-            ICachedSecretProvider provider = await WithCachedSecretStoreAsync(secretName, async source =>
+            await WithCachedSecretStoreAsync(secretName, async source =>
             {
-                Secret secret = await source.CachedSecretProvider.GetSecretAsync(secretName);
-                return secret is null ? null : source.CachedSecretProvider;
-            });
+                Task invalidateSecretAsync = source.CachedSecretProvider.InvalidateSecretAsync(secretName);
+                if (invalidateSecretAsync is null)
+                {
+                    return null;
+                }
 
-            await provider.InvalidateSecretAsync(secretName);
+                await invalidateSecretAsync;
+                return "ignored result";
+            });
         }
 
         private async Task<T> WithCachedSecretStoreAsync<T>(
             string secretName,
-            Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
         {
             return await  WithSecretStoreAsync(secretName, async source =>
             {
@@ -149,35 +166,38 @@ namespace Arcus.Security.Core
                     return null;
                 }
 
-                return await callRegisteredStore(source);
+                Task<T> registeredProvider = callRegisteredProvider(source);
+                if (registeredProvider is null)
+                {
+                    return null;
+                }
+
+                return await registeredProvider;
             });
         }
 
-        private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredStore) where T : class
+        private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
         {
-            if (!_secretProviders.Any())
-            {
-                var noRegisteredException = new KeyNotFoundException("No secret providers are configured to retrieve the secret from");
-                throw new SecretNotFoundException(secretName, noRegisteredException);
-            }
+            EnsureAnySecretProvidersConfigured(secretName);
 
+            var criticalExceptions = new Collection<Exception>();
             foreach (SecretStoreSource source in _secretProviders)
             {
                 try
                 {
-                    Task<T> resultAsync = callRegisteredStore(source);
-                    if (resultAsync is null)
-                    {
-                        continue;
-                    }
-
-                    T result = await resultAsync;
+                    T result = await GetSecretFromProviderAsync(secretName, source, callRegisteredProvider);
                     if (result is null)
                     {
                         continue;
                     }
 
+                    LogPossibleCriticalExceptions(secretName, criticalExceptions);
                     return result;
+                }
+                catch (Exception exception) when (IsCriticalException(exception))
+                {
+                    _logger.LogError(exception, "Exception of type '{ExceptionType}' is considered an critical exception", exception.GetType().Name);
+                    criticalExceptions.Add(exception);
                 }
                 catch (Exception exception)
                 {
@@ -185,8 +205,95 @@ namespace Arcus.Security.Core
                 }
             }
 
-            var noneFoundException = new KeyNotFoundException("None of the configured secret providers contains the requested secret");
-            throw new SecretNotFoundException(secretName, noneFoundException);
+            throw DetermineSecretStoreException(secretName, criticalExceptions);
+        }
+
+        private void EnsureAnySecretProvidersConfigured(string secretName)
+        {
+            if (!_secretProviders.Any())
+            {
+                _logger.LogError("No secret providers are configured in the secret store to retrieve the secret from, please configure at least one secret provider with the '{Extension}' extension in the startup of your application",
+                                 nameof(IHostBuilderExtensions.ConfigureSecretStore));
+
+                var noRegisteredException = new KeyNotFoundException("No secret providers are configured to retrieve the secret from");
+                throw new SecretNotFoundException(secretName, noRegisteredException);
+            }
+        }
+
+        private async Task<T> GetSecretFromProviderAsync<T>(
+            string secretName, 
+            SecretStoreSource source, 
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
+        {
+            /* TODO: use 'Arcus.Observability.Telemetry.Core' 'LogSecurityEvent' instead once the SQL dependency is moved
+                        -> https://github.com/arcus-azure/arcus.observability/issues/131 */
+            _logger.LogInformation("Events {EventName} (Context: {@EventContext})", "Get Secret", new Dictionary<string, object>
+            {
+                ["EventType"] = "Security",
+                ["SecretName"] = secretName,
+                ["SecretProviderType"] = source.SecretProvider.GetType().Name
+            });
+
+            Task<T> resultAsync = callRegisteredProvider(source);
+            if (resultAsync is null)
+            {
+                return null;
+            }
+
+            T result = await resultAsync;
+            return result;
+        }
+
+        private void LogPossibleCriticalExceptions(string secretName, IEnumerable<Exception> criticalExceptions)
+        {
+            if (criticalExceptions.Any())
+            {
+                _logger.LogWarning("Found secret with name '{SecretName}' but at the cost of {ExceptionCount} critical exceptions", secretName, criticalExceptions.Count());
+
+                foreach (Exception criticalException in criticalExceptions)
+                {
+                    _logger.LogWarning(criticalException, "Critical exception thrown during retrieval of secret with name '{SecretName}'", secretName);
+                }
+            }
+
+            _logger.LogInformation("Found secret with name '{SecretName}'", secretName);
+        }
+
+        private bool IsCriticalException(Exception exceptionCandidate)
+        {
+            return _criticalExceptionFilters.Any(filter =>
+            {
+                try
+                {
+                    return filter.IsCritical(exceptionCandidate);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "Failed to determining critical exception for exception type '{ExceptionType}'", filter.ExceptionType.Name);
+                    return false;
+                }
+            });
+        }
+
+        private Exception DetermineSecretStoreException(string secretName, IEnumerable<Exception> criticalExceptions)
+        {
+            if (!criticalExceptions.Any())
+            {
+                _logger.LogError("None of the configured {Count} configured secret providers was able to retrieve the requested secret with name '{SecretName}'",
+                                 _secretProviders.Count(), secretName);
+
+                var noneFoundException = new KeyNotFoundException($"None of the {_secretProviders.Count()} configured secret providers was able to retrieve the requested secret with name '{secretName}'");
+                return new SecretNotFoundException(secretName, noneFoundException);
+            }
+
+            if (criticalExceptions.Count() == 1)
+            {
+                return criticalExceptions.First();
+            }
+
+            return new AggregateException(
+                $"None of the configured secret providers was able to retrieve the secret with name '{secretName}' while {criticalExceptions.Count()} critical exceptions were thrown",
+                criticalExceptions);
         }
     }
 }
