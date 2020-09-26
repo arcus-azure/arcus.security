@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.HashiCorp\Arcus.Security.Providers.HashiCorp.csproj" />
+    <ProjectReference Include="..\Arcus.Security.Providers.KeyPerFile\Arcus.Security.Providers.DockerSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj" />
   </ItemGroup>

@@ -1,5 +1,5 @@
 ﻿using Arcus.Security.Core;
-using Arcus.Security.Providers.KeyPerFile;
+using Arcus.Security.Providers.DockerSecrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -30,7 +30,7 @@ namespace Arcus.Security.Tests.Integration.KeyPerFile
             var hostBuilder = new HostBuilder();
 
             // Act
-            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddKeyPerFile(_secretLocation));
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddDockerSecrets(_secretLocation));
 
             // Assert
             IHost host = hostBuilder.Build();
@@ -51,7 +51,7 @@ namespace Arcus.Security.Tests.Integration.KeyPerFile
             var hostBuilder = new HostBuilder();
 
             // Act
-            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddKeyPerFile(_secretLocation));
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddDockerSecrets(_secretLocation));
 
             // Assert
             IHost host = hostBuilder.Build();
