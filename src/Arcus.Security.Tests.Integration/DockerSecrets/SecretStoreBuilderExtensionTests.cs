@@ -1,5 +1,4 @@
 ﻿using Arcus.Security.Core;
-using Arcus.Security.Providers.DockerSecrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
