@@ -24,6 +24,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
     - [Azure Key Vault](features/secret-store/provider/key-vault)
     - [Configuration](features/secret-store/provider/configuration)
     - [Environment variables](features/secret-store/provider/environment-variables)
+    - [Docker secrets](features/secret-store/provider/docker-secrets.md)
     - [HashiCorp Vault](features/secret-store/provider/hashicorp-vault)
     - [User Secrets](features/secret-store/provider/user-secrets)
   - [Creating your own secret provider](features/secret-store/create-new-secret-provider)
