@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Arcus.Security.Tests.Integration.KeyPerFile
+namespace Arcus.Security.Tests.Integration.DockerSecrets
 {
     public class SecretStoreBuilderExtensionTests : IntegrationTest, IDisposable
     {
-        private readonly string _secretLocation = Path.Combine(Path.GetTempPath(), "keyperfiletests");
+        private readonly string _secretLocation = Path.Combine(Path.GetTempPath(), "dockersecretstests");
 
         public SecretStoreBuilderExtensionTests(ITestOutputHelper testOutput) : base(testOutput)
         {
