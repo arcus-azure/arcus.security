@@ -4,16 +4,16 @@ using Microsoft.Extensions.Configuration.KeyPerFile;
 using System;
 using System.Threading.Tasks;
 
-namespace Arcus.Security.Providers.KeyPerFile
+namespace Arcus.Security.Providers.DockerSecrets
 {
-    public class KeyPerFileSecretProvider : ISecretProvider
+    public class DockerSecretsSecretProvider : ISecretProvider
     {
         private readonly KeyPerFileConfigurationProvider _provider;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="KeyPerFileSecretProvider"/> class.
+        /// Initializes a new instance of the <see cref="DockerSecretsSecretProvider"/> class.
         /// </summary>
-        public KeyPerFileSecretProvider(KeyPerFileConfigurationSource configurationSource)
+        public DockerSecretsSecretProvider(KeyPerFileConfigurationSource configurationSource)
         {
             Guard.NotNull(configurationSource, nameof(configurationSource));
             _provider = new KeyPerFileConfigurationProvider(configurationSource);
