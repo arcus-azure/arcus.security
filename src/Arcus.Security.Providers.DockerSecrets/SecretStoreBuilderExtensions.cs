@@ -29,6 +29,9 @@ namespace Microsoft.Extensions.Hosting
             configuration.FileProvider = new PhysicalFileProvider(directoryPath);
             configuration.Optional = false;
 
+            var provider = new KeyPerFileConfigurationProvider(configuration);
+            provider.Load();
+
             return builder.AddProvider(new DockerSecretsSecretProvider(configuration));
         }
     }

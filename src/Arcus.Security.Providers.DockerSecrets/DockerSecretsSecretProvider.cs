@@ -16,13 +16,13 @@ namespace Arcus.Security.Providers.DockerSecrets
         /// <summary>
         /// Initializes a new instance of the <see cref="DockerSecretsSecretProvider"/> class.
         /// </summary>
-        /// <param name="configurationSource">The configuration source that provides the Docker secrets mounted as files in the container.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configurationSource"/> is <c>null</c></exception>
-        public DockerSecretsSecretProvider(KeyPerFileConfigurationSource configurationSource)
+        /// <param name="provider">The KeyPerFileConfigurationProvider that provides the Docker secrets mounted as files in the container.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is <c>null</c></exception>
+        public DockerSecretsSecretProvider(KeyPerFileConfigurationProvider provider)
         {
-            Guard.NotNull(configurationSource, nameof(configurationSource));
-            _provider = new KeyPerFileConfigurationProvider(configurationSource);
-            _provider.Load();
+            Guard.NotNull(provider, nameof(provider));
+            
+            _provider = provider;
         }
 
         /// <summary>
