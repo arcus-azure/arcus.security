@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="directoryPath">The path inside the container where the Docker secrets are located.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c></exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank</exception>
-        public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath, bool optional = true)
+        public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Docker secrets to");
             Guard.NotNullOrWhitespace(directoryPath, nameof(directoryPath), "Requires a non-blank directory path to locate the Docker secrets");
@@ -27,7 +27,7 @@ namespace Microsoft.Extensions.Hosting
             KeyPerFileConfigurationSource configuration = new KeyPerFileConfigurationSource();
 
             configuration.FileProvider = new PhysicalFileProvider(directoryPath);
-            configuration.Optional = optional;
+            configuration.Optional = false;
 
             return builder.AddProvider(new DockerSecretsSecretProvider(configuration));
         }
