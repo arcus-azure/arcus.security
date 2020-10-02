@@ -7,6 +7,9 @@ using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
+using Azure;
+using Azure.Core;
+using Azure.Identity;
 using GuardNet;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
@@ -263,7 +266,69 @@ namespace Microsoft.Extensions.Hosting
             });
 
             var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
+            return WithCachedSecretProvider(builder, keyVaultSecretProvider, cacheConfiguration, mutateSecretName);
+        }
 
+        /// <summary>
+        /// Adds Azure Key Vault as a secret source.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance.</param>
+        /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="tokenCredential"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddAzureKeyVault(
+            this SecretStoreBuilder builder,
+            TokenCredential tokenCredential,
+            IKeyVaultConfiguration configuration,
+            Func<string, string> mutateSecretName = null)
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
+            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
+
+            return AddAzureKeyVault(builder, tokenCredential, configuration, cacheConfiguration: null, mutateSecretName: mutateSecretName);
+        }
+
+        /// <summary>
+        /// Adds Azure Key Vault as a secret source.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance.</param>
+        /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="tokenCredential"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddAzureKeyVault(
+            this SecretStoreBuilder builder,
+            TokenCredential tokenCredential,
+            IKeyVaultConfiguration configuration,
+            ICacheConfiguration cacheConfiguration,
+            Func<string, string> mutateSecretName = null)
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
+            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
+
+            // Thrown during failure with Key Vault authorization.
+            builder.AddCriticalException<RequestFailedException>(exception =>
+            {
+                return exception.Status == 403 || exception.Status == 401 || exception.Status == 400;
+            });
+
+            builder.AddCriticalException<CredentialUnavailableException>();
+            builder.AddCriticalException<AuthenticationFailedException>();
+
+            var keyVaultSecretProvider = new KeyVaultSecretProvider(tokenCredential, configuration);
+            return WithCachedSecretProvider(builder, keyVaultSecretProvider, cacheConfiguration, mutateSecretName);
+        }
+
+        private static SecretStoreBuilder WithCachedSecretProvider(
+            SecretStoreBuilder builder,
+            KeyVaultSecretProvider keyVaultSecretProvider,
+            ICacheConfiguration cacheConfiguration,
+            Func<string, string> mutateSecretName)
+        {
             if (cacheConfiguration is null)
             {
                 return builder.AddProvider(keyVaultSecretProvider, mutateSecretName);
