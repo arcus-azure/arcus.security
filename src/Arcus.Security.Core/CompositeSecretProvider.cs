@@ -48,10 +48,16 @@ namespace Arcus.Security.Core
         /// Gets the cache-configuration for this instance.
         /// </summary>
         /// <remarks>
-        ///     Will always return <c>null</c> because several cached secret providers can be registered with different caching configuration,
+        ///     Will always throw an <see cref="NotSupportedException"/> because several cached secret providers can be registered with different caching configuration,
         ///     and there also could be none configured for caching.
         /// </remarks>
-        public ICacheConfiguration Configuration => null;
+        /// <exception cref="NotSupportedException">
+        ///     Thrown every time because the <see cref="CompositeSecretProvider"/> cannot determine the caching configuration from the different registered <see cref="ICachedSecretProvider"/>s.
+        /// </exception>
+        public ICacheConfiguration Configuration =>
+            throw new NotSupportedException(
+                "Getting the cache configuration directly from the secret store is not supported, "
+                + $"please use another way to access the configuration or implement your own '{nameof(ICachedSecretProvider)}' to use this within your secret provider");
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
