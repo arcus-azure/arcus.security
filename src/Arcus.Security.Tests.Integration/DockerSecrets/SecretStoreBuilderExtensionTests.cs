@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Arcus.Security.Providers.DockerSecrets;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,7 +20,7 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
         }
 
         [Fact]
-        public async Task AddKeyPerFileSecrets_WithPath_ResolvesSecret()
+        public async Task AddDockerSecrets_WithPath_ResolvesSecret()
         {
             // Arrange
             var expectedValue = Guid.NewGuid().ToString();
@@ -40,7 +41,17 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
         }
 
         [Fact]
-        public async Task KeyPerFileSecrets_HierarchicalKeys_AreSupported()
+        public async Task DockerSecretsProvider_ReturnsNull_WhenSecretNotFound()
+        {
+            var provider = new DockerSecretsSecretProvider(_secretLocation);
+
+            var secret = await provider.GetRawSecretAsync("MyNonExistingSecret");
+
+            Assert.Null(secret);
+        }
+
+        [Fact]
+        public async Task DockerSecrets_HierarchicalKeys_AreSupported()
         {
             // Arrange
             var expectedValue = Guid.NewGuid().ToString();
