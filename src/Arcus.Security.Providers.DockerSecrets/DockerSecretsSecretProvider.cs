@@ -3,6 +3,7 @@ using GuardNet;
 using Microsoft.Extensions.Configuration.KeyPerFile;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.FileProviders;
 
 namespace Arcus.Security.Providers.DockerSecrets
 {
@@ -16,12 +17,21 @@ namespace Arcus.Security.Providers.DockerSecrets
         /// <summary>
         /// Initializes a new instance of the <see cref="DockerSecretsSecretProvider"/> class.
         /// </summary>
-        /// <param name="provider">The KeyPerFileConfigurationProvider that provides the Docker secrets mounted as files in the container.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is <c>null</c></exception>
-        public DockerSecretsSecretProvider(KeyPerFileConfigurationProvider provider)
+        /// <param name="secretsDirectoryPath">The path inside the docker container where the secrets are located.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretsDirectoryPath"/> is <c>null</c>or an empty string.</exception>
+        public DockerSecretsSecretProvider(string secretsDirectoryPath)
         {
-            Guard.NotNull(provider, nameof(provider));
-            
+            Guard.NotNullOrWhitespace(secretsDirectoryPath, nameof(secretsDirectoryPath));
+
+            KeyPerFileConfigurationSource configuration = new KeyPerFileConfigurationSource
+            {
+                FileProvider = new PhysicalFileProvider(secretsDirectoryPath),
+                Optional = false
+            };
+
+            var provider = new KeyPerFileConfigurationProvider(configuration);
+            provider.Load();
+
             _provider = provider;
         }
 

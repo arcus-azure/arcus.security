@@ -24,15 +24,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Docker secrets to");
             Guard.NotNullOrWhitespace(directoryPath, nameof(directoryPath), "Requires a non-blank directory path to locate the Docker secrets");
 
-            KeyPerFileConfigurationSource configuration = new KeyPerFileConfigurationSource();
-
-            configuration.FileProvider = new PhysicalFileProvider(directoryPath);
-            configuration.Optional = false;
-
-            var provider = new KeyPerFileConfigurationProvider(configuration);
-            provider.Load();
-
-            return builder.AddProvider(new DockerSecretsSecretProvider(configuration));
+            return builder.AddProvider(new DockerSecretsSecretProvider(directoryPath));
         }
     }
 }
