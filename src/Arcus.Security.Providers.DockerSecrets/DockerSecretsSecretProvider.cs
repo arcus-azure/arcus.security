@@ -2,6 +2,7 @@
 using GuardNet;
 using Microsoft.Extensions.Configuration.KeyPerFile;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileProviders;
 
@@ -22,6 +23,11 @@ namespace Arcus.Security.Providers.DockerSecrets
         public DockerSecretsSecretProvider(string secretsDirectoryPath)
         {
             Guard.NotNullOrWhitespace(secretsDirectoryPath, nameof(secretsDirectoryPath));
+
+            if (!Directory.Exists(secretsDirectoryPath))
+            {
+                throw new DirectoryNotFoundException($"The directory {secretsDirectoryPath} which is configured as secretsDirectoryPath does not exist.");
+            }
 
             KeyPerFileConfigurationSource configuration = new KeyPerFileConfigurationSource
             {
