@@ -35,7 +35,7 @@ public class Program
                         // Adds the secrets that exist in the "/run/secrets" directory to the ISecretStore
                         // Docker secrets are by default mounted into the /run/secrets directory
                         // when using Linux containers on Docker Swarm.
-                        builder.AddDockerSecrets(directoryPath: "/run/secrets", optional: true);
+                        builder.AddDockerSecrets(directoryPath: "/run/secrets");
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

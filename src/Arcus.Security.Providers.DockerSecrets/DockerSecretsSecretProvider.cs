@@ -19,7 +19,7 @@ namespace Arcus.Security.Providers.DockerSecrets
         /// Initializes a new instance of the <see cref="DockerSecretsSecretProvider"/> class.
         /// </summary>
         /// <param name="secretsDirectoryPath">The path inside the docker container where the secrets are located.</param>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretsDirectoryPath"/> is <c>null</c>or an empty string.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretsDirectoryPath"/> is blank.</exception>
         public DockerSecretsSecretProvider(string secretsDirectoryPath)
         {
             Guard.NotNullOrWhitespace(secretsDirectoryPath, nameof(secretsDirectoryPath));
