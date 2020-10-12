@@ -44,6 +44,7 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
         public async Task DockerSecretsProvider_ReturnsNull_WhenSecretNotFound()
         {
             var provider = new DockerSecretsSecretProvider(_secretLocation);
+            await SetSecretAsync("MyExistingSecret", "foo");
 
             var secret = await provider.GetRawSecretAsync("MyNonExistingSecret");
 
