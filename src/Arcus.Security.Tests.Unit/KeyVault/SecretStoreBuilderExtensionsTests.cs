@@ -383,10 +383,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
 
-
-
-
-
         [Theory]
         [ClassData(typeof(Blanks))]
         public void AddAzureKeyVaultWithServicePrincipalWithTenant_WithBlankVaultUri_Throws(string vaultUri)
