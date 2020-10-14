@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Integration.Fixture;
+using Azure;
 using Azure.Identity;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Configuration;
@@ -704,17 +705,17 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task AddAzureKeyVaultWith_WithManagedIdentity_GetSecretSucceeds()
+        public async Task AddAzureKeyVault_WithManagedIdentity_GetSecretSucceeds()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, applicationId));
+            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId));
 
             // Assert
             IHost host = builder.Build();
@@ -731,7 +732,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
@@ -740,7 +741,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, applicationId, mutateSecretName: secretName => secretName.Remove(0, 5));
+                    keyVaultUri, clientId, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
             // Assert
@@ -758,7 +759,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
@@ -767,7 +768,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, applicationId, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
+                    keyVaultUri, clientId, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -783,7 +784,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
@@ -792,7 +793,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration, applicationId);
+                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration, clientId);
             });
 
             // Assert
@@ -811,7 +812,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = "Unknown.Secret.Name";
 
             var builder = new HostBuilder();
@@ -820,7 +821,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId: applicationId, cacheConfiguration: cacheConfiguration);
+                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration);
             });
 
             // Assert
@@ -836,7 +837,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
@@ -846,7 +847,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId: applicationId, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => secretName.Remove(0, 5));
+                    keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
             // Assert
@@ -865,7 +866,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
@@ -875,7 +876,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId: applicationId, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
+                    keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
@@ -930,7 +931,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exception = await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(keyName));
+            var exception = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
+            Assert.Equal((int) HttpStatusCode.Forbidden, exception.Status);
         }
     }
 }

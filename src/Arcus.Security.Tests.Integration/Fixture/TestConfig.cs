@@ -49,13 +49,23 @@ namespace Arcus.Security.Tests.Integration.Fixture
         }
 
         /// <summary>
-        /// Gets the configured application ID from the application configuration.
+        /// Gets the configured client ID of the service principal from the application configuration.
         /// </summary>
         /// <exception cref="KeyNotFoundException">Thrown when there's no application ID found in the application configuration.</exception>
-        public string GetApplicationId()
+        public string GetServicePrincipalClientId()
         {
-            string applicationId = GetRequiredValue("Arcus:ServicePrincipal:ApplicationId");
-            return applicationId;
+            string clientId = GetRequiredValue("Arcus:ServicePrincipal:ApplicationId");
+            return clientId;
+        }
+
+        /// <summary>
+        /// Gets the configured client ID of the managed identity from the application configuration.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no client ID for the managed identity found in the application configuration.</exception>
+        public string GetManagedIdentityClientId()
+        {
+            string clientId = GetRequiredValue("Arcus:ManagedIdentity:ClientId");
+            return clientId;
         }
 
         /// <summary>

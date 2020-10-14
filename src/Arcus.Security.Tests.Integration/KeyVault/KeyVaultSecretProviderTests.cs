@@ -137,10 +137,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                tokenCredential: new ManagedIdentityCredential(applicationId), 
+                tokenCredential: new ManagedIdentityCredential(clientId), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Act
@@ -176,10 +176,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string applicationId = Configuration.GetApplicationId();
+            string clientId = Configuration.GetManagedIdentityClientId();
             var notExistingKeyName = $"secret-{Guid.NewGuid():N}";
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                tokenCredential: new ManagedIdentityCredential(clientId: applicationId), 
+                tokenCredential: new ManagedIdentityCredential(clientId), 
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
             // Assert
