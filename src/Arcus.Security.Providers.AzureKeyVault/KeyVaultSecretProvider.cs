@@ -168,7 +168,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns></returns>
         protected async Task<IKeyVaultClient> GetClientAsync()
         {
-            Logger.LogTrace("Authenticating with the Azure Key Vault '{VaultUri}'...", VaultUri);
+            Logger.LogTrace("Authenticating with the Azure Key Vault {VaultUri}...", VaultUri);
             await LockCreateKeyVaultClient.WaitAsync();
 
             try
