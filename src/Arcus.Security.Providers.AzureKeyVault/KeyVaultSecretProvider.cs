@@ -149,13 +149,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
             catch (KeyVaultErrorException keyVaultErrorException)
             {
-                Logger.LogError(keyVaultErrorException,
-                    "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}", 
-                    VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
-
                 if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     throw new SecretNotFoundException(secretName, keyVaultErrorException);
+                }
+                else
+                {
+                     Logger.LogError(keyVaultErrorException,
+                         "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}", 
+                         VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
                 }
 
                 throw;
