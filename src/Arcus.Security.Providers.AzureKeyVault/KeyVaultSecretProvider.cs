@@ -14,6 +14,7 @@ using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Rest.TransientFaultHandling;
 using Polly;
+using Polly.Retry;
 
 namespace Arcus.Security.Providers.AzureKeyVault
 {
@@ -269,7 +270,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     .ExecuteAsync(secretOperation);
         }
 
-        private static Polly.Retry.RetryPolicy GetExponentialBackOffRetryPolicy<TException>(Func<TException, bool> exceptionPredicate) 
+        private static AsyncRetryPolicy GetExponentialBackOffRetryPolicy<TException>(Func<TException, bool> exceptionPredicate) 
             where TException : Exception
         {
             /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
