@@ -183,7 +183,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
             catch (Exception exception)
             {
-                Logger.LogError(exception, "Failure during authenticating with the Azure Key Vault '{VaultUri}'", VaultUri);
+                Logger.LogError(exception, "Failure during authenticating with the Azure Key Vault {VaultUri}", VaultUri);
                 throw;
             }
             finally
