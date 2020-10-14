@@ -132,7 +132,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                         {
                             Logger.LogTrace("Getting a secret from Azure Key Vault '{VaultUri}'...", VaultUri);
                             SecretBundle bundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
-                            Logger.LogTrace("Got secret from Azure Key Vault '{VaultUri}'", VaultUri);
+                            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", VaultUri);
 
                             return bundle;
                         });
