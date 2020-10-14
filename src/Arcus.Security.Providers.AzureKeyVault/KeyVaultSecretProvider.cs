@@ -178,7 +178,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     _keyVaultClient = await _authentication.AuthenticateAsync();
                 }
 
-                Logger.LogTrace("Authenticated with the Azure Key Vault '{VaultUri}'", VaultUri);
+                Logger.LogTrace("Authenticated with the Azure Key Vault {VaultUri}", VaultUri);
                 return _keyVaultClient;
             }
             catch (Exception exception)
