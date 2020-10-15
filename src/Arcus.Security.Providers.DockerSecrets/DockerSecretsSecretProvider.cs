@@ -24,6 +24,11 @@ namespace Arcus.Security.Providers.DockerSecrets
         {
             Guard.NotNullOrWhitespace(secretsDirectoryPath, nameof(secretsDirectoryPath));
 
+            if (!Path.IsPathRooted(secretsDirectoryPath))
+            {
+                throw new ArgumentException($"The {nameof(secretsDirectoryPath)} must be an absolute path", nameof(secretsDirectoryPath));
+            }
+
             if (!Directory.Exists(secretsDirectoryPath))
             {
                 throw new DirectoryNotFoundException($"The directory {secretsDirectoryPath} which is configured as secretsDirectoryPath does not exist.");
