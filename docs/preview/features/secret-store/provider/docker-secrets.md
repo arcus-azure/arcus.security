@@ -61,7 +61,7 @@ secrets:
     external: true
 ```
 
-After adding the _DockerSecrets_ secret provider to the secret store, the Docker secrets can simply be retrieved by calling the appropriate methods on the `ISecretProvider`:
+After adding the Docker Secrets secret provider to the secret store, the Docker secrets can simply be retrieved by calling the appropriate methods on the `ISecretProvider`:
 
 ```csharp
 public class PersonController
