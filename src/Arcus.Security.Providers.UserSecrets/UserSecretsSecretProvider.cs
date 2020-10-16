@@ -51,7 +51,7 @@ namespace Arcus.Security.Providers.UserSecrets
         public async Task<Secret> GetSecretAsync(string secretName)
         {
             string secretValue = await GetRawSecretAsync(secretName);
-            if (secretValue == null)
+            if (secretValue is null)
             {
                 return null;
             }
