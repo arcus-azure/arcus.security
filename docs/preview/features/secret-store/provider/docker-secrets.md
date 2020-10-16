@@ -5,7 +5,7 @@ layout: default
 
 # Docker Secrets secret provider
 This provider allows you to work with Docker secrets. When using Docker secrets in Docker Swarm, the secrets are injected in the Docker container as files.  
-The _DockerSecrets_ secret provider provides access to those secrets via the secret store.
+The Docker secrets secret provider provides access to those secrets via the secret store.
 
 This secret provider offers functionality which is equivalent to the _KeyPerFile_ Configuration Provider, but instead of adding the secrets to the Configuration, this secret provider allows access to the Docker Secrets via the _ISecretProvider_ interface.
 
