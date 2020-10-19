@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Azure.Identity;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
@@ -10,6 +11,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     ///     Azure Key Vault <see cref="IKeyVaultAuthentication"/> by using client ID and certificate to authenticate the <see cref="IKeyVaultClient"/>.
     /// </summary>
+    [Obsolete("Azure Key Vault authentication is moved to Azure Identity approach where the certificate authentication becomes: " + nameof(ClientCertificateCredential))]
     public class CertificateBasedAuthentication : IKeyVaultAuthentication
     {
         private readonly string _clientId;
