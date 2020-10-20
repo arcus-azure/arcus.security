@@ -523,8 +523,18 @@ namespace Microsoft.Extensions.Hosting
                        || exception.Response.StatusCode == HttpStatusCode.BadRequest;
             });
 
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);
-            return WithCachedSecretProvider(builder, keyVaultSecretProvider, cacheConfiguration, mutateSecretName);
+            return builder.AddProvider(serviceProvider =>
+            {
+                IKeyVaultAuthentication authentication = createAuthentication(serviceProvider);
+                var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration);    
+                
+                if (cacheConfiguration is null)
+                {
+                    return keyVaultSecretProvider;
+                }
+                
+                return new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
+            }, mutateSecretName);
         }
 
         /// <summary>
