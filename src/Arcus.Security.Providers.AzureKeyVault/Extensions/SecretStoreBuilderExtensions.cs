@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
@@ -11,6 +12,8 @@ using Azure;
 using Azure.Core;
 using Azure.Identity;
 using GuardNet;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
@@ -49,7 +52,11 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new CertificateBasedAuthentication(clientId, certificate),
+                serviceProvider =>
+                {
+                    var logger = serviceProvider.GetService<ILogger<CertificateBasedAuthentication>>();
+                    return new CertificateBasedAuthentication(clientId, certificate, logger);
+                },
                 new KeyVaultConfiguration(rawVaultUri),
                 allowCaching,
                 mutateSecretName);
@@ -117,7 +124,11 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new CertificateBasedAuthentication(clientId, certificate),
+                serviceProvider =>
+                {
+                    var logger = serviceProvider.GetService<ILogger<CertificateBasedAuthentication>>();
+                    return new CertificateBasedAuthentication(clientId, certificate, logger);
+                },
                 new KeyVaultConfiguration(rawVaultUri),
                 cacheConfiguration: cacheConfiguration,
                 mutateSecretName: mutateSecretName);
@@ -183,7 +194,11 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ManagedServiceIdentityAuthentication(connectionString, azureADInstance),
+                serviceProvider =>
+                {
+                    var logger = serviceProvider.GetService<ILogger<ManagedServiceIdentityAuthentication>>();
+                    return new ManagedServiceIdentityAuthentication(connectionString, azureADInstance, logger);
+                },
                 new KeyVaultConfiguration(rawVaultUri),
                 allowCaching,
                 mutateSecretName);
@@ -244,7 +259,11 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ManagedServiceIdentityAuthentication(connectionString, azureADInstance),
+                serviceProvider =>
+                {
+                    var logger = serviceProvider.GetService<ILogger<ManagedServiceIdentityAuthentication>>();
+                    return new ManagedServiceIdentityAuthentication(connectionString, azureADInstance, logger);
+                },
                 new KeyVaultConfiguration(rawVaultUri),
                 cacheConfiguration,
                 mutateSecretName);
@@ -307,7 +326,11 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ServicePrincipalAuthentication(clientId, clientKey),
+                serviceProvider =>
+                {
+                    var logger = serviceProvider.GetService<ILogger<ServicePrincipalAuthentication>>();
+                    return new ServicePrincipalAuthentication(clientId, clientKey, logger);
+                },
                 new KeyVaultConfiguration(rawVaultUri),
                 allowCaching,
                 mutateSecretName);
@@ -375,7 +398,11 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ServicePrincipalAuthentication(clientId, clientKey),
+                serviceProvider =>
+                {
+                    var logger = serviceProvider.GetService<ILogger<ServicePrincipalAuthentication>>();
+                    return new ServicePrincipalAuthentication(clientId, clientKey, logger);
+                },
                 new KeyVaultConfiguration(rawVaultUri),
                 cacheConfiguration: cacheConfiguration,
                 mutateSecretName: mutateSecretName);
@@ -437,8 +464,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
             Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
 
-            ICacheConfiguration cacheConfiguration = allowCaching ? new CacheConfiguration() : null;
-            return AddAzureKeyVault(builder, authentication, configuration, cacheConfiguration, mutateSecretName);
+            return AddAzureKeyVault(builder, serviceProvider => authentication, configuration, allowCaching, mutateSecretName);
         }
 
         /// <summary>
@@ -461,6 +487,30 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
             Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
+
+            return AddAzureKeyVault(builder, serviceProvider => authentication, configuration, cacheConfiguration, mutateSecretName);
+        }
+
+        private static SecretStoreBuilder AddAzureKeyVault(
+            SecretStoreBuilder builder,
+            Func<IServiceProvider, IKeyVaultAuthentication> createAuthentication,
+            IKeyVaultConfiguration configuration,
+            bool allowCaching = false,
+            Func<string, string> mutateSecretName = null)
+        {
+            ICacheConfiguration cacheConfiguration = allowCaching ? new CacheConfiguration() : null;
+            return AddAzureKeyVault(builder, createAuthentication, configuration, cacheConfiguration, mutateSecretName);
+        }
+
+        private static SecretStoreBuilder AddAzureKeyVault(
+            SecretStoreBuilder builder,
+            Func<IServiceProvider, IKeyVaultAuthentication> createAuthentication,
+            IKeyVaultConfiguration configuration,
+            ICacheConfiguration cacheConfiguration,
+            Func<string, string> mutateSecretName = null)
+        {
+            // Thrown by our own authentication implementations when there's a problem with authentication to Azure Key Vault.
+            builder.AddCriticalException<AuthenticationException>();
 
             // Thrown during failure with Active Directory authentication.
             builder.AddCriticalException<AdalServiceException>();
@@ -561,13 +611,20 @@ namespace Microsoft.Extensions.Hosting
             ICacheConfiguration cacheConfiguration,
             Func<string, string> mutateSecretName)
         {
-            if (cacheConfiguration is null)
+            return builder.AddProvider(serviceProvider =>
             {
-                return builder.AddProvider(keyVaultSecretProvider, mutateSecretName);
-            }
+                IKeyVaultAuthentication authentication = createAuthentication(serviceProvider);
+                var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
+                var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration, logger);
 
-            var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
-            return builder.AddProvider(cachedSecretProvider, mutateSecretName);
+                if (cacheConfiguration is null)
+                {
+                    return keyVaultSecretProvider;
+                }
+
+                var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
+                return cachedSecretProvider;
+            }, mutateSecretName);
         }
     }
 }

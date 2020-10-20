@@ -13,6 +13,8 @@ using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Rest.TransientFaultHandling;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
 using Polly.Retry;
 
@@ -59,13 +61,26 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration)
+            : this(authentication, vaultConfiguration, NullLogger<KeyVaultSecretProvider>.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
+        /// </summary>
+        /// <param name="authentication">.The requested authentication type for connecting to the Azure Key Vault instance.</param>
+        /// <param name="vaultConfiguration">The configuration related to the Azure Key Vault instance to use.</param>
+        /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
             Guard.For<UriFormatException>(
-                () => !VaultUriRegex.IsMatch(VaultUri), 
+                () => !VaultUriRegex.IsMatch(VaultUri),
                 "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _authentication = authentication;
@@ -91,7 +106,14 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
             _secretClient = new SecretClient(vaultConfiguration.VaultUri, tokenCredential);
             _isUsingAzureSdk = true;
+            
+            Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
         }
+
+        /// <summary>
+        /// Gets the logger instance to write diagnostic trace messages during the interaction with the Azure Key Vault.
+        /// </summary>
+        protected ILogger Logger { get; }
 
         /// <summary>
         ///     Gets the URI of the Azure Key Vault.
@@ -144,12 +166,20 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
         private async Task<Secret> GetSecretUsingKeyVaultClientAsync(string secretName)
         {
+            IKeyVaultClient keyVaultClient = await GetClientAsync();
+
             try
             {
-                IKeyVaultClient keyVaultClient = await GetClientAsync();
                 SecretBundle secretBundle =
                     await ThrottleTooManyRequestsAsync(
-                        () => keyVaultClient.GetSecretAsync(VaultUri, secretName));
+                        async () =>
+                        {
+                            Logger.LogTrace("Getting a secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
+                            SecretBundle bundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
+                            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", VaultUri);
+
+                            return bundle;
+                        });
 
                 if (secretBundle is null)
                 {
@@ -166,6 +196,12 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     throw new SecretNotFoundException(secretName, keyVaultErrorException);
+                }
+                else
+                {
+                     Logger.LogError(keyVaultErrorException,
+                         "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}", 
+                         VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
                 }
 
                 throw;
@@ -211,16 +247,23 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     $"Azure Key Vault secret provider is configured using the new Azure.Security.KeyVault.Secrets package, please call the '{nameof(GetSecretClient)}' instead to have access to the low-level Key Vault client");
             }
 
+            Logger.LogTrace("Authenticating with the Azure Key Vault {VaultUri}...", VaultUri);
             await LockCreateKeyVaultClient.WaitAsync();
 
             try
             {
-                if (_keyVaultClient == null)
+                if (_keyVaultClient is null)
                 {
                     _keyVaultClient = await _authentication.AuthenticateAsync();
                 }
 
+                Logger.LogTrace("Authenticated with the Azure Key Vault {VaultUri}", VaultUri);
                 return _keyVaultClient;
+            }
+            catch (Exception exception)
+            {
+                Logger.LogError(exception, "Failure during authenticating with the Azure Key Vault {VaultUri}", VaultUri);
+                throw;
             }
             finally
             {
