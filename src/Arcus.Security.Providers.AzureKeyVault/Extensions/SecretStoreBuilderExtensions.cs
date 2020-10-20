@@ -613,10 +613,6 @@ namespace Microsoft.Extensions.Hosting
         {
             return builder.AddProvider(serviceProvider =>
             {
-                IKeyVaultAuthentication authentication = createAuthentication(serviceProvider);
-                var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
-                var keyVaultSecretProvider = new KeyVaultSecretProvider(authentication, configuration, logger);
-
                 if (cacheConfiguration is null)
                 {
                     return keyVaultSecretProvider;
