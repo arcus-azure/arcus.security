@@ -85,8 +85,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
             _authentication = authentication;
             _isUsingAzureSdk = false;
+            
+            Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
         }
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
         /// </summary>
@@ -95,6 +97,19 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration)
+            : this(tokenCredential, vaultConfiguration, NullLogger<KeyVaultSecretProvider>.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
+        /// </summary>
+        /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance</param>
+        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
             Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
