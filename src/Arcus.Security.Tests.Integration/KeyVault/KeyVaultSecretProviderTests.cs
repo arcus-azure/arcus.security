@@ -113,7 +113,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_WithCustomManagedServiceIdentity_GetSecret_Succeeds()
+        public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_Succeeds()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -133,7 +133,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_WithCustomManagedIdentity_GetSecret_Succeeds()
+        public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_Succeeds()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -153,7 +153,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_WithCustomManagedServiceIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
+        public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -172,7 +172,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         [Fact]
-        public async Task KeyVaultSecretProvider_WithCustomManagedIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
+        public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
