@@ -137,19 +137,27 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string clientId = Configuration.GetManagedIdentityClientId();
+            string tenantId = Configuration.GetTenantId();
+            string clientId = Configuration.GetServicePrincipalClientId();
+            string clientKey = Configuration.GetServicePrincipalClientSecret();
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                tokenCredential: new ManagedIdentityCredential(clientId), 
-                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
-            // Act
-            Secret secret = await keyVaultSecretProvider.GetSecretAsync(keyName);
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            {
+                var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                        tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential()),
+                        vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
-            // Assert
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+                // Act
+                Secret secret = await keyVaultSecretProvider.GetSecretAsync(keyName);
+
+                // Assert
+                Assert.NotNull(secret);
+                Assert.NotNull(secret.Value);
+                Assert.NotNull(secret.Version); 
+            }
         }
 
         [Fact]
@@ -176,18 +184,26 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string clientId = Configuration.GetManagedIdentityClientId();
-            var notExistingKeyName = $"secret-{Guid.NewGuid():N}";
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                tokenCredential: new ManagedIdentityCredential(clientId), 
-                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+            string tenantId = Configuration.GetTenantId();
+            string clientId = Configuration.GetServicePrincipalClientId();
+            string clientKey = Configuration.GetServicePrincipalClientSecret();
 
-            // Assert
-            await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
             {
+                var notExistingKeyName = $"secret-{Guid.NewGuid():N}";
+                var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                    tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential()),
+                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+
+                // Assert
+                await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
+                {
                 // Act
                 await keyVaultSecretProvider.GetSecretAsync(notExistingKeyName);
-            });
+                }); 
+            }
         }
 
         [Fact]
