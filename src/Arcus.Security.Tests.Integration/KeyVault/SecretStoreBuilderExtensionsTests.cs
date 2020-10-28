@@ -721,9 +721,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId));
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
             {
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
