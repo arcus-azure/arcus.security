@@ -8,12 +8,36 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault;
+using Azure.Core;
+using Moq;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.KeyVault
 {
     public class KeyVaultSecretProviderTests
     {
+        [Fact]
+        public void KeyVaultSecretProvider_WithoutTokenCredential_Throws()
+        {
+            // Arrange
+            var config = Mock.Of<IKeyVaultConfiguration>();
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(
+                () => new KeyVaultSecretProvider(tokenCredential: null, vaultConfiguration: config));
+        }
+
+        [Fact]
+        public void KeyVaultSecretProvider_WithTokenCredentialWithoutVaultConfiguration_Throws()
+        {
+            // Arrange
+            var authentication = Mock.Of<TokenCredential>();
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(
+                () => new KeyVaultSecretProvider(authentication, vaultConfiguration: null));
+        }
+
         [Fact]
         public void KeyVaultSecretProvider_CreateWithEmptyUri_ShouldFailWithUriFormatException()
         {
@@ -50,7 +74,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string uri = GenerateVaultUri();
 
             // Act & Assert
-            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(null, new KeyVaultConfiguration(uri)));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultSecretProvider(authentication: null, new KeyVaultConfiguration(uri)));
         }
 
         [Fact]

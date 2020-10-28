@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Core;
+using Azure;
+using Azure.Core;
+using Azure.Security.KeyVault.Secrets;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
+using Microsoft.Rest.TransientFaultHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
+using Polly.Retry;
 
 namespace Arcus.Security.Providers.AzureKeyVault
 {
@@ -41,6 +46,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
         protected readonly Regex SecretNameRegex = new Regex(SecretNamePattern, RegexOptions.Compiled);
 
         private readonly IKeyVaultAuthentication _authentication;
+        private readonly SecretClient _secretClient;
+        private readonly bool _isUsingAzureSdk;
 
         private IKeyVaultClient _keyVaultClient;
 
@@ -77,6 +84,44 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _authentication = authentication;
+            _isUsingAzureSdk = false;
+            
+            Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
+        }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
+        /// </summary>
+        /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance</param>
+        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration)
+            : this(tokenCredential, vaultConfiguration, NullLogger<KeyVaultSecretProvider>.Instance)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
+        /// </summary>
+        /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance</param>
+        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger)
+        {
+            Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
+            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
+
+            VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
+            Guard.For<UriFormatException>(
+                () => !VaultUriRegex.IsMatch(VaultUri), 
+                "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
+
+            _secretClient = new SecretClient(vaultConfiguration.VaultUri, tokenCredential);
+            _isUsingAzureSdk = true;
+            
             Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
         }
 
@@ -122,6 +167,20 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
+            if (_isUsingAzureSdk)
+            {
+                Secret secret = await GetSecretUsingSecretClientAsync(secretName);
+                return secret;
+            }
+            else
+            {
+                Secret secret = await GetSecretUsingKeyVaultClientAsync(secretName);
+                return secret;
+            }
+        }
+
+        private async Task<Secret> GetSecretUsingKeyVaultClientAsync(string secretName)
+        {
             IKeyVaultClient keyVaultClient = await GetClientAsync();
 
             try
@@ -164,12 +223,45 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
         }
 
+        private async Task<Secret> GetSecretUsingSecretClientAsync(string secretName)
+        {
+            try
+            {
+                KeyVaultSecret secret = await ThrottleTooManyRequestsAsync(
+                    () => _secretClient.GetSecretAsync(secretName));
+
+                if (secret is null)
+                {
+                    return null;
+                }
+
+                return new Secret(
+                    secret.Value,
+                    secret.Properties.Version,
+                    secret.Properties.ExpiresOn);
+            }
+            catch (RequestFailedException requestFailedException)
+            {
+                if (requestFailedException.Status == 404)
+                {
+                    throw new SecretNotFoundException(secretName, requestFailedException);
+                }
+
+                throw;
+            }
+        }
+
         /// <summary>
         /// Gets the authenticated Key Vault client.
         /// </summary>
-        /// <returns></returns>
         protected async Task<IKeyVaultClient> GetClientAsync()
         {
+            if (_isUsingAzureSdk)
+            {
+                throw new InvalidOperationException(
+                    $"Azure Key Vault secret provider is configured using the new Azure.Security.KeyVault.Secrets package, please call the '{nameof(GetSecretClient)}' instead to have access to the low-level Key Vault client");
+            }
+
             Logger.LogTrace("Authenticating with the Azure Key Vault {VaultUri}...", VaultUri);
             await LockCreateKeyVaultClient.WaitAsync();
 
@@ -195,6 +287,20 @@ namespace Arcus.Security.Providers.AzureKeyVault
         }
 
         /// <summary>
+        /// Gets the configured Key Vault client.
+        /// </summary>
+        protected SecretClient GetSecretClient()
+        {
+            if (!_isUsingAzureSdk)
+            {
+                throw new InvalidOperationException(
+                    $"Azure Key Vault secret provider is configured using the old Microsoft.Azure.KeyVault package, please call the '{nameof(GetClientAsync)}' instead to have access to the low-level Key Vault client");
+            }
+
+            return _secretClient;
+        }
+
+        /// <summary>
         /// Client-side throttling when the Key Vault service limit exceeds.
         /// </summary>
         /// <param name="secretOperation">The operation to retry.</param>
@@ -203,6 +309,28 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// </returns>
         protected static Task<SecretBundle> ThrottleTooManyRequestsAsync(Func<Task<SecretBundle>> secretOperation)
         {
+            Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
+            return GetExponentialBackOffRetryPolicy((KeyVaultErrorException ex) => (int) ex.Response.StatusCode == 429)
+                         .ExecuteAsync(secretOperation);
+        }
+
+        /// <summary>
+        /// Client-side throttling when the Key Vault service limit exceeds.
+        /// </summary>
+        /// <param name="secretOperation">The operation to retry.</param>
+        /// <returns>
+        ///     The resulting secret bundle of the <paramref name="secretOperation"/>.
+        /// </returns>
+        protected static Task<Response<KeyVaultSecret>> ThrottleTooManyRequestsAsync(Func<Task<Response<KeyVaultSecret>>> secretOperation)
+        {
+            Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
+            return GetExponentialBackOffRetryPolicy((RequestFailedException ex) => ex.Status == 429)
+                    .ExecuteAsync(secretOperation);
+        }
+
+        private static AsyncRetryPolicy GetExponentialBackOffRetryPolicy<TException>(Func<TException, bool> exceptionPredicate) 
+            where TException : Exception
+        {
             /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
              * 1. Wait 1 second, retry request
              * 2. If still throttled wait 2 seconds, retry request
@@ -210,9 +338,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
              * 4. If still throttled wait 8 seconds, retry request
              * 5. If still throttled wait 16 seconds, retry request */
 
-            return Policy.Handle<KeyVaultErrorException>(ex => (int) ex.Response.StatusCode == 429)
-                         .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)))
-                         .ExecuteAsync(secretOperation);
+            return Policy.Handle(exceptionPredicate)
+                         .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)));
         }
     }
 }

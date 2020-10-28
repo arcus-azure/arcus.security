@@ -39,6 +39,36 @@ namespace Arcus.Security.Tests.Integration.Fixture
         }
 
         /// <summary>
+        /// Gets the configured tenant ID from the application configuration.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no tenant ID found in the application configuration.</exception>
+        public string GetTenantId()
+        {
+            string tenantId = GetRequiredValue("Arcus:Tenant");
+            return tenantId;
+        }
+
+        /// <summary>
+        /// Gets the configured client ID of the service principal from the application configuration.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no application ID found in the application configuration.</exception>
+        public string GetServicePrincipalClientId()
+        {
+            string clientId = GetRequiredValue("Arcus:ServicePrincipal:ApplicationId");
+            return clientId;
+        }
+
+        /// <summary>
+        /// Gets the configured client secret of the service principal from the application configuration.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">Thrown when there's no application secret found in the application configuration.</exception>
+        public string GetServicePrincipalClientSecret()
+        {
+            string clientSecret = GetRequiredValue("Arcus:ServicePrincipal:AccessKey");
+            return clientSecret;
+        }
+
+        /// <summary>
         /// Gets the configured HashiCorp Vault execution file.
         /// </summary>
         public FileInfo GetHashiCorpVaultBin()
@@ -70,6 +100,18 @@ namespace Arcus.Security.Tests.Integration.Fixture
             }
 
             return vaultFile;
+        }
+
+        private string GetRequiredValue(string key)
+        {
+            string value = _configuration[key];
+            if (String.IsNullOrWhiteSpace(value))
+            {
+                throw new KeyNotFoundException(
+                    $"Could not find configuration value for key: '{key}', was blank");
+            }
+
+            return value;
         }
 
         /// <summary>
