@@ -69,16 +69,6 @@ namespace Arcus.Security.Tests.Integration.Fixture
         }
 
         /// <summary>
-        /// Gets the configured client ID of the managed identity from the application configuration.
-        /// </summary>
-        /// <exception cref="KeyNotFoundException">Thrown when there's no client ID for the managed identity found in the application configuration.</exception>
-        public string GetManagedIdentityClientId()
-        {
-            string clientId = GetRequiredValue("Arcus:ManagedIdentity:ClientId");
-            return clientId;
-        }
-
-        /// <summary>
         /// Gets the configured HashiCorp Vault execution file.
         /// </summary>
         public FileInfo GetHashiCorpVaultBin()
