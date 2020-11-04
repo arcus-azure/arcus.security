@@ -37,7 +37,7 @@ Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 If you prefer a more fluent approach you can also use our `WithCaching` extension.
 
 ```csharp
-var cachedSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaultConfiguration)
+var cachedSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration)
                                     .WithCaching();
 Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
