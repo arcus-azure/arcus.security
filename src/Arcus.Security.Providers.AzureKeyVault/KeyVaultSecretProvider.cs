@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Arcus.Observability.Telemetry.Core;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Core;
@@ -167,15 +168,30 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
-            if (_isUsingAzureSdk)
+            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
             {
-                Secret secret = await GetSecretUsingSecretClientAsync(secretName);
-                return secret;
-            }
-            else
-            {
-                Secret secret = await GetSecretUsingKeyVaultClientAsync(secretName);
-                return secret;
+                try
+                {
+                    if (_isUsingAzureSdk)
+                    {
+                        Secret secret = await GetSecretUsingSecretClientAsync(secretName);
+                        Logger.LogDependency("Azure key vault", secretName, VaultUri, isSuccessful: true, startTime: measurement.StartTime, duration: measurement.Elapsed);
+
+                        return secret;
+                    }
+                    else
+                    {
+                        Secret secret = await GetSecretUsingKeyVaultClientAsync(secretName);
+                        Logger.LogDependency("Azure key vault", secretName, VaultUri, isSuccessful: true, startTime: measurement.StartTime, duration: measurement.Elapsed);
+
+                        return secret;
+                    }
+                }
+                catch
+                {
+                    Logger.LogDependency("Azure key vault", secretName, VaultUri, isSuccessful: false, startTime: measurement.StartTime, duration: measurement.Elapsed);
+                    throw;
+                }
             }
         }
 
