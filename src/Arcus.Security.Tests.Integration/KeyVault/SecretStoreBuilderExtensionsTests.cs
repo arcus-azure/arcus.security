@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Core.Fixture;
+using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Integration.Fixture;
+using Arcus.Testing.Logging;
 using Azure;
 using Azure.Identity;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,6 +24,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
     [Trait(name: "Category", value: "Integration")]
     public class SecretStoreBuilderExtensionsTests : IntegrationTest
     {
+        private const string DependencyName = "Azure key vault";
+
         public SecretStoreBuilderExtensionsTests(ITestOutputHelper testOutput) : base(testOutput)
         {
         }
@@ -34,6 +40,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -49,6 +57,40 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
+            Assert.DoesNotContain(spyLogger.Messages, msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency)
+        {
+            // Arrange
+            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
+            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(keyVaultUri, applicationId, clientKey, 
+                    configureOptions: options => options.TrackDependency = trackDependency);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            Secret secret = await provider.GetSecretAsync(keyName);
+            Assert.NotNull(secret);
+            Assert.NotNull(secret.Value);
+            Assert.NotNull(secret.Version);
+            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -75,6 +117,36 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency)
+        {
+            // Arrange
+            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
+            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = "UnknownSecretName";
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(keyVaultUri, applicationId, clientKey, 
+                    configureOptions: options => options.TrackDependency = trackDependency);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+        }
+
         [Fact]
         public async Task AddAzureKeyVault_WithServicePrincipalToDots_GetsSecretSucceeds()
         {
@@ -89,7 +161,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
                     keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
@@ -117,8 +189,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
+                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName, allowCaching: false);
             });
 
             // Assert
@@ -194,7 +266,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
                     keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
@@ -222,7 +294,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
                     keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
@@ -255,6 +327,35 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithOptions_WithManagedServiceIdentity_GetSecretSucceeds(bool trackDependency)
+        {
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(keyVaultUri, connectionString,
+                configureOptions: options => options.TrackDependency = trackDependency));
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            Secret secret = await provider.GetSecretAsync(keyName);
+            Assert.NotNull(secret);
+            Assert.NotNull(secret.Value);
+            Assert.NotNull(secret.Version);
+            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -293,7 +394,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(
+                stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
                     keyVaultUri, connectionString, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
@@ -320,7 +421,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(
+                stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
                     keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
@@ -399,7 +500,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(
+                stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
                     keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
@@ -428,7 +529,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(
+                stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
                     keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
@@ -515,6 +616,40 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret.Version);
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency)
+        {
+            // Arrange
+            string tenantId = Configuration.GetTenantId();
+            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
+            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey,
+                    configureOptions: options => options.TrackDependency = trackDependency);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            Secret secret = await provider.GetSecretAsync(keyName);
+            Assert.NotNull(secret);
+            Assert.NotNull(secret.Value);
+            Assert.NotNull(secret.Version);
+            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+        }
+
         [Fact]
         public async Task AddAzureKeyVaultWithTenant_WithServicePrincipal_GetSecretFails()
         {
@@ -538,6 +673,37 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency)
+        {
+            // Arrange
+            string tenantId = Configuration.GetTenantId();
+            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
+            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            var keyName = "UnknownSecretName";
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey,
+                    configureOptions: options => options.TrackDependency = trackDependency);
+            });
+            
+            // Assert
+            IHost host = builder.Build();
+            var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -735,6 +901,42 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             }
         }
 
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentity_GetSecretSucceeds(bool trackDependency)
+        {
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            string tenantId = Configuration.GetTenantId();
+            string clientId = Configuration.GetServicePrincipalClientId();
+            var clientKey = Configuration.GetServicePrincipalClientSecret();
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId,
+                configureOptions: options => options.TrackDependency = trackDependency));
+
+            // Assert
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            {
+                IHost host = builder.Build();
+                var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+                Secret secret = await provider.GetSecretAsync(keyName);
+                Assert.NotNull(secret);
+                Assert.NotNull(secret.Value);
+                Assert.NotNull(secret.Version);
+                Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            }
+        }
+
         [Fact]
         public async Task AddAzureKeyVault_WithManagedIdentityRemovesPrefix_GetsSecretSucceeds()
         {
@@ -798,6 +1000,44 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
                 await Assert.ThrowsAsync<SecretNotFoundException>(
                     () => provider.GetSecretAsync(keyName)); 
+            }
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentityWrongMutation_GetsSecretFails(bool trackDependency)
+        {
+            // Arrange
+            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
+            string tenantId = Configuration.GetTenantId();
+            string clientId = Configuration.GetServicePrincipalClientId();
+            string clientKey = Configuration.GetServicePrincipalClientSecret();
+            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
+
+            var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithManagedIdentity(
+                    keyVaultUri, clientId, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
+                    configureOptions: options => options.TrackDependency = trackDependency);
+            });
+
+            // Assert
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            {
+                IHost host = builder.Build();
+                var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+                await Assert.ThrowsAsync<SecretNotFoundException>(
+                    () => provider.GetSecretAsync(keyName)); 
+                Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
             }
         }
 
@@ -956,7 +1196,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exception = await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(keyName));
         }
 
         [Fact]
@@ -970,6 +1210,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
+            var spyLogger = new InMemoryLogger();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -983,6 +1225,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             var exception = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
             Assert.Equal((int) HttpStatusCode.Forbidden, exception.Status);
+            Assert.DoesNotContain(spyLogger.Messages, msg => msg.StartsWith("Event") && msg.Contains("Security"));
         }
     }
 }
