@@ -41,5 +41,17 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.ThrowsAny<ArgumentException>(
                 () => builder.AddCriticalException<AuthenticationException>(exceptionFilter: null));
         }
+
+        [Fact]
+        public void WithAuditing_WithoutFunction_Throws()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var builder = new SecretStoreBuilder(services);
+
+            // Act / assert
+            Assert.ThrowsAny<ArgumentException>(
+                () => builder.WithAuditing(configureOptions: null));
+        }
     }
 }

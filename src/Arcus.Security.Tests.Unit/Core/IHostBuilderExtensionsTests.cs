@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
+using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Sdk;
 
@@ -395,6 +399,55 @@ namespace Arcus.Security.Tests.Unit.Core
             var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
             Secret secret = await cachedSecretProvider.GetSecretAsync(secretKey, ignoreCache: false);
             Assert.Equal(expected, secret.Value);
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithDefaultAuditing_DoesntLogsSecurityEvent()
+        {
+            // Arrange
+            string secretName = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));
+            var spyLogger = new InMemoryLogger();
+            var builder = new HostBuilder();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+            await secretProvider.GetRawSecretAsync(secretName);
+            Assert.DoesNotContain(spyLogger.Messages, msg => msg.StartsWith("Event") && msg.Contains("Security"));
+        }
+
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task ConfigureSecretStore_WithAuditing_LogsSecurityEvent(bool emitSecurityEvents)
+        {
+            // Arrange
+            string secretName = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));
+            var spyLogger = new InMemoryLogger();
+            var builder = new HostBuilder();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider)
+                      .WithAuditing(options => options.EmitSecurityEvents = emitSecurityEvents);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+            await secretProvider.GetRawSecretAsync(secretName);
+            Assert.Equal(emitSecurityEvents, spyLogger.Messages.Count(msg => msg.StartsWith("Event") && msg.Contains("Security")) == 1);
         }
     }
 }
