@@ -47,7 +47,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
             Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
 
-            return AddAzureKeyVaultWithCertificateWithOptions(builder, rawVaultUri, clientId, certificate, mutateSecretName: null, allowCaching: allowCaching);
+            return AddAzureKeyVaultWithCertificateWithOptions(builder, rawVaultUri, clientId, certificate, mutateSecretName: null, allowCaching: allowCaching, configureOptions: null);
         }
 
         /// <summary>
@@ -720,7 +720,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
             Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
 
-            return AddAzureKeyVault(builder, serviceProvider => authentication, configuration, cacheConfiguration, mutateSecretName);
+            return AddAzureKeyVault(builder, serviceProvider => authentication, configuration, cacheConfiguration, mutateSecretName, configureOptions);
         }
 
         private static SecretStoreBuilder AddAzureKeyVault(
