@@ -344,7 +344,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
             Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
 
-            return AddAzureKeyVaultWithManagedServiceIdentityWithOptions(builder, rawVaultUri, cacheConfiguration, azureADInstance, mutateSecretName: null, configureOptions: null);
+            return AddAzureKeyVaultWithManagedServiceIdentityWithOptions(builder, rawVaultUri, cacheConfiguration, connectionString, azureADInstance, mutateSecretName: null, configureOptions: null);
         }
 
         /// <summary>
