@@ -287,7 +287,8 @@ namespace Microsoft.Extensions.Hosting
                 },
                 new KeyVaultConfiguration(rawVaultUri),
                 allowCaching,
-                mutateSecretName);
+                mutateSecretName,
+                configureOptions);
         }
 
         /// <summary>

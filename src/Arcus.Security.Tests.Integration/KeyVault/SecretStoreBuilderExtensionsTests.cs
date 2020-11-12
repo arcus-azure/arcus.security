@@ -355,9 +355,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
-            bool hasSingleDependencyEmit = spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1;
-            Assert.True(trackDependency == hasSingleDependencyEmit, 
-                $"Tracking dependency (active = {trackDependency}) should result in {(trackDependency ? 1 : 0)} dependency tracking emits");
+            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
