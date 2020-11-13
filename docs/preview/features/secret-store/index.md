@@ -131,4 +131,21 @@ public class MyHttpTrigger
 }
 ```
 
+## Secret store configuration
+The secret store as additional configuration that controls the behavior of the store.
+See below the available features so you can setup your secret store for your needs.
+
+### Include security auditing
+The secret store has the ability to audit each secret retrieval so malicious activity can be spotted more easily.
+This functionality is available in both the regular .NET Core as Azure Functions environment.
+
+```csharp
+.ConfigureSecretStore((config, stores) =>
+{
+    // Will log an security event for each retrieved secret, including the secret name and the provider that has tried to retrieve the secret.
+    // Default: `false`
+    stores.WithAuditing(options => options.EmitSecurityEvents = true);
+})
+```
+
 [&larr; back](/)
