@@ -237,7 +237,7 @@ namespace Arcus.Security.Core
                 _logger.LogSecurityEvent("Get Secret", new Dictionary<string, object>
                 {
                     ["SecretName"] = secretName,
-                    ["SecretProviderType"] = source.SecretProvider.GetType().Name
+                    ["SecretProvider"] = source.SecretProvider.GetType().Name
                 }); 
             }
 
