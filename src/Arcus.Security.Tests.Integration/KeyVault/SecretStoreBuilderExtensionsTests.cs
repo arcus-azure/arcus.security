@@ -1,23 +1,17 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Core.Fixture;
-using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Integration.Fixture;
-using Arcus.Testing.Logging;
 using Azure;
 using Azure.Identity;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Serilog;
-using Serilog.Events;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -26,8 +20,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
     [Trait(name: "Category", value: "Integration")]
     public class SecretStoreBuilderExtensionsTests : IntegrationTest
     {
-        private const string DependencyType = "DependencyType", DependencyName = "Azure key vault";
-
         public SecretStoreBuilderExtensionsTests(ITestOutputHelper testOutput) : base(testOutput)
         {
         }
@@ -1236,12 +1228,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
         private void AssertTrackedAzureKeyVaultDependency(bool trackDependency)
         {
-            Assert.Equal(trackDependency, InMemoryLogSink.LogEvents.Count(ev => 
-            {
-                return ev.MessageTemplate.Text.StartsWith("Dependency")
-                       && ev.Properties.TryGetValue(DependencyType, out LogEventPropertyValue value)
-                       && value.ToDecentString() == DependencyName;
-            }) == 1);
+            Assert.Equal(trackDependency, InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.StartsWith("Dependency")) == 1);
         }
     }
 }
