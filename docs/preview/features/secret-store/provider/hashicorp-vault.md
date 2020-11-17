@@ -47,13 +47,13 @@ public class Program
                          // Following defaults can be overridden:
 
                         // Mount point of UserPass athentication (default: userpass).
-                        builder.AddHashiCorpVaultWithUserPass(..., userPassMountPoint: "myuserpass");
+                        builder.AddHashiCorpVaultWithUserPass(..., options => options.UserPassMountPoint: "myuserpass");
 
                          // Version of the KeyValue secret engine (default: V2).
-                         builder.AddHashiCorpVaultWithUserPass(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
+                         builder.AddHashiCorpVaultWithUserPass(..., options => options.KeyValueVersion: VaultKeyValueSecretEngineVersion.V1);
 
                         // Mount point of KeyValue secret engine (default: kv-v2).
-                        builder.AddHashiCorpVaultWithUserPass(..., keyValueMountPoint: "secret");
+                        builder.AddHashiCorpVaultWithUserPass(..., options => options.KeyValueMountPoint: "secret");
 
                         // Adding the HashiCorp Vault secret provider with UserPass authentication, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
@@ -73,13 +73,13 @@ public class Program
                         );
 
                         // Mount point of Kubernetes authentication (default: kubernetes).
-                        builder.AddHashiCorpVaultWithKubernetes(..., kubernetesMountPoint: "mykubernetes");
+                        builder.AddHashiCorpVaultWithKubernetes(..., options => options.KubernetesMountPoint: "mykubernetes");
 
                          // Version of the KeyValue secret engine (default: V2).
-                         builder.AddHashiCorpVaultWithKubernetes(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
+                         builder.AddHashiCorpVaultWithKubernetes(..., options => options.KeyValueVersion: VaultKeyValueSecretEngineVersion.V1);
 
                         // Mount point of KeyValue secret engine (default: kv-v2).
-                        builder.AddHashiCorpVaultWithKubernetes(..., keyValueMountPoint: "secret");
+                        builder.AddHashiCorpVaultWithKubernetes(..., options => options.KeyValueMountPoint: "secret");
 
                         // Adding the HashiCorp Vault secret provider with Kubernetes authentication, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
@@ -95,14 +95,21 @@ public class Program
                             secretPath: "my-secrets");
 
                         // Version of the KeyValue secret engine (default: V2).
-                         builder.AddHashiCorpVault(..., keyValueVersion: VaultKeyValueSecretEngineVersion.V1);
+                         builder.AddHashiCorpVault(..., options => options.KeyValueVersion: VaultKeyValueSecretEngineVersion.V1);
 
                         // Mount point of KeyValue secret engine (default: kv-v2).
-                        builder.AddHashiCorpVault(..., keyValueMountPoint: "secret");
+                        builder.AddHashiCorpVault(..., options => options.KeyValueMountPoint: "secret");
 
                         // Adding the HashiCorp Vault secret provider, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
                         builder.AddHashiCorpVault(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
+
+                        // Additional settings:
+                        // -------------------
+
+                        // Tracking the HashiCorp Vault dependency which works well together with Application Insights (default: `false`).
+                        // See https://observability.arcus-azure.net/features/writing-different-telemetry-types#measuring-custom-dependencies for more information.
+                        builder.AddHashiCorpVault(..., options => options.TrackDependency = true);
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

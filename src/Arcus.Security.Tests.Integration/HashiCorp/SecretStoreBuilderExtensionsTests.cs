@@ -66,7 +66,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, "invalid password", secretPath, keyValueMountPoint: secretPath);
+                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, "invalid password", secretPath, options => options.KeyValueMountPoint = secretPath);
                 });
 
                 // Assert
@@ -105,7 +105,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, password, secretPath, keyValueMountPoint: secretPath);
+                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, password, secretPath, options => options.KeyValueMountPoint = secretPath);
                 });
 
                 // Assert
