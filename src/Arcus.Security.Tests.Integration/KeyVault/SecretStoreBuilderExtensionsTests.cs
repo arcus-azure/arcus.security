@@ -42,7 +42,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             var builder = new HostBuilder();
             var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger, dispose: true)));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -73,7 +73,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -129,7 +129,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -339,7 +339,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(keyVaultUri, connectionString,
@@ -627,7 +627,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -685,7 +685,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -910,7 +910,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId,
@@ -1011,7 +1011,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -1204,7 +1204,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
