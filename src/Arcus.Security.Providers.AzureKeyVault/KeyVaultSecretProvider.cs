@@ -204,7 +204,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Task<Secret> storeSecretTask;
             if (_isUsingAzureSdk)
             {
-                storeSecretTask = SetSecretUsingSecretClientAsync(secretName, secretValue);
+                storeSecretTask = StoreSecretUsingSecretClientAsync(secretName, secretValue);
             }
             else
             {
@@ -236,7 +236,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 async keyVaultClient => await keyVaultClient.GetSecretAsync(secretName));
         }
 
-        private async Task<Secret> SetSecretUsingSecretClientAsync(string secretName, string secretValue)
+        private async Task<Secret> StoreSecretUsingSecretClientAsync(string secretName, string secretValue)
         {
             var secret = new KeyVaultSecret(secretName, secretValue);
 
