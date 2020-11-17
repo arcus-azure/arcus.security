@@ -19,11 +19,6 @@ namespace Arcus.Security.Tests.Core.Stubs
         public IEnumerable<LogEvent> LogEvents => _events.AsEnumerable();
 
         /// <summary>
-        /// Gets the currently logged event messages; stored in-memory.
-        /// </summary>
-        public IEnumerable<string> Messages => LogEvents.Select(ev => ev.RenderMessage());
-
-        /// <summary>
         /// Emit the provided log event to the sink.
         /// </summary>
         /// <param name="logEvent">The log event to write.</param>

@@ -17,6 +17,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Serilog;
+using Serilog.Events;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -25,7 +26,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
     [Trait(name: "Category", value: "Integration")]
     public class SecretStoreBuilderExtensionsTests : IntegrationTest
     {
-        private const string DependencyName = "Azure key vault";
+        private const string DependencyType = "DependencyType", DependencyName = "Azure key vault";
 
         public SecretStoreBuilderExtensionsTests(ITestOutputHelper testOutput) : base(testOutput)
         {
@@ -59,8 +60,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.NotNull(secret.Value);
                 Assert.NotNull(secret.Version);
             }
-            
-            Assert.DoesNotContain(InMemoryLogSink.Messages, msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName));
         }
 
         [Theory]
@@ -95,7 +94,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.NotNull(secret.Version);
             }
             
-            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -149,7 +148,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
             }
             
-            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            Assert.NotEmpty(InMemoryLogSink.LogEvents);
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -349,14 +349,17 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 configureOptions: options => options.TrackDependency = trackDependency));
 
             // Assert
-            IHost host = builder.Build();
-            var provider = host.Services.GetRequiredService<ISecretProvider>();
+            using (IHost host = builder.Build())
+            {
+                var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
-            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+                Secret secret = await provider.GetSecretAsync(keyName);
+                Assert.NotNull(secret);
+                Assert.NotNull(secret.Value);
+                Assert.NotNull(secret.Version);
+            }
+            
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -650,7 +653,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.NotNull(secret.Version); 
             }
 
-            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -707,7 +710,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
             }
             
-            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -928,16 +931,17 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
             using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
             using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (IHost host = builder.Build())
             {
-                using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
                 Secret secret = await provider.GetSecretAsync(keyName);
                 Assert.NotNull(secret);
                 Assert.NotNull(secret.Value);
                 Assert.NotNull(secret.Version);
-                Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
             }
+
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -1037,13 +1041,12 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-
                     await Assert.ThrowsAsync<SecretNotFoundException>(
                         () => provider.GetSecretAsync(keyName)); 
                 }
             }
 
-            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            AssertTrackedAzureKeyVaultDependency(trackDependency);
         }
 
         [Fact]
@@ -1229,6 +1232,16 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             var exception = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
             Assert.Equal((int) HttpStatusCode.Forbidden, exception.Status);
+        }
+
+        private void AssertTrackedAzureKeyVaultDependency(bool trackDependency)
+        {
+            Assert.Equal(trackDependency, InMemoryLogSink.LogEvents.Count(ev => 
+            {
+                return ev.MessageTemplate.Text.StartsWith("Dependency")
+                       && ev.Properties.TryGetValue(DependencyType, out LogEventPropertyValue value)
+                       && value.ToDecentString() == DependencyName;
+            }) == 1);
         }
     }
 }
