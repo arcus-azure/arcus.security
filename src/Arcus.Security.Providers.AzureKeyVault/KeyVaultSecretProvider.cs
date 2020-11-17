@@ -13,7 +13,6 @@ using Azure.Security.KeyVault.Secrets;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Rest.TransientFaultHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
@@ -180,15 +179,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
+            var isSuccessful = false;
             using (DependencyMeasurement measurement = DependencyMeasurement.Start())
             {
                 try
                 {
                     Secret secret = await GetSecretCoreAsync(secretName);
-                    if (_options.TrackDependency)
-                    {
-                        Logger.LogDependency("Azure key vault", secretName, VaultUri, isSuccessful: true, measurement: measurement); 
-                    }
+                    isSuccessful = true;
                     
                     return secret;
                 }
@@ -196,7 +193,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 {
                     if (_options.TrackDependency)
                     {
-                        Logger.LogDependency("Azure key vault", secretName, VaultUri, isSuccessful: false, measurement: measurement); 
+                        Logger.LogDependency(DependencyName, secretName, VaultUri, isSuccessful, measurement); 
                     }
                 }
             }

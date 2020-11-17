@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Serilog;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -72,8 +73,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -90,7 +90,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
-            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -129,8 +129,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -144,7 +143,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -340,8 +339,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(keyVaultUri, connectionString,
@@ -355,7 +353,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
-            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -629,8 +627,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -647,7 +644,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
-            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -688,8 +685,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -703,7 +699,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+            Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
         }
 
         [Fact]
@@ -914,8 +910,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId,
@@ -933,7 +928,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.NotNull(secret);
                 Assert.NotNull(secret.Value);
                 Assert.NotNull(secret.Version);
-                Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+                Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
             }
         }
 
@@ -1016,8 +1011,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -1037,7 +1031,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
                 await Assert.ThrowsAsync<SecretNotFoundException>(
                     () => provider.GetSecretAsync(keyName)); 
-                Assert.Equal(trackDependency, spyLogger.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
+                Assert.Equal(trackDependency, InMemoryLogSink.Messages.Count(msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName)) == 1);
             }
         }
 
@@ -1210,8 +1204,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.UseSerilog(Logger);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
