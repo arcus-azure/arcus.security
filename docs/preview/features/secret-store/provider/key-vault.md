@@ -56,7 +56,7 @@ public class Program
                         // Example - When looking up `ServicePrincipal:ClientKey` it will be changed to `ServicePrincipal-ClientKey`.
                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, mutateSecretName: secretName => secretName.Replace(":", "-"));
 
-                        // Tracking the Azure Key Vault dependency which works well together with Application Insights.
+                        // Tracking the Azure Key Vault dependency which works well together with Application Insights (default: `false`).
                         // See https://observability.arcus-azure.net/features/writing-different-telemetry-types#measuring-custom-dependencies for more information.
                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, configureOptions: options => options.TrackDependency = true);
                     })
