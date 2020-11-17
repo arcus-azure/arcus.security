@@ -41,8 +41,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
-            var spyLogger = new InMemoryLogger();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger, dispose: true)));
+            builder.UseSerilog(Logger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -58,7 +57,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             Assert.NotNull(secret);
             Assert.NotNull(secret.Value);
             Assert.NotNull(secret.Version);
-            Assert.DoesNotContain(spyLogger.Messages, msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName));
+            Assert.DoesNotContain(InMemoryLogSink.Messages, msg => msg.StartsWith("Dependency") && msg.Contains(DependencyName));
         }
 
         [Theory]
