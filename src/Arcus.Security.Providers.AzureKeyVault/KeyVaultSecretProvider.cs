@@ -12,7 +12,6 @@ using Azure.Security.KeyVault.Secrets;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Rest.TransientFaultHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
@@ -138,7 +137,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
+        /// <param name="secretName">The name of the secret</param>
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
@@ -156,8 +155,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <param name="secretName">The name of the secret</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret</returns>
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
@@ -167,34 +166,91 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
+            Task<Secret> getSecretTask;
             if (_isUsingAzureSdk)
             {
-                Secret secret = await GetSecretUsingSecretClientAsync(secretName);
-                return secret;
+                getSecretTask = GetSecretUsingSecretClientAsync(secretName);
             }
             else
             {
-                Secret secret = await GetSecretUsingKeyVaultClientAsync(secretName);
-                return secret;
+                getSecretTask = GetSecretUsingKeyVaultClientAsync(secretName);
             }
+
+            Logger.LogTrace("Getting a secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
+            var secret = await getSecretTask;
+            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", VaultUri);
+
+            return secret;
+        }
+
+        /// <summary>
+        /// Stores a secret value with a given secret name
+        /// </summary>
+        /// <param name="secretName">The name of the secret</param>
+        /// <param name="secretValue">The value of the secret</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the latest information for the given secret</returns>
+        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
+        /// <exception cref="ArgumentException">The <paramref name="secretValue"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretValue"/> must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
+        public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
+            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
+
+            Task<Secret> storeSecretTask;
+            if (_isUsingAzureSdk)
+            {
+                storeSecretTask = SetSecretUsingSecretClientAsync(secretName, secretValue);
+            }
+            else
+            {
+                storeSecretTask = StoreSecretUsingKeyVaultClientAsync(secretName, secretValue);
+            }
+
+            Logger.LogTrace("Storing secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
+            var secret = await storeSecretTask;
+            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", secret.Version, VaultUri);
+
+            return secret;
         }
 
         private async Task<Secret> GetSecretUsingKeyVaultClientAsync(string secretName)
+        {
+            return await InteractWithVaultUsingKeyVaultClientAsync(secretName, 
+                async keyVaultClient => await keyVaultClient.GetSecretAsync(VaultUri, secretName));
+        }
+
+        private async Task<Secret> StoreSecretUsingKeyVaultClientAsync(string secretName, string secretValue)
+        {
+            return await InteractWithVaultUsingKeyVaultClientAsync(secretName,
+                async keyVaultClient => await keyVaultClient.SetSecretAsync(VaultUri, secretName, secretValue));
+        }
+
+        private async Task<Secret> GetSecretUsingSecretClientAsync(string secretName)
+        {
+            return await InteractWithVaultUsingSecretClientAsync(secretName,
+                async keyVaultClient => await keyVaultClient.GetSecretAsync(secretName));
+        }
+
+        private async Task<Secret> SetSecretUsingSecretClientAsync(string secretName, string secretValue)
+        {
+            var secret = new KeyVaultSecret(secretName, secretValue);
+
+            return await InteractWithVaultUsingSecretClientAsync(secretName,
+                async keyVaultClient => await keyVaultClient.SetSecretAsync(secret));
+        }
+
+        private async Task<Secret> InteractWithVaultUsingKeyVaultClientAsync(string secretName, Func<IKeyVaultClient, Task<SecretBundle>> operation)
         {
             IKeyVaultClient keyVaultClient = await GetClientAsync();
 
             try
             {
-                SecretBundle secretBundle =
-                    await ThrottleTooManyRequestsAsync(
-                        async () =>
-                        {
-                            Logger.LogTrace("Getting a secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
-                            SecretBundle bundle = await keyVaultClient.GetSecretAsync(VaultUri, secretName);
-                            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", VaultUri);
-
-                            return bundle;
-                        });
+                SecretBundle secretBundle = await ThrottleTooManyRequestsAsync(async () => await operation(keyVaultClient));
 
                 if (secretBundle is null)
                 {
@@ -202,8 +258,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 }
 
                 return new Secret(
-                    secretBundle.Value, 
-                    secretBundle.SecretIdentifier?.Version, 
+                    secretBundle.Value,
+                    secretBundle.SecretIdentifier?.Version,
                     secretBundle.Attributes.Expires);
             }
             catch (KeyVaultErrorException keyVaultErrorException)
@@ -214,21 +270,20 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 }
                 else
                 {
-                     Logger.LogError(keyVaultErrorException,
-                         "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}", 
-                         VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
+                    Logger.LogError(keyVaultErrorException,
+                        "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}",
+                        VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
                 }
 
                 throw;
             }
         }
 
-        private async Task<Secret> GetSecretUsingSecretClientAsync(string secretName)
+        private async Task<Secret> InteractWithVaultUsingSecretClientAsync(string secretName, Func<SecretClient, Task<Response<KeyVaultSecret>>> operation)
         {
             try
             {
-                KeyVaultSecret secret = await ThrottleTooManyRequestsAsync(
-                    () => _secretClient.GetSecretAsync(secretName));
+                KeyVaultSecret secret = await ThrottleTooManyRequestsAsync(async () => await operation(_secretClient));
 
                 if (secret is null)
                 {

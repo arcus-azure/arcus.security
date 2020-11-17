@@ -154,6 +154,21 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             Assert.Equal(expirationDate, actual.Expires);
         }
 
+        [Theory]
+        [InlineData("Secret.With.Dots")]
+        [InlineData("secret-with-%")]
+        [InlineData("4secret-starting-with-number")]
+        [InlineData("secret-over-126-chars-rULfPJou27VPdaN4DNHO7KLO2nMP0s357XnRcfWUiqmPVnuaK7mqUVPAfKlCzUf1bTfhpOtPX82kAMfV96P8G7pD8SQvxnLOHR3alksdjfaksdfjP6v86e")]
+        public async Task KeyVaultSecretProvider_StoreSecretWithIncorrectSecretNameFormat_Throws(string secretName)
+        {
+            // Arrange
+            var secretValue = Guid.NewGuid().ToString();
+            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation("some ignored secret value");
+
+            // Act / Assert
+            await Assert.ThrowsAnyAsync<FormatException>(() => provider.StoreSecretAsync(secretName, secretValue));
+        }
+
         private static KeyVaultSecretProvider CreateSecretProviderWithTooManyRequestSimulation(string expected, DateTime? expirationDate = null)
         {
             // Arrange
