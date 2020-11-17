@@ -52,7 +52,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort));
+            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
             Guard.NotNullOrWhitespace(username, nameof(username), "Requires a username for the UserPass authentication during connecting with the HashiCorp Vault");
             Guard.NotNullOrWhitespace(password, nameof(password), "Requires a password for the UserPass authentication during connecting with the HashiCorp Vault");
             Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault secrets are stored");
@@ -145,7 +145,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNull(settings, nameof(settings), "Requires HashiCorp Vault settings to correctly connect to the running HashiCorp Vault");
-            Guard.NotNull(settings.VaultServerUriWithPort, nameof(settings.VaultServerUriWithPort), "Requires the HashiCorp Vault settings to have a valid URI with HTTP port");
+            Guard.NotNullOrWhitespace(settings.VaultServerUriWithPort, nameof(settings.VaultServerUriWithPort), "Requires a non-blank HashiCorp Vault settings to have a valid URI with HTTP port");
             Guard.NotNull(settings.AuthMethodInfo, nameof(settings.AuthMethodInfo), "Requires the HashiCorp Vault settings to have an authentication method configured");
             Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a secret path to look for secret values");
             Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
