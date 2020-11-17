@@ -16,6 +16,8 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
+        private Action<SecretStoreAuditingOptions> _configureAuditingOptions;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
         /// </summary>
@@ -50,6 +52,11 @@ namespace Microsoft.Extensions.Hosting
         ///     Though, for almost all use-cases, the <see cref="AddCriticalException{TException}()"/> and <see cref="AddCriticalException{TException}(Func{TException,bool})"/> should be sufficient.
         /// </remarks>
         public IList<CriticalExceptionFilter> CriticalExceptionFilters { get; } = new List<CriticalExceptionFilter>();
+
+        /// <summary>
+        /// Gets the configured options related to auditing during the lifetime of the secret store.
+        /// </summary>
+        internal SecretStoreAuditingOptions AuditingOptions { get; } = new SecretStoreAuditingOptions();
 
         /// <summary>
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
@@ -139,6 +146,19 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
+        /// Configure the auditing options of the secret store.
+        /// </summary>
+        /// <param name="configureOptions">The function to customize the auditing options of the secret store.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configureOptions"/> is <c>null</c>.</exception>
+        public SecretStoreBuilder WithAuditing(Action<SecretStoreAuditingOptions> configureOptions)
+        {
+            Guard.NotNull(configureOptions, nameof(configureOptions), "Requires a function to configure the auditing options");
+
+            _configureAuditingOptions = configureOptions;
+            return this;
+        }
+
+        /// <summary>
         /// Builds the secret store and register the store into the <see cref="IServiceCollection"/>.
         /// </summary>
         internal void RegisterSecretStore()
@@ -165,6 +185,11 @@ namespace Microsoft.Extensions.Hosting
                 }
 
                 Services.AddSingleton(filter);
+            }
+
+            if (_configureAuditingOptions != null)
+            {
+                Services.Configure(_configureAuditingOptions);
             }
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();

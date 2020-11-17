@@ -9,6 +9,7 @@ using GuardNet;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace Arcus.Security.Core
 {
@@ -19,6 +20,7 @@ namespace Arcus.Security.Core
     {
         private readonly IEnumerable<SecretStoreSource> _secretProviders;
         private readonly IEnumerable<CriticalExceptionFilter> _criticalExceptionFilters;
+        private readonly SecretStoreAuditingOptions _auditingOptions;
         private readonly ILogger _logger;
 
         /// <summary>
@@ -26,21 +28,26 @@ namespace Arcus.Security.Core
         /// </summary>
         /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
         /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
+        /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
         /// <param name="logger">The logger instance to write diagnostic messages during the retrieval of secrets via the registered <paramref name="secretProviderSources"/>.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> of the <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
         public CompositeSecretProvider(
             IEnumerable<SecretStoreSource> secretProviderSources, 
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
+            IOptions<SecretStoreAuditingOptions> auditingOptions,
             ILogger<CompositeSecretProvider> logger)
         {
             Guard.NotNull(secretProviderSources, nameof(secretProviderSources), "Requires a series of registered secret provider registrations to retrieve secrets");
             Guard.NotNull(criticalExceptionFilters, nameof(criticalExceptionFilters), "Requires a series of registered critical exception filters to determine if a thrown exception is critical");
+            Guard.NotNull(auditingOptions, nameof(auditingOptions), "Requires a set of options to configure the auditing of the secret store");
             Guard.For<ArgumentException>(() => secretProviderSources.Any(source => source is null), "Requires all registered secret provider registrations to be not 'null'");
             Guard.For<ArgumentException>(() => criticalExceptionFilters.Any(filter => filter is null), "Requires all registered critical exception filters to be not 'null'");
-            
+            Guard.NotNull<SecretStoreAuditingOptions, ArgumentException>(auditingOptions.Value, "Requires a value for the set of options to configure the auditing of the secret store");
+
             _secretProviders = secretProviderSources;
             _criticalExceptionFilters = criticalExceptionFilters;
+            _auditingOptions = auditingOptions.Value;
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
         }
 
@@ -225,14 +232,14 @@ namespace Arcus.Security.Core
             SecretStoreSource source, 
             Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
         {
-            /* TODO: use 'Arcus.Observability.Telemetry.Core' 'LogSecurityEvent' instead once the SQL dependency is moved
-                        -> https://github.com/arcus-azure/arcus.observability/issues/131 */
-            _logger.LogInformation("Events {EventName} (Context: {@EventContext})", "Get Secret", new Dictionary<string, object>
+            if (_auditingOptions.EmitSecurityEvents)
             {
-                ["EventType"] = "Security",
-                ["SecretName"] = secretName,
-                ["SecretProviderType"] = source.SecretProvider.GetType().Name
-            });
+                _logger.LogSecurityEvent("Get Secret", new Dictionary<string, object>
+                {
+                    ["SecretName"] = secretName,
+                    ["SecretProvider"] = source.SecretProvider.GetType().Name
+                }); 
+            }
 
             Task<T> resultAsync = callRegisteredProvider(source);
             if (resultAsync is null)
