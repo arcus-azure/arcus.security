@@ -1,28 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
-using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Providers.HashiCorp.Extensions;
 using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
 using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using VaultSharp;
 using VaultSharp.Core;
 using VaultSharp.V1.AuthMethods;
-using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp
 {
     [Trait(name: "Category", value: "Integration")]
-    public class SecretStoreBuilderExtensionsTests
+    public class SecretStoreBuilderExtensionsTests : IntegrationTest
     {
         private const string DefaultDevMountPoint = "secret";
 
@@ -32,14 +27,16 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilderExtensionsTests"/> class.
         /// </summary>
-        public SecretStoreBuilderExtensionsTests(ITestOutputHelper outputWriter)
+        public SecretStoreBuilderExtensionsTests(ITestOutputHelper outputWriter) : base(outputWriter)
         {
             _config = TestConfig.Create();
             _logger = new XunitTestLogger(outputWriter);
         }
 
-        [Fact]
-        public async Task AuthenticateWithInvalidUserPassPasswordKeyValue_GetSecret_Fails()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AuthenticateWithInvalidUserPassPasswordKeyValue_GetSecret_Fails(bool trackDependency)
         {
             // Arrange
             string secretPath = "mysecret";
@@ -66,20 +63,29 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, "invalid password", secretPath, options => options.KeyValueMountPoint = secretPath);
+                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, "invalid password", secretPath, options =>
+                    {
+                        options.KeyValueMountPoint = secretPath;
+                        options.TrackDependency = trackDependency;
+                    });
                 });
 
                 // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-                var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
-                Assert.Equal(HttpStatusCode.BadRequest, exception.HttpStatusCode);
+                using (IHost host = builder.Build())
+                {
+                    var provider = host.Services.GetRequiredService<ISecretProvider>();
+                    var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
+                    Assert.Equal(HttpStatusCode.BadRequest, exception.HttpStatusCode);
+                }
             }
+
+            AssertTrackedHashiCorpVaultDependency(trackDependency);
         }
 
-        [Fact]
-        public async Task AuthenticateWithUnauthorizedUserPassUserKeyValue_GetSecret_Fails()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task AuthenticateWithUnauthorizedUserPassUserKeyValue_GetSecret_Fails(bool trackDependency)
         {
             // Arrange
             string secretPath = "mysecret";
@@ -105,16 +111,29 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, password, secretPath, options => options.KeyValueMountPoint = secretPath);
+                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, password, secretPath, options =>
+                    {
+                        options.KeyValueMountPoint = secretPath;
+                        options.TrackDependency = trackDependency;
+                    });
                 });
 
                 // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-
-                var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
-                Assert.Equal(HttpStatusCode.Forbidden, exception.HttpStatusCode);
+                using (IHost host = builder.Build())
+                {
+                    var provider = host.Services.GetRequiredService<ISecretProvider>();
+                    var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
+                    Assert.Equal(HttpStatusCode.Forbidden, exception.HttpStatusCode);
+                }
             }
+
+            AssertTrackedHashiCorpVaultDependency(trackDependency);
+        }
+
+        private void AssertTrackedHashiCorpVaultDependency(bool trackDependency)
+        {
+            Assert.NotEmpty(InMemoryLogSink.LogEvents);
+            Assert.Equal(trackDependency, InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.StartsWith("Dependency")) == 1);
         }
     }
 }
