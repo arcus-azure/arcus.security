@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -133,7 +134,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         private void AssertTrackedHashiCorpVaultDependency(bool trackDependency)
         {
             Assert.NotEmpty(InMemoryLogSink.LogEvents);
-            Assert.Equal(trackDependency, InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.StartsWith("Dependency")) == 1);
+            Assert.Equal(
+                Convert.ToInt16(trackDependency), 
+                InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.StartsWith("Dependency")));
         }
     }
 }
