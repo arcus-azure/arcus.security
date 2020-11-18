@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Arcus.Observability.Telemetry.Core;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Core;
@@ -12,7 +13,6 @@ using Azure.Security.KeyVault.Secrets;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Rest.TransientFaultHandling;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
@@ -25,6 +25,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// </summary>
     public class KeyVaultSecretProvider : ISecretProvider
     {
+        /// <summary>
+        /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
+        /// </summary>
+        protected const string DependencyName = "Azure key vault";
+
         /// <summary>
         /// Gets the pattern which the Azure Key Vault URI should match against. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
         /// </summary>
@@ -47,6 +52,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
         private readonly IKeyVaultAuthentication _authentication;
         private readonly SecretClient _secretClient;
+        private readonly KeyVaultOptions _options;
         private readonly bool _isUsingAzureSdk;
 
         private IKeyVaultClient _keyVaultClient;
@@ -60,8 +66,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        [Obsolete("Use the constructor without the " + nameof(IKeyVaultAuthentication) + " but with the Azure SDK " + nameof(TokenCredential) + " instead")]
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration)
-            : this(authentication, vaultConfiguration, NullLogger<KeyVaultSecretProvider>.Instance)
+            : this(authentication, vaultConfiguration, new KeyVaultOptions(), NullLogger<KeyVaultSecretProvider>.Instance)
         {
         }
 
@@ -70,10 +77,12 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// </summary>
         /// <param name="authentication">.The requested authentication type for connecting to the Azure Key Vault instance.</param>
         /// <param name="vaultConfiguration">The configuration related to the Azure Key Vault instance to use.</param>
+        /// <param name="options">The additional options to configure the provider.</param>
         /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger)
+        [Obsolete("Use the constructor without the " + nameof(IKeyVaultAuthentication) + " but with the Azure SDK " + nameof(TokenCredential) + " instead")]
+        public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
@@ -84,6 +93,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _authentication = authentication;
+            _options = options;
             _isUsingAzureSdk = false;
             
             Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
@@ -97,7 +107,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration)
-            : this(tokenCredential, vaultConfiguration, NullLogger<KeyVaultSecretProvider>.Instance)
+            : this(tokenCredential, vaultConfiguration, new KeyVaultOptions(), NullLogger<KeyVaultSecretProvider>.Instance)
         {
         }
 
@@ -106,10 +116,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// </summary>
         /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance</param>
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
+        /// <param name="options">The additional options to configure the provider.</param>
         /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger)
+        public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
             Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
@@ -120,6 +131,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _secretClient = new SecretClient(vaultConfiguration.VaultUri, tokenCredential);
+            _options = options;
             _isUsingAzureSdk = true;
             
             Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
@@ -167,6 +179,28 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
+            var isSuccessful = false;
+            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
+            {
+                try
+                {
+                    Secret secret = await GetSecretCoreAsync(secretName);
+                    isSuccessful = true;
+                    
+                    return secret;
+                }
+                finally
+                {
+                    if (_options.TrackDependency)
+                    {
+                        Logger.LogDependency(DependencyName, secretName, VaultUri, isSuccessful, measurement); 
+                    }
+                }
+            }
+        }
+
+        private async Task<Secret> GetSecretCoreAsync(string secretName)
+        {
             if (_isUsingAzureSdk)
             {
                 Secret secret = await GetSecretUsingSecretClientAsync(secretName);
