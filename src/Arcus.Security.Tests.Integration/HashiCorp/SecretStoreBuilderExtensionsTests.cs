@@ -78,9 +78,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
                     Assert.Equal(HttpStatusCode.BadRequest, exception.HttpStatusCode);
                 }
-            }
 
-            AssertTrackedHashiCorpVaultDependency(trackDependency);
+                AssertTrackedHashiCorpVaultDependency(trackDependency);
+            }
         }
 
         [Theory]
@@ -126,9 +126,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
                     Assert.Equal(HttpStatusCode.Forbidden, exception.HttpStatusCode);
                 }
-            }
 
-            AssertTrackedHashiCorpVaultDependency(trackDependency);
+                AssertTrackedHashiCorpVaultDependency(trackDependency);
+            }
         }
 
         private void AssertTrackedHashiCorpVaultDependency(bool trackDependency)
