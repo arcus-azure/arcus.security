@@ -104,6 +104,7 @@ namespace Arcus.Security.Providers.HashiCorp
         {
             var context = new Dictionary<string, object>
             {
+                ["SecretEngine Type"] = "KeyValue",
                 ["SecretEngine Version"] = _options.KeyValueVersion
             };
 
@@ -112,13 +113,15 @@ namespace Arcus.Security.Providers.HashiCorp
             {
                 try
                 {
+                    _logger.LogTrace("Getting a secret {SecretName} from HashiCorp Vault {VaultUri}...", secretName, _vaultClient.Settings.VaultServerUriWithPort);
                     SecretData result = await ReadSecretDataAsync(_secretPath);
-                    isSuccessful = true;
 
+                    isSuccessful = true;
                     return result;
                 }
                 finally
                 {
+                    _logger.LogTrace("{Result} secret from HashiCorp Vault {VaultUri}", isSuccessful ? "Got" : "Couldn't get", _vaultClient.Settings.VaultServerUriWithPort);
                     if (!_options.TrackDependency)
                     {
                         _logger.LogDependency(DependencyName, secretName, _vaultClient.Settings.VaultServerUriWithPort, isSuccessful, measurement, context); 
