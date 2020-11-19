@@ -10,6 +10,7 @@ using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
 using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using VaultSharp.Core;
 using VaultSharp.V1.AuthMethods;
 using Xunit;
@@ -50,6 +51,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             const string policyName = "my-policy";
 
             var builder = new HostBuilder();
+            builder.UseSerilog(Logger);
 
             using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
             {
@@ -99,6 +101,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             const string policyName = "my-policy";
 
             var builder = new HostBuilder();
+            builder.UseSerilog(Logger);
 
             using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
             {
