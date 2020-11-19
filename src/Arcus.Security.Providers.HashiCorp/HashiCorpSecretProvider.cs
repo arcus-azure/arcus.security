@@ -122,7 +122,7 @@ namespace Arcus.Security.Providers.HashiCorp
                 finally
                 {
                     _logger.LogTrace("{Result} secret from HashiCorp Vault {VaultUri}", isSuccessful ? "Got" : "Couldn't get", _vaultClient.Settings.VaultServerUriWithPort);
-                    if (!_options.TrackDependency)
+                    if (_options.TrackDependency)
                     {
                         _logger.LogDependency(DependencyName, secretName, _vaultClient.Settings.VaultServerUriWithPort, isSuccessful, measurement, context); 
                     }
