@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp;
+using Arcus.Security.Providers.HashiCorp.Configuration;
 using Arcus.Security.Providers.HashiCorp.Extensions;
 using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
@@ -9,6 +10,7 @@ using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.UserPass;
@@ -54,7 +56,11 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
                 var authentication = new UserPassAuthMethodInfo(userName, password);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V2, DefaultDevMountPoint, secretPath);
+                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions 
+                {
+                    KeyValueMountPoint = DefaultDevMountPoint, 
+                    KeyValueVersion = VaultKeyValueSecretEngineVersion.V2
+                }, NullLogger<HashiCorpSecretProvider>.Instance);
 
                 // Act
                 string actual = await provider.GetRawSecretAsync(secretName);
@@ -84,7 +90,11 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
                 var authentication = new UserPassAuthMethodInfo(userName, password);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, VaultKeyValueSecretEngineVersion.V2, DefaultDevMountPoint, secretPath);
+                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions
+                {
+                    KeyValueMountPoint = DefaultDevMountPoint,
+                    KeyValueVersion = VaultKeyValueSecretEngineVersion.V2
+                },  NullLogger<HashiCorpSecretProvider>.Instance);
 
                 // Act
                 string actual = await provider.GetRawSecretAsync(secretName);
@@ -116,7 +126,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 builder.ConfigureSecretStore((config, stores) =>
                 {
                     stores.AddHashiCorpVaultWithUserPass(
-                        server.ListenAddress.ToString(), userName, password, secretPath, keyValueMountPoint: DefaultDevMountPoint, 
+                        server.ListenAddress.ToString(), userName, password, secretPath,
+                        configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint, 
                         mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length));
                 });
 
@@ -150,7 +161,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 builder.ConfigureSecretStore((config, stores) =>
                 {
                     stores.AddHashiCorpVaultWithUserPass(
-                        server.ListenAddress.ToString(), userName, password, secretPath, keyValueMountPoint: DefaultDevMountPoint,
+                        server.ListenAddress.ToString(), userName, password, secretPath,
+                        configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint,
                         mutateSecretName: secretName =>  "Test-" + secretName);
                 });
 
@@ -185,7 +197,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVault(settings, secretPath, keyValueMountPoint: DefaultDevMountPoint, 
+                    stores.AddHashiCorpVault(settings, secretPath,
+                        options => options.KeyValueMountPoint = DefaultDevMountPoint, 
                         mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length));
                 });
 
@@ -221,7 +234,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVault(settings, secretPath, keyValueMountPoint: DefaultDevMountPoint,
+                    stores.AddHashiCorpVault(settings, secretPath, options => options.KeyValueMountPoint = DefaultDevMountPoint,
                                              mutateSecretName: secretName => "Test-" + secretName);
                 });
 
@@ -256,7 +269,11 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
                 var authentication = new UserPassAuthMethodInfo(userName, password);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, keyValueVersion, mountPoint, secretPath);
+                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions
+                {
+                    KeyValueMountPoint = mountPoint, 
+                    KeyValueVersion = keyValueVersion
+                }, NullLogger<HashiCorpSecretProvider>.Instance);
 
                 // Act
                 string actual = await provider.GetRawSecretAsync(secretName);
@@ -290,7 +307,10 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
                 var authentication = new UserPassAuthMethodInfo(userName, password);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, keyValueVersion, mountPoint, secretPath);
+                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions{
+                    KeyValueMountPoint = mountPoint, 
+                    KeyValueVersion = keyValueVersion
+                }, NullLogger<HashiCorpSecretProvider>.Instance);
 
                 // Act
                 string actual = await provider.GetRawSecretAsync(secretName);
