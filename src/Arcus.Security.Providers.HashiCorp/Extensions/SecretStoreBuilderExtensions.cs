@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Net.Http;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp.Configuration;
 using GuardNet;
@@ -12,7 +11,6 @@ using VaultSharp.Core;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.Kubernetes;
 using VaultSharp.V1.AuthMethods.UserPass;
-using VaultSharp.V1.SecretsEngines;
 
 namespace Arcus.Security.Providers.HashiCorp.Extensions
 {
@@ -35,7 +33,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="password">The password of the UserPass authentication method.</param>
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <param name="configureOptions">The function to set the additional options to configure the HashiCorp Vault KeyValue.</param>
-        /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
+        /// <param name="configureSecretProviderOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="secretPath"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">
         ///     Thrown when the <paramref name="vaultServerUriWithPort"/> is blank or doesn't represent a valid URI,
@@ -49,7 +47,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string password,
             string secretPath,
             Action<HashiCorpVaultUserPassOptions> configureOptions = null,
-            Func<string, string> mutateSecretName = null)
+            Action<SecretProviderOptions> configureSecretProviderOptions = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
@@ -64,7 +62,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             IAuthMethodInfo authenticationMethod = new UserPassAuthMethodInfo(options.UserPassMountPoint, username, password);
             var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
 
-            return AddHashiCorpVault(builder, settings, secretPath, options, mutateSecretName);
+            return AddHashiCorpVault(builder, settings, secretPath, options, configureSecretProviderOptions);
         }
 
         /// <summary>
@@ -85,7 +83,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="jsonWebToken">The service account JWT used to access the TokenReview API to validate other JWTs during login.</param>
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <param name="configureOptions"></param>
-        /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
+        /// <param name="configureSecretProviderOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>.</exception>
         /// <exception cref="ArgumentException">
         ///     Thrown when the <paramref name="vaultServerUriWithPort"/> is blank or doesn't represent a valid URI,
@@ -99,7 +97,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string jsonWebToken,
             string secretPath,
             Action<HashiCorpVaultKubernetesOptions> configureOptions = null,
-            Func<string, string> mutateSecretName = null)
+            Action<SecretProviderOptions> configureSecretProviderOptions = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
@@ -113,7 +111,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             IAuthMethodInfo authenticationMethod = new KubernetesAuthMethodInfo(options.KubernetesMountPoint, roleName, jsonWebToken);
             var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
 
-            return AddHashiCorpVault(builder, settings, secretPath, options, mutateSecretName);
+            return AddHashiCorpVault(builder, settings, secretPath, options, configureSecretProviderOptions);
         }
 
         /// <summary>
@@ -128,7 +126,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="settings"></param>
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <param name="configureOptions">The function to set the additional options to configure the HashiCorp Vault KeyValue.</param>
-        /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
+        /// <param name="configureSecretProviderOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
         /// <exception cref="ArgumentNullException">
         ///     Thrown when the <paramref name="builder"/>, <paramref name="settings"/> or <paramref name="secretPath"/> is <c>null</c>.
         /// </exception>
@@ -141,7 +139,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             VaultClientSettings settings,
             string secretPath,
             Action<HashiCorpVaultOptions> configureOptions = null,
-            Func<string, string> mutateSecretName = null)
+            Action<SecretProviderOptions> configureSecretProviderOptions = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
             Guard.NotNull(settings, nameof(settings), "Requires HashiCorp Vault settings to correctly connect to the running HashiCorp Vault");
@@ -153,7 +151,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             var options = new HashiCorpVaultOptions();
             configureOptions?.Invoke(options);
 
-            return AddHashiCorpVault(builder, settings, secretPath, options, mutateSecretName);
+            return AddHashiCorpVault(builder, settings, secretPath, options, configureSecretProviderOptions);
         }
 
         private static SecretStoreBuilder AddHashiCorpVault(
@@ -161,7 +159,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             VaultClientSettings settings,
             string secretPath,
             HashiCorpVaultOptions options,
-            Func<string, string> mutateSecretName)
+            Action<SecretProviderOptions> configureSecretProviderOptions)
         {
             // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
             builder.AddCriticalException<VaultApiException>(exception =>
@@ -176,7 +174,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
                 var provider = new HashiCorpSecretProvider(settings, secretPath, options, logger);
                 
                 return provider;
-            }, mutateSecretName);
+            }, configureSecretProviderOptions);
         }
     }
 }

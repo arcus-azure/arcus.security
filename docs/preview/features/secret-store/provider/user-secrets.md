@@ -42,7 +42,7 @@ public class Program
 
                          // The user secrets ID, using lower case transformation before looking up secrets.
                          // Example - When looking up `Client.ID` it will be changed to `client.id`.
-                         builder.AddUserSecrets<Program>(secretName => secretName.ToLower());
+                         builder.AddUserSecrets<Program>(options => options.MutateSecretName = secretName => secretName.ToLower());
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

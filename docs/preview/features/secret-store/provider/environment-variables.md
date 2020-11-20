@@ -36,7 +36,7 @@ public class Program
 
                        // Uses the environment variables, using underscores and capitals for secret name structure.
                        // Example - When looking up Queue.Name it will be changed to ARCUS_QUEUE_NAME.
-                       builder.AddEnvironmentVariables(mutateSecretName: name => $"ARCUS_{name.Replace(".", "_").ToUpper()}");
+                       builder.AddEnvironmentVariables(options => options.MutateSecretName = name => $"ARCUS_{name.Replace(".", "_").ToUpper()}");
                    })
                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

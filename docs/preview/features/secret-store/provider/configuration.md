@@ -37,7 +37,7 @@ public class Program
 
                        // Uses the built `IConfiguration` as secret provider, using `:` instead of `.` when looking up secrets.
                        // Example - When looking up `Queue.Name` it will be changed to `queue:name`.
-                       builder.AddConfiguration(config, secretName => secretName.Replace(".", ":").ToLower());
+                       builder.AddConfiguration(config, options => options.MutateSecretName = secretName => secretName.Replace(".", ":").ToLower());
 #endif
                    });
                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());

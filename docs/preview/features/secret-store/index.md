@@ -26,6 +26,11 @@ And several additional providers in seperate packages.
 
 If you require an additional secret providers that aren't available here, please [this document](./../../features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
 
+## Additional features
+Lists all the additional functions of the secret store.
+
+* [Retrieve a specific secret provider](./named-secret-providers)
+
 ## Installation
 For this feature, the following package needs to be installed:
 
