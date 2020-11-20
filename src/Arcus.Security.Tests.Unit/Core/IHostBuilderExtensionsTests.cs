@@ -564,7 +564,7 @@ namespace Arcus.Security.Tests.Unit.Core
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
-                Assert.Throws<InvalidOperationException>(() => store.GetCachedProvider(name));
+                Assert.Throws<NotSupportedException>(() => store.GetCachedProvider(name));
             }
         }
 
