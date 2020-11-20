@@ -199,7 +199,6 @@ namespace Arcus.Security.Tests.Unit.Core
             }
         }
 
-
         [Fact]
         public async Task ConfigureSecretStore_AddEnvironmentVariablesWithWrongMutation_CantFindEnvironmentVariable()
         {
