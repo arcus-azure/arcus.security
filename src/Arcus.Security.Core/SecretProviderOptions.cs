@@ -18,6 +18,7 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Gets or sets the name of the <see cref="ISecretProvider"/> to be registered in the secret store.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="value"/> is blank.</exception>
         public string Name
         {
             get => _name;
