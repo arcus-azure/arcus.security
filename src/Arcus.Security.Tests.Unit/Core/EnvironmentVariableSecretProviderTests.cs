@@ -46,7 +46,10 @@ namespace Arcus.Security.Tests.Unit.Core
             using (TemporaryEnvironmentVariable.Create(secretKey, expected))
             {
                 // Act
-                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(options => { }));
+                builder.ConfigureSecretStore((config, stores) =>
+                {
+                    stores.AddEnvironmentVariables(target: EnvironmentVariableTarget.Process, prefix: null, name: null, mutateSecretName: null);
+                });
 
                 // Assert
                 IHost host = builder.Build();
@@ -95,7 +98,7 @@ namespace Arcus.Security.Tests.Unit.Core
             using (TemporaryEnvironmentVariable.Create(secretKey, expected))
             {
                 // Act
-                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(options => { }, prefix: prefix));
+                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(EnvironmentVariableTarget.Process, prefix: prefix, name: null, mutateSecretName: null));
 
                 // Assert
                 IHost host = builder.Build();
@@ -141,7 +144,10 @@ namespace Arcus.Security.Tests.Unit.Core
             using (TemporaryEnvironmentVariable.Create(secretKey, value: $"secret-{Guid.NewGuid()}"))
             {
                 // Act
-                builder.ConfigureSecretStore((config, stores) => stores.AddEnvironmentVariables(options => { }, prefix: unknownPrefix));
+                builder.ConfigureSecretStore((config, stores) =>
+                {
+                    stores.AddEnvironmentVariables(target: EnvironmentVariableTarget.Process, prefix: unknownPrefix, name: null, mutateSecretName: null);
+                });
 
                 // Assert
                 IHost host = builder.Build();
@@ -187,7 +193,7 @@ namespace Arcus.Security.Tests.Unit.Core
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddEnvironmentVariables(options => options.MutateSecretName = name => name.ToUpper().Replace(".", "_"));
+                    stores.AddEnvironmentVariables(target: EnvironmentVariableTarget.Process, prefix: null, name: null, mutateSecretName: name => name.ToUpper().Replace(".", "_"));
                 });
 
                 // Assert
@@ -232,7 +238,7 @@ namespace Arcus.Security.Tests.Unit.Core
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddEnvironmentVariables(options => options.MutateSecretName = name => name.Replace("_", "."));
+                    stores.AddEnvironmentVariables(target: EnvironmentVariableTarget.Process, prefix: null, name: null, mutateSecretName: name => name.Replace("_", "."));
                 });
 
                 // Assert
@@ -268,7 +274,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddEnvironmentVariables(options => { }, target: (EnvironmentVariableTarget) 4);
+                stores.AddEnvironmentVariables(target: (EnvironmentVariableTarget) 4, prefix: null, name: null, mutateSecretName: null);
             });
 
             // Assert

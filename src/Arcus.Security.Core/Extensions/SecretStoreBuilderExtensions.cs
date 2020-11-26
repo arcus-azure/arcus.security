@@ -1,5 +1,4 @@
 ﻿using System;
-using Arcus.Security.Core;
 using Arcus.Security.Core.Providers;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
@@ -31,29 +30,35 @@ namespace Microsoft.Extensions.Hosting
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(EnvironmentVariableTarget), target),
                 $"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
 
-            return AddEnvironmentVariables(builder, options => options.MutateSecretName = mutateSecretName, target, prefix);
+            return AddEnvironmentVariables(builder, target, prefix, name: null, mutateSecretName: mutateSecretName);
         }
 
         /// <summary>
         /// Adds a secret source to the secret store of the application that gets its secrets from the environment.
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
-        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
         /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
+        /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
         public static SecretStoreBuilder AddEnvironmentVariables(
             this SecretStoreBuilder builder,
-            Action<SecretProviderOptions> configureOptions,
-            EnvironmentVariableTarget target = EnvironmentVariableSecretProvider.DefaultTarget,
-            string prefix = null)
+            EnvironmentVariableTarget target,
+            string prefix,
+            string name,
+            Func<string, string> mutateSecretName)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the environment secrets");
             Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(EnvironmentVariableTarget), target),
                 $"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
 
-            return builder.AddProvider(new EnvironmentVariableSecretProvider(target, prefix), configureOptions);
+            return builder.AddProvider(new EnvironmentVariableSecretProvider(target, prefix), options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
         }
 
         /// <summary>
@@ -69,8 +74,9 @@ namespace Microsoft.Extensions.Hosting
             Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the configuration secrets");
+            Guard.NotNull(configuration, nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
 
-            return AddConfiguration(builder, configuration, options => options.MutateSecretName = mutateSecretName);
+            return AddConfiguration(builder, configuration, name: null, mutateSecretName: mutateSecretName);
         }
 
         /// <summary>
@@ -78,16 +84,23 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
-        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddConfiguration(
             this SecretStoreBuilder builder,
             IConfiguration configuration,
-            Action<SecretProviderOptions> configureOptions)
+            string name,
+            Func<string, string> mutateSecretName)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the configuration secrets");
+            Guard.NotNull(configuration, nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
 
-            return builder.AddProvider(new ConfigurationSecretProvider(configuration), configureOptions);
+            return builder.AddProvider(new ConfigurationSecretProvider(configuration), options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
         }
     }
 }

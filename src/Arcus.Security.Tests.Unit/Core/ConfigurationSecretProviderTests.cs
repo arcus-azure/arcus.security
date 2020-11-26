@@ -43,7 +43,7 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
-        public async Task ConfigureSecretStore_AddConfigurationithOptions_UsesIConfiguration()
+        public async Task ConfigureSecretStore_AddConfigurationWithOptions_UsesIConfiguration()
         {
             // Arrange
             string secretKey = $"MySecret-{Guid.NewGuid()}";
@@ -61,7 +61,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddConfiguration(config, options => options.Name = "Some name");
+                stores.AddConfiguration(config, name: "Some name", mutateSecretName: null);
             });
 
             // Assert
@@ -97,7 +97,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddConfiguration(config, options => options.Name = "Some name");
+                stores.AddConfiguration(config, name: "Some name", mutateSecretName: null);
             });
 
             // Assert
@@ -146,7 +146,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddConfiguration(config, options => options.MutateSecretName = name => name.Replace(".", ":"));
+                stores.AddConfiguration(config, mutateSecretName: name => name.Replace(".", ":"), name: null);
             });
 
             // Assert
@@ -193,7 +193,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddConfiguration(config, options => options.MutateSecretName = name => name.Replace(":", "."));
+                stores.AddConfiguration(config, mutateSecretName: name => name.Replace(":", "."), name: null);
             });
 
             // Assert
@@ -223,7 +223,10 @@ namespace Arcus.Security.Tests.Unit.Core
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddConfiguration(configuration: null, configureOptions: options => { }));
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddConfiguration(configuration: null, name: "Some name", mutateSecretName: name => name);
+            });
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
