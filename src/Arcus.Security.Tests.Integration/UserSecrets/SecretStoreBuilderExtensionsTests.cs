@@ -67,7 +67,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var hostBuilder = new HostBuilder();
 
             // Act
-            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets(TestSecretsId, options => options.Name = "Some name"));
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets(TestSecretsId, name: "Some name", mutateSecretName: null));
 
             // Assert
             IHost host = hostBuilder.Build();
@@ -113,7 +113,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets(userSecretId, options => options.Name = "Some name");
+                stores.AddUserSecrets(userSecretId, name: "Some name", mutateSecretName: null);
             });
 
             // Assert
@@ -161,7 +161,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets(TestSecretsId, options => options.MutateSecretName = secretName => secretName.ToLower());
+                stores.AddUserSecrets(TestSecretsId, mutateSecretName: secretName => secretName.ToLower());
             });
 
             // Assert
@@ -209,7 +209,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets(TestSecretsId, options => options.MutateSecretName = secretName => secretName.Replace(".", ":"));
+                stores.AddUserSecrets(TestSecretsId, mutateSecretName: secretName => secretName.Replace(".", ":"));
             });
 
             // Assert
@@ -321,7 +321,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets(assembly, options => options.MutateSecretName = secretName => secretName.ToLower());
+                stores.AddUserSecrets(assembly, mutateSecretName: secretName => secretName.ToLower());
             });
 
             // Assert
@@ -391,7 +391,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(options => options.Name = "Some name");
+                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(name: "Some name", mutateSecretName: null);
             });
 
             // Assert
@@ -477,7 +477,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(options => options.MutateSecretName = secretName => secretName.ToLower());
+                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(mutateSecretName: secretName => secretName.ToLower());
             });
 
             // Assert
@@ -525,7 +525,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(options => options.MutateSecretName = secretName => secretName.Replace(".", ":"));
+                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(mutateSecretName: secretName => secretName.Replace(".", ":"));
             });
 
             // Assert

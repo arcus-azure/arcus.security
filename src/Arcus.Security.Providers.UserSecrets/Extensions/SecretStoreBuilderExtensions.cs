@@ -25,6 +25,7 @@ namespace Microsoft.Extensions.Hosting
         /// <typeparam name="T">The type from the assembly to search for an instance of <see cref="UserSecretsIdAttribute"/>.</typeparam>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the assembly containing <typeparamref name="T"/> does not have <see cref="UserSecretsIdAttribute"/>.</exception>
         public static SecretStoreBuilder AddUserSecrets<T>(
             this SecretStoreBuilder builder,
@@ -41,14 +42,28 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <typeparam name="T">The type from the assembly to search for an instance of <see cref="UserSecretsIdAttribute"/>.</typeparam>
         /// <param name="builder">The builder to create the secret store.</param>
-        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <param name="name">The unique name to register this UserSecrets provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the assembly containing <typeparamref name="T"/> does not have <see cref="UserSecretsIdAttribute"/>.</exception>
         public static SecretStoreBuilder AddUserSecrets<T>(
             this SecretStoreBuilder builder,
-            Action<SecretProviderOptions> configureOptions) where T : class
+            string name,
+            Func<string, string> mutateSecretName) where T : class
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
 
+            return AddUserSecrets<T>(builder, options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
+        }
+
+        private static SecretStoreBuilder AddUserSecrets<T>(
+            SecretStoreBuilder builder,
+            Action<SecretProviderOptions> configureOptions)
+        {
             Assembly assembly = typeof(T).GetTypeInfo().Assembly;
             return AddUserSecrets(builder, assembly, configureOptions);
         }
@@ -61,6 +76,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="assembly">The assembly with the <see cref="UserSecretsIdAttribute" />.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="assembly"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when <paramref name="assembly"/> does not have a valid <see cref="UserSecretsIdAttribute"/>.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, Func<string, string> mutateSecretName = null)
         {
@@ -77,13 +93,28 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="assembly">The assembly with the <see cref="UserSecretsIdAttribute" />.</param>
-        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <param name="name">The unique name to register this UserSecrets provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="assembly"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when <paramref name="assembly"/> does not have a valid <see cref="UserSecretsIdAttribute"/>.</exception>
-        public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, Action<SecretProviderOptions> configureOptions)
+        public static SecretStoreBuilder AddUserSecrets(
+            this SecretStoreBuilder builder,
+            Assembly assembly,
+            string name,
+            Func<string, string> mutateSecretName)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
             Guard.NotNull(assembly, nameof(assembly), "Requires an assembly to retrieve the user secrets ID which locates the local user secrets");
 
+            return AddUserSecrets(builder, assembly, options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
+        }
+
+        private static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, Action<SecretProviderOptions> configureOptions)
+        {
             string userSecretsId = GetUserSecretsIdFromTypeAssembly(assembly);
             return AddUserSecrets(builder, userSecretsId, configureOptions);
         }
@@ -125,14 +156,28 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="userSecretsId">The user secrets ID.</param>
-        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <param name="name">The unique name to register this UserSecrets provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="userSecretsId"/> is blank.</exception>
-        public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, string userSecretsId, Action<SecretProviderOptions> configureOptions)
+        public static SecretStoreBuilder AddUserSecrets(
+            this SecretStoreBuilder builder,
+            string userSecretsId,
+            string name,
+            Func<string, string> mutateSecretName)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
             Guard.NotNullOrWhitespace(userSecretsId, nameof(userSecretsId), "Requires a non-blank user secrets ID to locate the user secrets");
 
+            return AddUserSecrets(builder, userSecretsId, options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
+        }
+
+        private static SecretStoreBuilder AddUserSecrets(SecretStoreBuilder builder, string userSecretsId, Action<SecretProviderOptions> configureOptions)
+        {
             string directoryPath = GetUserSecretsDirectoryPath(userSecretsId);
             JsonConfigurationSource source = CreateJsonFileSource(directoryPath);
 
