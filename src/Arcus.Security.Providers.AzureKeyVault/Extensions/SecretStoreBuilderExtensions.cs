@@ -207,7 +207,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="certificate">The certificate that is used as credential.</param>
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
         /// <param name="configureOptions">The optional additional options to configure the Azure Key Vault secret source.</param>
-        /// <param name="name">The unique name to register this Configuration provider in the secret store.</param>
+        /// <param name="name">The unique name to register this Azure Key Vault provider in the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> or <paramref name="clientId"/> is blank.</exception>
