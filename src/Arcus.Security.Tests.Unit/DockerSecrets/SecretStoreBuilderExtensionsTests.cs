@@ -33,7 +33,7 @@ namespace Arcus.Security.Tests.Unit.DockerSecrets
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddDockerSecrets(directoryPath, options => options.Name = "Some name");
+                stores.AddDockerSecrets(directoryPath, name: "Some name", mutateSecretName: null);
             });
 
             // Assert

@@ -128,7 +128,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     stores.AddHashiCorpVaultWithUserPass(
                         server.ListenAddress.ToString(), userName, password, secretPath,
                         configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint, 
-                        configureSecretProviderOptions: options => options.MutateSecretName = secretName => secretName.Remove(0, secretNamePrefix.Length));
+                        mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length),
+                        name: null);
                 });
 
                 // Assert
@@ -163,7 +164,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     stores.AddHashiCorpVaultWithUserPass(
                         server.ListenAddress.ToString(), userName, password, secretPath,
                         configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint,
-                        configureSecretProviderOptions: options => options.MutateSecretName = secretName =>  "Test-" + secretName);
+                        mutateSecretName: secretName =>  "Test-" + secretName,
+                        name: null);
                 });
 
                 // Assert
@@ -199,7 +201,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 {
                     stores.AddHashiCorpVault(settings, secretPath,
                         options => options.KeyValueMountPoint = DefaultDevMountPoint, 
-                        configureSecretProviderOptions: options => options.MutateSecretName = secretName => secretName.Remove(0, secretNamePrefix.Length));
+                        mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length),
+                        name: null);
                 });
 
                 // Assert
@@ -236,7 +239,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 {
                     stores.AddHashiCorpVault(settings, secretPath, 
                         configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint,
-                        configureSecretProviderOptions: options => options.MutateSecretName = secretName => "Test-" + secretName);
+                        mutateSecretName: secretName => "Test-" + secretName,
+                        name: null);
                 });
 
                 // Assert

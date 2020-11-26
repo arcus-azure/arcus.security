@@ -39,7 +39,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
         /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
-        /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
+        /// <param name="name">The unique name to register this Environment Variables provider in the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
@@ -84,7 +84,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
-        /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
+        /// <param name="name">The unique name to register this Configuration provider in the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddConfiguration(

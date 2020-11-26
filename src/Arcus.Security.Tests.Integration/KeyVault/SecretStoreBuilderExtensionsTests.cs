@@ -600,7 +600,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -632,7 +632,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey,
-                    configureOptions: options => options.TrackDependency = trackDependency);
+                    configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -664,7 +664,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, configureOptions: null, name: null, mutateSecretName: null);
             });
             
             // Assert
@@ -693,7 +693,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey,
-                    configureOptions: options => options.TrackDependency = trackDependency);
+                    configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
             });
             
             // Assert
@@ -723,7 +723,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
                     keyVaultUri, tenantId, applicationId, clientKey, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => secretName.Remove(0, 5));
+                    mutateSecretName: secretName => secretName.Remove(0, 5),
+                    name: null,
+                    configureOptions: null);
             });
 
             // Assert
@@ -753,7 +755,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
                     keyVaultUri, tenantId, applicationId, clientKey, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => "SOMETHING-WRONG-" + secretName);
+                    mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -779,7 +783,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true);
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -807,7 +811,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true);
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -834,7 +838,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
                     keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => secretName.Remove(0, 5));
+                    mutateSecretName: secretName => secretName.Remove(0, 5),
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -864,7 +870,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
                     keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => "SOMETHING-WRONG-" + secretName);
+                    mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -888,7 +896,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId));
+            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
@@ -921,8 +929,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.UseSerilog(Logger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId,
-                configureOptions: options => options.TrackDependency = trackDependency));
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId, configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
+            });
 
             // Assert
             using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
@@ -958,7 +968,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
                     keyVaultUri, clientId, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => secretName.Remove(0, 5));
+                    mutateSecretName: secretName => secretName.Remove(0, 5),
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -993,7 +1005,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
                     keyVaultUri, clientId, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => "SOMETHING-WRONG-" + secretName);
+                    mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -1030,7 +1044,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 stores.AddAzureKeyVaultWithManagedIdentity(
                     keyVaultUri, clientId,
                     configureOptions: options => options.TrackDependency = trackDependency,
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => "SOMETHING-WRONG-" + secretName);
+                    mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
+                    name: null);
             });
 
             // Assert
@@ -1065,7 +1080,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration, clientId);
+                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration, clientId, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -1100,7 +1115,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration);
+                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -1134,7 +1149,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
                     keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => secretName.Remove(0, 5));
+                    mutateSecretName: secretName => secretName.Remove(0, 5),
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -1171,7 +1188,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
                     keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, 
-                    configureSecretProviderOptions: options => options.MutateSecretName = secretName => "SOMETHING-WRONG-" + secretName);
+                    mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
+                    configureOptions: null,
+                    name: null);
             });
 
             // Assert
@@ -1199,7 +1218,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, "wrong-app-id", "wrong-access-key");
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, "wrong-app-id", "wrong-access-key", configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -1225,7 +1244,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert

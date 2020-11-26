@@ -58,10 +58,11 @@ public class Program
 
                         // Adding the Azure Key Vault secret provider, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `ServicePrincipal:ClientKey` it will be changed to `ServicePrincipal-ClientKey`.
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, configureSecretProviderOptions: options => 
-                        {
-                            options.MutateSecretName = secretName => secretName.Replace(":", "-");
-                        });
+                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, mutateSecretName: secretName => secretName.Replace(":", "-"));
+
+                        // Providing an unique name to this secret provider so it can be looked up later.
+                       // See: "Retrieve a specific secret provider from the secret store"
+                       builder.AddAzureKeyVaultWithManagedIdentity(..., name: "AzureKeyVault.ManagedIdentity");
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
