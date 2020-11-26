@@ -55,10 +55,10 @@ Normally, you inject the `ISecretProvider` in your application service and acces
    {
        public class OrderController(ISecretStore secretStore)
        {
-            // Gets the `ISecretProvider` with the matched name.
-            ISecretProvider secretprovider = secretStore.GetProvider("get/set");
+            // Gets the `ISecretProvider` with the matched name (with either using the `ISecretProvider` as return type or your own generic type).
+            var secretprovider = secretStore.GetProvider<GetAndSetSecretProvider>("get/set");
 
-            // Gets the `ICachedSecretProvider` with the matched name.
+            // Gets the `ICachedSecretProvider` with the matched name (with either using the `ICachedSecretProvider` as return type or your own generic type).
             // Mark that this only works when the secret provider was regisered as a cached secret provider.
             ICachedSecretProvider cachedSecretProvider = secretStore.GetCachedProvider("get/set");
        }
