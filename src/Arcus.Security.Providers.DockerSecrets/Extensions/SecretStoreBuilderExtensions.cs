@@ -24,7 +24,7 @@ namespace Microsoft.Extensions.Hosting
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Docker secrets to");
             Guard.NotNullOrWhitespace(directoryPath, nameof(directoryPath), "Requires a non-blank directory path to locate the Docker secrets");
 
-            return AddDockerSecrets(builder, directoryPath, options => options.MutateSecretName = mutateSecretName);
+            return AddDockerSecrets(builder, directoryPath, name: null, mutateSecretName: mutateSecretName);
         }
 
         /// <summary>
@@ -32,18 +32,24 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to add the Docker secrets provider to.</param>
         /// <param name="directoryPath">The path inside the container where the Docker secrets are located.</param>
-        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c></exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank</exception>
         public static SecretStoreBuilder AddDockerSecrets(
             this SecretStoreBuilder builder, 
             string directoryPath, 
-            Action<SecretProviderOptions> configureOptions)
+            string name,
+            Func<string, string> mutateSecretName)
         {
             Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Docker secrets to");
             Guard.NotNullOrWhitespace(directoryPath, nameof(directoryPath), "Requires a non-blank directory path to locate the Docker secrets");
 
-            return builder.AddProvider(new DockerSecretsSecretProvider(directoryPath), configureOptions);
+            return builder.AddProvider(new DockerSecretsSecretProvider(directoryPath), options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
         }
     }
 }
