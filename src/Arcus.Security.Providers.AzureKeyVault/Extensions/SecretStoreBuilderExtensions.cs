@@ -533,7 +533,7 @@ namespace Microsoft.Extensions.Hosting
                     return keyVaultSecretProvider;
                 }
                 
-                return new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
+                return new KeyVaultCachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
             }, mutateSecretName);
         }
 
@@ -628,7 +628,7 @@ namespace Microsoft.Extensions.Hosting
                     return keyVaultSecretProvider;
                 }
 
-                var cachedSecretProvider = new CachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
+                var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
                 return cachedSecretProvider;
             }, mutateSecretName);
         }

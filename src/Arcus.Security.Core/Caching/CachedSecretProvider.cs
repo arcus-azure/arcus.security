@@ -13,7 +13,6 @@ namespace Arcus.Security.Core.Caching
     public class CachedSecretProvider : ICachedSecretProvider
     {
         private readonly ISecretProvider _secretProvider;
-        private readonly IMemoryCache _memoryCache;
         private readonly ICacheConfiguration _cacheConfiguration;
 
         /// <summary>
@@ -30,8 +29,9 @@ namespace Arcus.Security.Core.Caching
             Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration));
 
             _secretProvider = secretProvider;
-            _memoryCache = memoryCache;
             _cacheConfiguration = cacheConfiguration;
+            
+            MemoryCache = memoryCache;
         }
 
         /// <inheritdoc />
@@ -51,6 +51,11 @@ namespace Arcus.Security.Core.Caching
             this(secretProvider, new CacheConfiguration(), new MemoryCache(new MemoryCacheOptions()))
         {
         }
+
+        /// <summary>
+        /// Gets the in-memory cache where the cached secrets are stored.
+        /// </summary>
+        protected IMemoryCache MemoryCache { get; }
 
         /// <summary>
         /// Gets the cache-configuration for this instance.
@@ -110,7 +115,7 @@ namespace Arcus.Security.Core.Caching
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
             // Look-up the cached secret
-            if (ignoreCache == false && _memoryCache.TryGetValue(secretName, out Secret cachedSecret))
+            if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret cachedSecret))
             {
                 return cachedSecret;
             }
@@ -125,7 +130,7 @@ namespace Arcus.Security.Core.Caching
                 .SetSlidingExpiration(_cacheConfiguration.Duration);
 
             // Save data in cache.
-            _memoryCache.Set(secretName, secret, cacheEntryOptions);
+            MemoryCache.Set(secretName, secret, cacheEntryOptions);
 
             return secret;
         }
@@ -139,7 +144,7 @@ namespace Arcus.Security.Core.Caching
         {
             Guard.NotNullOrEmpty(secretName, nameof(secretName), "Cannot invalidate a cached secret with an empty name");
 
-            _memoryCache.Remove(secretName);
+            MemoryCache.Remove(secretName);
             return Task.CompletedTask;
         }
     }
