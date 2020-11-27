@@ -24,9 +24,11 @@ namespace Arcus.Security.Core
             get => _name;
             set
             {
-                 Guard.For<ArgumentException>(
-                     () => value != null && String.IsNullOrWhiteSpace(value),
-                     "Requires a non-blank value for the name of the secret provider to be registered in the secret store"););
+                Guard.For<ArgumentException>(
+                    () => value != null && String.IsNullOrWhiteSpace(value),
+                    "Requires a non-blank value for the name of the secret provider to be registered in the secret store");
+                
+                _name = value;
             }
         }
     }
