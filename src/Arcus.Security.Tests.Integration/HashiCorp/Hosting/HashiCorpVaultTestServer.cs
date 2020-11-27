@@ -304,11 +304,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             return Policy.Timeout(TimeSpan.FromSeconds(timeoutInSeconds))
                          .Wrap(Policy.Handle<Exception>()
-                                     .WaitAndRetryForever(index =>
-                                     {
-                                         _logger.LogTrace("Retry after {Seconds} seconds the disposing action", retryIntervalInSeconds);
-                                         return TimeSpan.FromSeconds(retryIntervalInSeconds);
-                                     }))
+                                     .WaitAndRetryForever(index => TimeSpan.FromSeconds(retryIntervalInSeconds)))
                          .ExecuteAndCapture(action);
         }
     }

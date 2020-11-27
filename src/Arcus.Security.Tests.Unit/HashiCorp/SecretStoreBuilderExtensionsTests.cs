@@ -153,7 +153,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithKubernetes("https://vault.uri:456", "role name", "jwt", "secret/path", secretEngineVersion);
+                stores.AddHashiCorpVaultWithKubernetes("https://vault.uri:456", "role name", "jwt", "secret/path", options => options.KeyValueVersion = secretEngineVersion);
             });
 
             // Assert
@@ -170,7 +170,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", "password", "secret/path", secretEngineVersion);
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", "password", "secret/path", options => options.KeyValueVersion = secretEngineVersion);
             });
 
             // Assert
@@ -188,7 +188,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVault(settings, secretPath: "secret/path", keyValueVersion: secretEngineVersion);
+                stores.AddHashiCorpVault(settings, secretPath: "secret/path", options => options.KeyValueVersion = secretEngineVersion);
             });
 
             // Assert
@@ -262,8 +262,11 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
                     "username",
                     "password",
                     "secret/path",
-                    VaultKeyValueSecretEngineVersion.V2,
-                    userPassMountPoint: userPassMountPoint);
+                    options =>
+                    {
+                        options.KeyValueVersion = VaultKeyValueSecretEngineVersion.V2;
+                        options.UserPassMountPoint = userPassMountPoint;
+                    });
             });
 
             // Assert
@@ -285,8 +288,11 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
                     "rolename",
                     "jwt",
                     "secret/path",
-                    VaultKeyValueSecretEngineVersion.V2,
-                    kubernetesMountPoint: kubernetesMountPoint);
+                    options =>
+                    {
+                        options.KeyValueVersion = VaultKeyValueSecretEngineVersion.V2;
+                        options.KubernetesMountPoint = kubernetesMountPoint;
+                    });
             });
 
             // Assert
@@ -308,8 +314,11 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
                     "username",
                     "password",
                     "secret/path",
-                    VaultKeyValueSecretEngineVersion.V2,
-                    keyValueMountPoint: keyValueMountPoint);
+                    options =>
+                    {
+                        options.KeyValueVersion = VaultKeyValueSecretEngineVersion.V2;
+                        options.KeyValueMountPoint = keyValueMountPoint;
+                    });
             });
 
             // Assert
@@ -331,8 +340,11 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
                     "rolename",
                     "jwt",
                     "secret/path",
-                    VaultKeyValueSecretEngineVersion.V2,
-                    keyValueMountPoint: keyValueMountPoint);
+                    options =>
+                    {
+                        options.KeyValueVersion = VaultKeyValueSecretEngineVersion.V2;
+                        options.KeyValueMountPoint = keyValueMountPoint;
+                    });
             });
 
             // Assert
@@ -353,8 +365,11 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
                 stores.AddHashiCorpVault(
                     settings,
                     "secret/path",
-                    VaultKeyValueSecretEngineVersion.V2,
-                    keyValueMountPoint: keyValueMountPoint);
+                    options =>
+                    {
+                        options.KeyValueVersion = VaultKeyValueSecretEngineVersion.V2;
+                        options.KeyValueMountPoint = keyValueMountPoint;
+                    });
             });
 
             // Assert
