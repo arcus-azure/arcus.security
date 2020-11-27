@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arcus.Security.Core;
 using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Unit.KeyVault.Doubles;
@@ -110,7 +111,22 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             var cachedProvider = new KeyVaultCachedSecretProvider(stubProvider);
 
             // Act / Assert
-            await Assert.ThrowsAsync<FormatException>(() => cachedProvider.StoreSecretAsync(secretName, secretValue: "Some value"));
+            await Assert.ThrowsAsync<FormatException>(() => cachedProvider.StoreSecretAsync(secretName, secretValue: "Some value", ignoreCache: false));
+        }
+
+        [Theory]
+        [ClassData(typeof(ValidSecretNames))]
+        public async Task StoreSecret_WithValidSecretName_Succeeds(string secretName)
+        {
+            // Arrange
+            var stubProvider = new SpyKeyVaultSecretProvider(Mock.Of<TokenCredential>(), new KeyVaultConfiguration("https://some-key.vault.azure.net"));
+            var cachedProvider = new KeyVaultCachedSecretProvider(stubProvider);
+
+            // Act
+            Secret secret = await cachedProvider.StoreSecretAsync(secretName, "Some value", ignoreCache: false);
+
+            // Assert
+            Assert.NotNull(secret);
         }
     }
 }

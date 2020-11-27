@@ -100,7 +100,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
         }
 
         [Theory]
-        [ClassData(typeof(InvalidSecretNames))]
+        [ClassData(typeof(ValidSecretNames))]
         public async Task KeyVaultSecretProvider_GetsRawSecretWithCorrectFormat(string secretName)
         {
             // Arrange
