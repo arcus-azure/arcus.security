@@ -31,7 +31,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestSecretName");
+            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 authentication: new ServicePrincipalAuthentication(applicationId, clientKey), 
@@ -54,7 +54,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestSecretName");
+            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 tokenCredential: new ClientSecretCredential(tenantId, applicationId, clientKey), 
@@ -118,7 +118,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestSecretName");
+            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 authentication: new ManagedServiceIdentityAuthentication(connectionString: connectionString),
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
@@ -140,7 +140,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string tenantId = Configuration.GetTenantId();
             string clientId = Configuration.GetServicePrincipalClientId();
             string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestSecretName");
+            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
             using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
@@ -212,7 +212,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestSecretName");
+            var secretName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             var keyVaultSecretProvider = new KeyVaultSecretProvider(
                 authentication: new ManagedServiceIdentityAuthentication(),
                 vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
