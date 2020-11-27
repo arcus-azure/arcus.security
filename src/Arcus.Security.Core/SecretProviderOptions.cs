@@ -8,7 +8,7 @@ namespace Arcus.Security.Core
     /// </summary>
     public class SecretProviderOptions
     {
-        private readonly string _name;
+        private string _name;
 
         /// <summary>
         /// Gets or sets the function to mutate the secret name before looking it up.
