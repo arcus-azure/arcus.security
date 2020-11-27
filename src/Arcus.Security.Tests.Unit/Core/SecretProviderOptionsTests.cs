@@ -7,7 +7,9 @@ namespace Arcus.Security.Tests.Unit.Core
     public class SecretProviderOptionsTests
     {
         [Theory]
-        [ClassData(typeof(Blanks))]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData("       ")]
         public void SetName_WithoutValue_Fails(string name)
         {
             // Arrange
