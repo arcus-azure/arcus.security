@@ -278,28 +278,5 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.Equal(secret.Expires, fetchedSecret.Expires);
             }
         }
-
-        [Fact]
-        public async Task KeyVaultSecretProvider__StoreSecret_NonExistingSecret_ThrowsSecretNotFoundException()
-        {
-            // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var notExistingSecretName = $"secret-{Guid.NewGuid():N}";
-            var secretValue = Guid.NewGuid().ToString();
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ManagedServiceIdentityAuthentication(),
-                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
-
-            using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
-            {
-                // Assert
-                await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
-                {
-                    // Act
-                    await keyVaultSecretProvider.StoreSecretAsync(notExistingSecretName, secretValue);
-                });
-            }
-        }
     }
 }
