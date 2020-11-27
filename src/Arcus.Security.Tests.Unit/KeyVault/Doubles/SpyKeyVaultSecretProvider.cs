@@ -16,29 +16,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
     public class SpyKeyVaultSecretProvider : KeyVaultSecretProvider
     {
         /// <summary>
-        ///     Creates an Azure Key Vault Secret provider, connected to a specific Azure Key Vault
-        /// </summary>
-        /// <param name="authentication">The requested authentication type for connecting to the Azure Key Vault instance</param>
-        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
-        /// <exception cref="System.ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
-        /// <exception cref="System.ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        public SpyKeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration) : base(authentication, vaultConfiguration)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
-        /// </summary>
-        /// <param name="authentication">.The requested authentication type for connecting to the Azure Key Vault instance.</param>
-        /// <param name="vaultConfiguration">The configuration related to the Azure Key Vault instance to use.</param>
-        /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
-        /// <exception cref="System.ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
-        /// <exception cref="System.ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        public SpyKeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger) : base(authentication, vaultConfiguration, logger)
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
         /// </summary>
         /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance</param>
@@ -46,18 +23,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         /// <exception cref="System.ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         public SpyKeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration) : base(tokenCredential, vaultConfiguration)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
-        /// </summary>
-        /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance</param>
-        /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
-        /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
-        /// <exception cref="System.ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
-        /// <exception cref="System.ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        public SpyKeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, ILogger<KeyVaultSecretProvider> logger) : base(tokenCredential, vaultConfiguration, logger)
         {
         }
 
