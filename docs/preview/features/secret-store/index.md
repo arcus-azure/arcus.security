@@ -58,8 +58,7 @@ public class Program
                     builder.AddConfiguration(config);
 #endif
                     var keyVaultName = config["KeyVault_Name"];
-                    builder.AddEnvironmentVariables()
-                            .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+                    builder.AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
                 })
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
@@ -77,6 +76,31 @@ public class HealthController : ControllerBase
     }
 }
 ```
+
+### Using secret store outside .NET hosting
+The secret store is also available directly on the `IServiceCollection` for applications that run outside the .NET hosting but still want to use the Arcus secret store.
+
+Just like you would register the secret store on the `HostBuilder`, you can use the `.AddSecretStore` extension to register the secret store:
+
+```csharp
+IServiceCollection services = ...
+IConfiguration configuration = ...
+
+services.AddSecretStore(stores =>
+{
+    stores.AddEnvironmentVariables();
+    
+    #if DEBUG
+    builder.AddConfiguration(configuration);
+    #endif
+
+    var keyVaultName = configuration["KeyVault_Name"];
+    stores.AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+});
+```
+
+When the dependency injection container injects the dependent services in the rest of your application, 
+the secret store will provide with you an `ISecretProvider` instance that contains the registered secret providers.
 
 ## Using secret store within Azure Functions
 

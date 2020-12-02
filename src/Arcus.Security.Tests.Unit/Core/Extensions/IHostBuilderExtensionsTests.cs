@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Arcus.Security.Tests.Unit.Core
+namespace Arcus.Security.Tests.Unit.Core.Extensions
 {
     public class IHostBuilderExtensionsTests
     {

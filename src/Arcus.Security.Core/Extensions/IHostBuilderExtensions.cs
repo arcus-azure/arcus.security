@@ -17,10 +17,11 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="hostBuilder">The builder to append the secret store configuration to.</param>
         /// <param name="configureSecretStores">The customization of the different target secret store sources to include in the final <see cref="ISecretProvider"/>.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="hostBuilder"/> or <paramref name="configureSecretStores"/> is <c>null</c>.</exception>
         public static IHostBuilder ConfigureSecretStore(this IHostBuilder hostBuilder, Action<IConfiguration, SecretStoreBuilder> configureSecretStores)
         {
-            Guard.NotNull(hostBuilder, nameof(hostBuilder));
-            Guard.NotNull(configureSecretStores, nameof(configureSecretStores));
+            Guard.NotNull(hostBuilder, nameof(hostBuilder), "Requires a host builder to add the secret store");
+            Guard.NotNull(configureSecretStores, nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
 
             return ConfigureSecretStore(hostBuilder, (context, config, secretStores) => configureSecretStores(config, secretStores));
         }
@@ -30,10 +31,11 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="hostBuilder">The builder to append the secret store configuration to.</param>
         /// <param name="configureSecretStores">The customization of the different target secret store sources to include in the final <see cref="ISecretProvider"/>.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="hostBuilder"/> or <paramref name="configureSecretStores"/> is <c>null</c>.</exception>
         public static IHostBuilder ConfigureSecretStore(this IHostBuilder hostBuilder, Action<HostBuilderContext, IConfiguration, SecretStoreBuilder> configureSecretStores)
         {
-            Guard.NotNull(hostBuilder, nameof(hostBuilder));
-            Guard.NotNull(configureSecretStores, nameof(configureSecretStores));
+            Guard.NotNull(hostBuilder, nameof(hostBuilder), "Requires a host builder to add the secret store");
+            Guard.NotNull(configureSecretStores, nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
             
             return hostBuilder.ConfigureServices((context, services) =>
             {
