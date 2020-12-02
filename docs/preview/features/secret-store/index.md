@@ -86,6 +86,9 @@ Just like you would register the secret store on the `HostBuilder`, you can use 
 IServiceCollection services = ...
 IConfiguration configuration = ...
 
+// Mark: the secret store uses logging, so make sure that you have set the logging beforehand.
+service.AddLogging(...);
+
 services.AddSecretStore(stores =>
 {
     stores.AddEnvironmentVariables();

@@ -35,7 +35,7 @@ namespace Arcus.Security.Core
         public CompositeSecretProvider(
             IEnumerable<SecretStoreSource> secretProviderSources, 
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
-            IOptions<SecretStoreAuditingOptions> auditingOptions,
+            SecretStoreAuditingOptions auditingOptions,
             ILogger<CompositeSecretProvider> logger)
         {
             Guard.NotNull(secretProviderSources, nameof(secretProviderSources), "Requires a series of registered secret provider registrations to retrieve secrets");
@@ -43,11 +43,10 @@ namespace Arcus.Security.Core
             Guard.NotNull(auditingOptions, nameof(auditingOptions), "Requires a set of options to configure the auditing of the secret store");
             Guard.For<ArgumentException>(() => secretProviderSources.Any(source => source is null), "Requires all registered secret provider registrations to be not 'null'");
             Guard.For<ArgumentException>(() => criticalExceptionFilters.Any(filter => filter is null), "Requires all registered critical exception filters to be not 'null'");
-            Guard.NotNull<SecretStoreAuditingOptions, ArgumentException>(auditingOptions.Value, "Requires a value for the set of options to configure the auditing of the secret store");
 
             _secretProviders = secretProviderSources;
             _criticalExceptionFilters = criticalExceptionFilters;
-            _auditingOptions = auditingOptions.Value;
+            _auditingOptions = auditingOptions;
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
         }
 

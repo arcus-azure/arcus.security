@@ -29,7 +29,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             string secretValue3 = $"secret-{Guid.NewGuid()}";
             var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
 
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores =>
@@ -63,7 +63,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             string secretValue3 = $"secret-{Guid.NewGuid()}";
             var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
 
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores =>
@@ -88,7 +88,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var secretKey = "Arcus.KeyVault.Secret";
             var expected = Guid.NewGuid().ToString();
             var stubProvider = new InMemoryCachedSecretProvider((secretKey, expected));
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores =>
@@ -110,7 +110,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider1 = new SaboteurSecretProvider(new CryptographicException("Some cryptographic failure"));
             var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("Some authentication failure"));
 
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores =>
@@ -139,7 +139,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider1 = new SaboteurSecretProvider(new AuthenticationException(expectedMessage));
             var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("This is a different message"));
 
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores =>
@@ -164,7 +164,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             const string secretKey = "MySecret";
             var stubProvider = new InMemorySecretProvider((secretKey, $"secret-{Guid.NewGuid()}"));
 
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores => stores.AddProvider(stubProvider));
@@ -179,42 +179,37 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         public void AddSecretStore_WithoutExceptionFilter_Throws()
         {
             // Arrange
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
-            // Act
-            services.AddSecretStore(stores =>
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(() => services.AddSecretStore(stores =>
             {
                 stores.AddCriticalException<AuthenticationException>(exceptionFilter: null);
-            });
-
-            // Assert
-            Assert.ThrowsAny<ArgumentException>(() => services.BuildServiceProvider());
+            }));
         }
 
         [Fact]
         public void AddSecretStore_WithoutSecretProvider_Fails()
         {
             // Arrange
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
-            // Act
-            services.AddSecretStore(stores => stores.AddProvider(secretProvider: null));
-
-            // Assert
-            Assert.ThrowsAny<InvalidOperationException>(() => services.BuildServiceProvider());
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentNullException>(() => services.AddSecretStore(stores => stores.AddProvider(secretProvider: null)));
         }
 
         [Fact]
         public void AddSecretStore_WithoutLazySecretProvider_Fails()
         {
             // Arrange
-            var services = new ServiceCollection();
+            var services = new ServiceCollection().AddLogging();
 
             // Act
             services.AddSecretStore(stores => stores.AddProvider(serviceProvider => null));
 
             // Assert
-            Assert.ThrowsAny<InvalidOperationException>(() => services.BuildServiceProvider());
+            IServiceProvider provider = services.BuildServiceProvider();
+            Assert.ThrowsAny<InvalidOperationException>(() => provider.GetRequiredService<ISecretProvider>());
         }
         
         [Fact]

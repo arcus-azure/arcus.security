@@ -187,10 +187,8 @@ namespace Microsoft.Extensions.Hosting
                 Services.AddSingleton(filter);
             }
 
-            if (_configureAuditingOptions != null)
-            {
-                Services.Configure(_configureAuditingOptions);
-            }
+            _configureAuditingOptions?.Invoke(AuditingOptions);
+            Services.TryAddSingleton(AuditingOptions);
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
