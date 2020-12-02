@@ -2,6 +2,7 @@
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 using System;
+using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -39,9 +40,7 @@ namespace Microsoft.Extensions.Hosting
             
             return hostBuilder.ConfigureServices((context, services) =>
             {
-                var builder = new SecretStoreBuilder(services);
-                configureSecretStores(context, context.Configuration, builder);
-                builder.RegisterSecretStore();
+                services.AddSecretStore(stores => configureSecretStores(context, context.Configuration, stores));
             });
         }
     }
