@@ -57,6 +57,27 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
         }
 
         [Fact]
+        public async Task AddUserSecrets_WithUserSecretsIdWithOptions_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "MyDummySetting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets(TestSecretsId, name: "Some name", mutateSecretName: null));
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
         public async Task AddUserSecrets_WithNotFoundSecretKey_NotFoundSecret()
         {
             // Arrange
@@ -69,6 +90,31 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
 
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets(userSecretId));
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<SecretNotFoundException>(
+                () => secretProvider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task AddUserSecrets_WithNotFoundSecretKeyWithOptions_NotFoundSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "MyDummySetting";
+            const string userSecretId = "some-unknown-user-secret-id";
+            SetSecret(userSecretId, "some-unknown-secret-key", expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets(userSecretId, name: "Some name", mutateSecretName: null);
+            });
 
             // Assert
             IHost host = hostBuilder.Build();
@@ -103,6 +149,30 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
         }
 
         [Fact]
+        public async Task AddUserSecrets_WithUserSecretsIdWithOptionsMutateToLower_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "my.dummy.setting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets(TestSecretsId, mutateSecretName: secretName => secretName.ToLower());
+            });
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
         public async Task AddUserSecrets_WithUserSecretsIdWrongMutation_NotFoundSecret()
         {
             // Arrange
@@ -116,6 +186,30 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddUserSecrets(TestSecretsId, secretName => secretName.Replace(".", ":"));
+            });
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<SecretNotFoundException>(
+                () => secretProvider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task AddUserSecrets_WithUserSecretsIdWithOptionsWrongMutation_NotFoundSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "My.Dummy.Setting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets(TestSecretsId, mutateSecretName: secretName => secretName.Replace(".", ":"));
             });
 
             // Assert
@@ -214,6 +308,31 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
         }
 
         [Fact]
+        public async Task AddUserSecrets_WithAssemblyWithOptionsMutateToLower_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "my.dummy.setting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            Assembly assembly = typeof(SecretStoreBuilderExtensionsTests).Assembly;
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets(assembly, mutateSecretName: secretName => secretName.ToLower());
+            });
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
         public async Task AddUserSecret_WithAssemblyWrongMutation_NotFoundSecret()
         {
             // Arrange
@@ -250,6 +369,30 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
 
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) => stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>());
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
+        public async Task AddUserSecrets_WithGenericTypeWithOptions_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "MyDummySetting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(name: "Some name", mutateSecretName: null);
+            });
 
             // Assert
             IHost host = hostBuilder.Build();
@@ -322,6 +465,30 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
         }
 
         [Fact]
+        public async Task AddUserSecrets_WithGenericTypeWithOptionsMutateToLower_ResolvesSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "my.dummy.setting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(mutateSecretName: secretName => secretName.ToLower());
+            });
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
+            Assert.Equal(expectedValue, actualValue);
+        }
+
+        [Fact]
         public async Task AddUserSecrets_WithGenericTypeWrongMutation_NotFoundSecret()
         {
             // Arrange
@@ -335,6 +502,30 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(secretName => secretName.Replace(".", ":"));
+            });
+
+            // Assert
+            IHost host = hostBuilder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+
+            await Assert.ThrowsAsync<SecretNotFoundException>(
+                () => secretProvider.GetRawSecretAsync(secretKey));
+        }
+
+        [Fact]
+        public async Task AddUserSecrets_WithGenericTypeWithOptionsWrongMutation_NotFoundSecret()
+        {
+            // Arrange
+            var expectedValue = Guid.NewGuid().ToString();
+            const string secretKey = "My.Dummy.Setting";
+            SetSecret(TestSecretsId, secretKey, expectedValue);
+
+            var hostBuilder = new HostBuilder();
+
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddUserSecrets<SecretStoreBuilderExtensionsTests>(mutateSecretName: secretName => secretName.Replace(".", ":"));
             });
 
             // Assert

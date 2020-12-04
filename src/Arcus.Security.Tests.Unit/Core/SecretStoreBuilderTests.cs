@@ -20,6 +20,17 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
+        public void AddProvider_WithoutSecretProviderWithOptions_Throws()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var builder = new SecretStoreBuilder(services);
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.AddProvider(secretProvider: null, configureOptions: options => { }));
+        }
+
+        [Fact]
         public void AddProviderFunction_WithoutFunction_Throws()
         {
             // Arrange
@@ -28,6 +39,17 @@ namespace Arcus.Security.Tests.Unit.Core
 
             // Act / Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.AddProvider(createSecretProvider: null));
+        }
+
+        [Fact]
+        public void AddProviderFunction_WithoutFunctionWithOptions_Throws()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var builder = new SecretStoreBuilder(services);
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.AddProvider(createSecretProvider: null, configureOptions: options => { }));
         }
 
         [Fact]
