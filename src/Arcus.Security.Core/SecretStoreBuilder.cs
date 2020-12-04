@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
@@ -17,7 +18,7 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
-        private Action<SecretStoreAuditingOptions> _configureAuditingOptions;
+        private ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
@@ -199,7 +200,7 @@ namespace Microsoft.Extensions.Hosting
         {
             Guard.NotNull(configureOptions, nameof(configureOptions), "Requires a function to configure the auditing options");
 
-            _configureAuditingOptions = configureOptions;
+            _configureAuditingOptions.Add(configureOptions);
             return this;
         }
 
@@ -235,7 +236,11 @@ namespace Microsoft.Extensions.Hosting
                 Services.AddSingleton(filter);
             }
 
-            _configureAuditingOptions?.Invoke(AuditingOptions);
+            foreach (Action<SecretStoreAuditingOptions> configureAuditingOptions in _configureAuditingOptions)
+            {
+                configureAuditingOptions(AuditingOptions);
+            }
+
             Services.TryAddSingleton(AuditingOptions);
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();

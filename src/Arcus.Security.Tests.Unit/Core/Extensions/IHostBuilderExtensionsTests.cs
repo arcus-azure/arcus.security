@@ -495,6 +495,31 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         }
 
         [Fact]
+        public async Task ConfigureSecretStore_WithAuditingIncrement_LogsSecurityEvent()
+        {
+            // Arrange
+            string secretName = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));
+            var spyLogger = new InMemoryLogger();
+            var builder = new HostBuilder();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider)
+                      .WithAuditing(options => options.EmitSecurityEvents = false)
+                      .WithAuditing(options => options.EmitSecurityEvents = true);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+            await secretProvider.GetRawSecretAsync(secretName);
+            Assert.True(spyLogger.Messages.Count(msg => msg.StartsWith("Event") && msg.Contains("Security")) == 1);
+        }
+
+        [Fact]
         public void ConfigureSecretStore_WithNamedProvider_RetrievedCorrectProvider()
         {
             // Arrange
