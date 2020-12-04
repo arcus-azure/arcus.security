@@ -13,7 +13,6 @@ namespace Arcus.Security.Core.Caching
     public class CachedSecretProvider : ICachedSecretProvider
     {
         private readonly ISecretProvider _secretProvider;
-        private readonly IMemoryCache _memoryCache;
         private readonly ICacheConfiguration _cacheConfiguration;
 
         /// <summary>
@@ -30,8 +29,13 @@ namespace Arcus.Security.Core.Caching
             Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration));
 
             _secretProvider = secretProvider;
-            _memoryCache = memoryCache;
             _cacheConfiguration = cacheConfiguration;
+            
+            MemoryCache = memoryCache;
+
+            CacheEntry = new MemoryCacheEntryOptions()
+                // Keep in cache for this time, reset time if accessed.
+                .SetSlidingExpiration(Configuration.Duration);
         }
 
         /// <inheritdoc />
@@ -51,6 +55,16 @@ namespace Arcus.Security.Core.Caching
             this(secretProvider, new CacheConfiguration(), new MemoryCache(new MemoryCacheOptions()))
         {
         }
+
+        /// <summary>
+        /// Gets the in-memory cache where the cached secrets are stored.
+        /// </summary>
+        protected IMemoryCache MemoryCache { get; }
+
+        /// <summary>
+        /// Gets the options to configure the values set into the <see cref="MemoryCache"/>.
+        /// </summary>
+        protected MemoryCacheEntryOptions CacheEntry { get; }
 
         /// <summary>
         /// Gets the cache-configuration for this instance.
@@ -109,24 +123,15 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            // Look-up the cached secret
-            if (ignoreCache == false && _memoryCache.TryGetValue(secretName, out Secret cachedSecret))
+            if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret cachedSecret))
             {
                 return cachedSecret;
             }
 
-            // Read secret from provider
             Task<Secret> getSecret = _secretProvider.GetSecretAsync(secretName);
             Secret secret = getSecret == null ? null : await getSecret;
 
-            // Set cache options.
-            var cacheEntryOptions = new MemoryCacheEntryOptions()
-                // Keep in cache for this time, reset time if accessed.
-                .SetSlidingExpiration(_cacheConfiguration.Duration);
-
-            // Save data in cache.
-            _memoryCache.Set(secretName, secret, cacheEntryOptions);
-
+            MemoryCache.Set(secretName, secret, CacheEntry);
             return secret;
         }
 
@@ -139,7 +144,7 @@ namespace Arcus.Security.Core.Caching
         {
             Guard.NotNullOrEmpty(secretName, nameof(secretName), "Cannot invalidate a cached secret with an empty name");
 
-            _memoryCache.Remove(secretName);
+            MemoryCache.Remove(secretName);
             return Task.CompletedTask;
         }
     }
