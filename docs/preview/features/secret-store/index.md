@@ -83,23 +83,25 @@ The secret store is also available directly on the `IServiceCollection` for appl
 Just like you would register the secret store on the `HostBuilder`, you can use the `.AddSecretStore` extension to register the secret store:
 
 ```csharp
-IServiceCollection services = ...
-IConfiguration configuration = ...
-
-// Mark: the secret store uses logging, so make sure that you have set the logging beforehand.
-service.AddLogging(...);
-
-services.AddSecretStore(stores =>
+public void ConfigureServices(IServiceCollection services)
 {
-    stores.AddEnvironmentVariables();
-    
-    #if DEBUG
-    builder.AddConfiguration(configuration);
-    #endif
+    IConfiguration configuration = 
+        new ConfigurationBuilder()
+            .AddEnvironmentVariables()
+            .Build();
 
-    var keyVaultName = configuration["KeyVault_Name"];
-    stores.AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
-});
+    services.AddSecretStore(stores =>
+    {
+        stores.AddEnvironmentVariables();
+        
+        #if DEBUG
+        builder.AddConfiguration(configuration);
+        #endif
+    
+        var keyVaultName = configuration["KeyVault_Name"];
+        stores.AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+    });
+}
 ```
 
 When the dependency injection container injects the dependent services in the rest of your application, 

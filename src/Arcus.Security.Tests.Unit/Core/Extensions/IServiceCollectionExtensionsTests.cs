@@ -4,8 +4,10 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
+using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core.Extensions
@@ -29,7 +31,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             string secretValue3 = $"secret-{Guid.NewGuid()}";
             var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
 
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores =>
@@ -63,7 +65,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             string secretValue3 = $"secret-{Guid.NewGuid()}";
             var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
 
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores =>
@@ -88,7 +90,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var secretKey = "Arcus.KeyVault.Secret";
             var expected = Guid.NewGuid().ToString();
             var stubProvider = new InMemoryCachedSecretProvider((secretKey, expected));
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores =>
@@ -110,7 +112,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider1 = new SaboteurSecretProvider(new CryptographicException("Some cryptographic failure"));
             var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("Some authentication failure"));
 
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores =>
@@ -139,7 +141,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider1 = new SaboteurSecretProvider(new AuthenticationException(expectedMessage));
             var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("This is a different message"));
 
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores =>
@@ -164,7 +166,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             const string secretKey = "MySecret";
             var stubProvider = new InMemorySecretProvider((secretKey, $"secret-{Guid.NewGuid()}"));
 
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores => stores.AddProvider(stubProvider));
@@ -176,10 +178,31 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         }
 
         [Fact]
+        public async Task AddSecretStore_WithLogger_UsesLogger()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var spyLogger = new SpyLogger();
+            services.AddLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            const string secretName = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));
+
+            // Act
+            services.AddSecretStore(stores => stores.AddProvider(stubProvider));
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            await secretProvider.GetRawSecretAsync(secretName);
+            Assert.True(spyLogger.IsCalled);
+        }
+
+        [Fact]
         public void AddSecretStore_WithoutExceptionFilter_Throws()
         {
             // Arrange
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act / Assert
             Assert.ThrowsAny<ArgumentException>(() => services.AddSecretStore(stores =>
@@ -192,7 +215,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         public void AddSecretStore_WithoutSecretProvider_Fails()
         {
             // Arrange
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act / Assert
             Assert.ThrowsAny<ArgumentNullException>(() => services.AddSecretStore(stores => stores.AddProvider(secretProvider: null)));
@@ -202,7 +225,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         public void AddSecretStore_WithoutLazySecretProvider_Fails()
         {
             // Arrange
-            var services = new ServiceCollection().AddLogging();
+            var services = new ServiceCollection();
 
             // Act
             services.AddSecretStore(stores => stores.AddProvider(serviceProvider => null));

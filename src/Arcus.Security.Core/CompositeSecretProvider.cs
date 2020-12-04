@@ -9,7 +9,6 @@ using GuardNet;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace Arcus.Security.Core
 {
@@ -48,6 +47,22 @@ namespace Arcus.Security.Core
             _criticalExceptionFilters = criticalExceptionFilters;
             _auditingOptions = auditingOptions;
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositeSecretProvider"/> class.
+        /// </summary>
+        /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
+        /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
+        /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> of the <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
+        public CompositeSecretProvider(
+            IEnumerable<SecretStoreSource> secretProviderSources, 
+            IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
+            SecretStoreAuditingOptions auditingOptions)
+            : this(secretProviderSources, criticalExceptionFilters, auditingOptions, NullLogger<CompositeSecretProvider>.Instance)
+        {
         }
 
         /// <summary>
