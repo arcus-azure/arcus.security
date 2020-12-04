@@ -23,6 +23,8 @@ First, the secret provider has to be registered with a unique name.
 })
 ```
 
+⚠ The name of the registered secret providers should be unique; otherwise, an exception will be thrown when you try to access the `GetProvider` or `GetCachedProvider`.
+
 ## Retrieving a named secret provider
 
 Now that the named environment variables secret provider is registered, we are able to retrieve this provider in our application.
