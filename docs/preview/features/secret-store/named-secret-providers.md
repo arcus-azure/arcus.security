@@ -46,5 +46,3 @@ Instead of injecting `ISecretProvider` in your application to access secrets, we
        }
    }
 ```
-
-> Note that the name of the registered `ISecretProvider` should be unique; otherwise and exception will be thrown when you try to access the `GetProvider` or `GetCachedProvider`.
