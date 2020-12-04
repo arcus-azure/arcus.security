@@ -58,13 +58,12 @@ public class Program
                 })
                 .ConfigureSecretStore((context, config, builder) =>
                 {
-                    builder.AddEnvironmentVariables();
 #if DEBUG
                     builder.AddConfiguration(config);
 #endif
                     var keyVaultName = config["KeyVault_Name"];
                     builder.AddEnvironmentVariables()
-                            .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+                           .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
                 })
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
@@ -82,6 +81,35 @@ public class HealthController : ControllerBase
     }
 }
 ```
+
+### Configuring secret store without .NET host builder
+The secret store is also available directly on the `IServiceCollection` for applications that run without a .NET hosting context but still want to make use of the Arcus secret store.
+
+Just like you would register the secret store on the `HostBuilder`, you can use the `.AddSecretStore` extension method to register the secret store:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    IConfiguration configuration = 
+        new ConfigurationBuilder()
+            .AddEnvironmentVariables()
+            .Build();
+
+    services.AddSecretStore(stores =>
+    {
+        stores.AddEnvironmentVariables();
+        
+        #if DEBUG
+        builder.AddConfiguration(configuration);
+        #endif
+    
+        var keyVaultName = configuration["KeyVault_Name"];
+        stores.AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+    });
+}
+```
+
+When your application wants to access a secret, all it has to do is use `ISecretProvider` which will give you access to all the registered secret providers.
 
 ## Using secret store within Azure Functions
 
