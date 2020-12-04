@@ -5,7 +5,7 @@ layout: default
 
 # Retrieve a specific secret provider from the secret store
 
-The default workings of the secret store, is that a set of secret providers are registered and the consumer gets access to all of secrets provided by `ISecretProvider`s.
+The default workings of the secret store, is that a set of secret providers are registered and the consumer gets access to all of secrets provided by using `ISecretProvider`.
 In some cases, you may want to retrieve a specific secret provider from the store. This can be because that secret provider has some functionality that the other providers doesn't have.
 
 In those cases, you can register your secret provider with a unique name. This name will be matched with the secret provider so that in a later stage, you can retrieve back your named provider.
