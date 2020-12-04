@@ -55,6 +55,11 @@ namespace Microsoft.Extensions.Hosting
         public IList<CriticalExceptionFilter> CriticalExceptionFilters { get; } = new List<CriticalExceptionFilter>();
 
         /// <summary>
+        /// Gets the configured options related to auditing during the lifetime of the secret store.
+        /// </summary>
+        internal SecretStoreAuditingOptions AuditingOptions { get; } = new SecretStoreAuditingOptions();
+
+        /// <summary>
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
         /// </summary>
         /// <param name="secretProvider">The provider which secrets are added to the secret store.</param>
