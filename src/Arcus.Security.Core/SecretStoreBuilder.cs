@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Providers;
@@ -16,7 +18,7 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
-        private Action<SecretStoreAuditingOptions> _configureAuditingOptions;
+        private ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
@@ -67,19 +69,41 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Consider using the " + nameof(AddProvider) + " overload with the " + nameof(SecretProviderOptions.MutateSecretName) + " instead")]
         public SecretStoreBuilder AddProvider(ISecretProvider secretProvider, Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to add to the secret store");
 
-            if (mutateSecretName is null)
+            return AddProvider(secretProvider, options => options.MutateSecretName = mutateSecretName);
+        }
+
+        /// <summary>
+        /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
+        /// </summary>
+        /// <param name="secretProvider">The provider which secrets are added to the secret store.</param>
+        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <returns>
+        ///     The extended secret store with the given <paramref name="secretProvider"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreBuilder AddProvider(
+            ISecretProvider secretProvider,
+            Action<SecretProviderOptions> configureOptions)
+        {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to add to the secret store");
+
+            var options = new SecretProviderOptions();
+            configureOptions?.Invoke(options);
+
+            if (options?.MutateSecretName is null)
             {
-                SecretStoreSources.Add(new SecretStoreSource(secretProvider));
+                SecretStoreSources.Add(new SecretStoreSource(secretProvider, options));
             }
             else
             {
-                SecretStoreSources.Add(CreateMutatedSecretSource(serviceProvider => secretProvider, mutateSecretName));
+                SecretStoreSources.Add(CreateMutatedSecretSource(serviceProvider => secretProvider, options));
             }
-            
+
             return this;
         }
 
@@ -92,19 +116,41 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="createSecretProvider"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Consider using the " + nameof(AddProvider) + " overload with the " + nameof(SecretProviderOptions.MutateSecretName) + " instead")]
         public SecretStoreBuilder AddProvider(
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             Func<string, string> mutateSecretName = null)
         {
             Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create a secret provider to add to the secret store");
 
-            if (mutateSecretName is null)
+            return AddProvider(createSecretProvider, options => options.MutateSecretName = mutateSecretName);
+        }
+
+        /// <summary>
+        /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
+        /// </summary>
+        /// <param name="createSecretProvider">The function to create a provider which secrets are added to the secret store.</param>
+        /// <param name="configureOptions">The function to configure the registration of the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <returns>
+        ///     The extended secret store with the given <paramref name="createSecretProvider"/> as lazy initialization.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreBuilder AddProvider(
+            Func<IServiceProvider, ISecretProvider> createSecretProvider,
+            Action<SecretProviderOptions> configureOptions)
+        {
+            Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create a secret provider to add to the secret store");
+
+            var options = new SecretProviderOptions();
+            configureOptions?.Invoke(options);
+
+            if (options?.MutateSecretName is null)
             {
-                SecretStoreSources.Add(new SecretStoreSource(createSecretProvider));
+                SecretStoreSources.Add(new SecretStoreSource(createSecretProvider, options));
             }
             else
             {
-                SecretStoreSources.Add(CreateMutatedSecretSource(createSecretProvider, mutateSecretName));
+                SecretStoreSources.Add(CreateMutatedSecretSource(createSecretProvider, options));
             }
             
             return this;
@@ -154,15 +200,18 @@ namespace Microsoft.Extensions.Hosting
         {
             Guard.NotNull(configureOptions, nameof(configureOptions), "Requires a function to configure the auditing options");
 
-            _configureAuditingOptions = configureOptions;
+            _configureAuditingOptions.Add(configureOptions);
             return this;
         }
 
         /// <summary>
         /// Builds the secret store and register the store into the <see cref="IServiceCollection"/>.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when one or more <see cref="ISecretProvider"/> was registered with the same name.</exception>
         internal void RegisterSecretStore()
         {
+            EnsureUniqueSecretProviderNames();
+
             foreach (SecretStoreSource source in SecretStoreSources)
             {
                 if (source is null)
@@ -187,18 +236,36 @@ namespace Microsoft.Extensions.Hosting
                 Services.AddSingleton(filter);
             }
 
-            if (_configureAuditingOptions != null)
+            foreach (Action<SecretStoreAuditingOptions> configureAuditingOptions in _configureAuditingOptions)
             {
-                Services.Configure(_configureAuditingOptions);
+                configureAuditingOptions(AuditingOptions);
             }
+
+            Services.TryAddSingleton(AuditingOptions);
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
+            Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+        }
+
+        private void EnsureUniqueSecretProviderNames()
+        {
+            IEnumerable<string> secretProvidersWithDuplicateNames =
+                SecretStoreSources.GroupBy(source => source.Options.Name)
+                                  .Where(group => @group.Key != null && @group.Count() > 1)
+                                  .Select(group => @group.Key);
+
+            if (secretProvidersWithDuplicateNames.Any())
+            {
+                string duplicateNames = String.Join(", ", secretProvidersWithDuplicateNames);
+                throw new InvalidOperationException(
+                    $"Cannot set up secret store because one or more {nameof(ISecretProvider)} was registered with the same name: {duplicateNames}");
+            }
         }
 
         private static SecretStoreSource CreateMutatedSecretSource(
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
-            Func<string, string> mutateSecretName)
+            SecretProviderOptions options)
         {
             return new SecretStoreSource(serviceProvider =>
             {
@@ -206,13 +273,13 @@ namespace Microsoft.Extensions.Hosting
                 if (secretProvider is ICachedSecretProvider cachedSecretProvider)
                 {
                     var logger = serviceProvider.GetService<ILogger<MutatedSecretNameCachedSecretProvider>>();
-                    return new MutatedSecretNameCachedSecretProvider(cachedSecretProvider, mutateSecretName, logger);
+                    return new MutatedSecretNameCachedSecretProvider(cachedSecretProvider, options.MutateSecretName, logger);
                 }
                 {
                     var logger = serviceProvider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
-                    return new MutatedSecretNameSecretProvider(secretProvider, mutateSecretName, logger);
+                    return new MutatedSecretNameSecretProvider(secretProvider, options.MutateSecretName, logger);
                 }
-            });
+            }, options);
         }
     }
 }

@@ -9,14 +9,13 @@ using GuardNet;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace Arcus.Security.Core
 {
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation representing a series of <see cref="ISecretProvider"/> implementations.
     /// </summary>
-    internal class CompositeSecretProvider : ICachedSecretProvider
+    internal class CompositeSecretProvider : ICachedSecretProvider, ISecretStore
     {
         private readonly IEnumerable<SecretStoreSource> _secretProviders;
         private readonly IEnumerable<CriticalExceptionFilter> _criticalExceptionFilters;
@@ -35,7 +34,7 @@ namespace Arcus.Security.Core
         public CompositeSecretProvider(
             IEnumerable<SecretStoreSource> secretProviderSources, 
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
-            IOptions<SecretStoreAuditingOptions> auditingOptions,
+            SecretStoreAuditingOptions auditingOptions,
             ILogger<CompositeSecretProvider> logger)
         {
             Guard.NotNull(secretProviderSources, nameof(secretProviderSources), "Requires a series of registered secret provider registrations to retrieve secrets");
@@ -43,12 +42,27 @@ namespace Arcus.Security.Core
             Guard.NotNull(auditingOptions, nameof(auditingOptions), "Requires a set of options to configure the auditing of the secret store");
             Guard.For<ArgumentException>(() => secretProviderSources.Any(source => source is null), "Requires all registered secret provider registrations to be not 'null'");
             Guard.For<ArgumentException>(() => criticalExceptionFilters.Any(filter => filter is null), "Requires all registered critical exception filters to be not 'null'");
-            Guard.NotNull<SecretStoreAuditingOptions, ArgumentException>(auditingOptions.Value, "Requires a value for the set of options to configure the auditing of the secret store");
 
             _secretProviders = secretProviderSources;
             _criticalExceptionFilters = criticalExceptionFilters;
-            _auditingOptions = auditingOptions.Value;
+            _auditingOptions = auditingOptions;
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompositeSecretProvider"/> class.
+        /// </summary>
+        /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
+        /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
+        /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> of the <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
+        public CompositeSecretProvider(
+            IEnumerable<SecretStoreSource> secretProviderSources, 
+            IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
+            SecretStoreAuditingOptions auditingOptions)
+            : this(secretProviderSources, criticalExceptionFilters, auditingOptions, NullLogger<CompositeSecretProvider>.Instance)
+        {
         }
 
         /// <summary>
@@ -65,6 +79,119 @@ namespace Arcus.Security.Core
             throw new NotSupportedException(
                 "Getting the cache configuration directly from the secret store is not supported, "
                 + $"please use another way to access the configuration or implement your own '{nameof(ICachedSecretProvider)}' to use this within your secret provider");
+
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="name">The name that was used to register the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <typeparam name="TSecretProvider">The concrete <see cref="ISecretProvider"/> type.</typeparam>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>,
+        ///     or there were multiple <see cref="ISecretProvider"/> instances registered with the same name.
+        /// </exception>
+        /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ISecretProvider"/> cannot be cast to the specific <typeparamref name="TSecretProvider"/>.</exception>
+        public TSecretProvider GetProvider<TSecretProvider>(string name) where TSecretProvider : ISecretProvider
+        {
+            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
+
+            ISecretProvider provider = GetProvider(name);
+            if (provider is TSecretProvider concreteProvider)
+            {
+                return concreteProvider;
+            }
+
+            throw new InvalidCastException($"Cannot cast registered {nameof(ISecretProvider)} with name '{name}' to type '{typeof(TSecretProvider).Name}'");
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="name">The name that was used to register the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>,
+        ///     or there were multiple <see cref="ISecretProvider"/> instances registered with the same name.
+        /// </exception>
+        public ISecretProvider GetProvider(string name)
+        {
+            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
+
+            SecretStoreSource source = GetSecretSource(name);
+            return source.SecretProvider;
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ICachedSecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="name">The name that was used to register the <see cref="ICachedSecretProvider"/> in the secret store.</param>
+        /// <typeparam name="TCachedSecretProvider">The concrete <see cref="ICachedSecretProvider"/> type.</typeparam>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown when there was no <see cref="ICachedSecretProvider"/> found in the secret store with the given <paramref name="name"/>,
+        ///     or there were multiple <see cref="ICachedSecretProvider"/> instances registered with the same name.
+        /// </exception>
+        /// <exception cref="NotSupportedException">Thrown when there was an <see cref="ICachedSecretProvider"/> registered but not with caching.</exception>
+        /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
+        public TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(string name) where TCachedSecretProvider : ICachedSecretProvider
+        {
+            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
+
+            ICachedSecretProvider provider = GetCachedProvider(name);
+            if (provider is TCachedSecretProvider concreteProvider)
+            {
+                return concreteProvider;
+            }
+
+            throw new InvalidCastException($"Cannot cast registered {nameof(ICachedSecretProvider)} with name '{name}' to type '{typeof(TCachedSecretProvider).Name}'");
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ICachedSecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="name">The name that was used to register the <see cref="ICachedSecretProvider"/> in the secret store.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown when there was no <see cref="ICachedSecretProvider"/> found in the secret store with the given <paramref name="name"/>,
+        ///     or there were multiple <see cref="ICachedSecretProvider"/> instances registered with the same name.
+        /// </exception>
+        /// <exception cref="NotSupportedException">Thrown when there was an <see cref="ISecretProvider"/> registered but not with caching.</exception>
+        public ICachedSecretProvider GetCachedProvider(string name)
+        {
+            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
+
+            SecretStoreSource source = GetSecretSource(name);
+            if (source.CachedSecretProvider is null)
+            {
+                throw new NotSupportedException(
+                    $"Found a registered {nameof(ISecretProvider)} with the name '{name}' in the secret store, but was not configured for caching. "
+                    + $"Please use the {nameof(GetProvider)} instead or configure the registered provider with caching");
+            }
+
+            return source.CachedSecretProvider;
+        }
+
+        private SecretStoreSource GetSecretSource(string name)
+        {
+            IEnumerable<SecretStoreSource> matchingProviders =
+                _secretProviders.Where(provider => provider.Options.Name == name);
+
+            int count = matchingProviders.Count();
+            if (count is 0)
+            {
+                throw new KeyNotFoundException(
+                    $"Could not retrieve the named {nameof(ISecretProvider)} because no provider was registered with the name '{name}'");
+            }
+
+            if (count > 1)
+            {
+                throw new KeyNotFoundException(
+                    $"Could not retrieve the named {nameof(ISecretProvider)} because more than one provider was registered with the name '{name}'");
+            }
+
+            SecretStoreSource firstProvider = matchingProviders.First();
+            return firstProvider;
+        }
 
         /// <summary>
         /// Retrieves the secret value, based on the given name

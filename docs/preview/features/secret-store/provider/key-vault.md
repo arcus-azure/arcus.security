@@ -52,13 +52,17 @@ public class Program
                         var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(1));
                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration);
 
+                        // Tracking the Azure Key Vault dependency which works well together with Application Insights (default: `false`).
+                        // See https://observability.arcus-azure.net/features/writing-different-telemetry-types#measuring-custom-dependencies for more information.
+                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, configureOptions: options => options.TrackDependency = true);
+
                         // Adding the Azure Key Vault secret provider, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `ServicePrincipal:ClientKey` it will be changed to `ServicePrincipal-ClientKey`.
                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, mutateSecretName: secretName => secretName.Replace(":", "-"));
 
-                        // Tracking the Azure Key Vault dependency which works well together with Application Insights (default: `false`).
-                        // See https://observability.arcus-azure.net/features/writing-different-telemetry-types#measuring-custom-dependencies for more information.
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, configureOptions: options => options.TrackDependency = true);
+                        // Providing an unique name to this secret provider so it can be looked up later.
+                       // See: "Retrieve a specific secret provider from the secret store"
+                       builder.AddAzureKeyVaultWithManagedIdentity(..., name: "AzureKeyVault.ManagedIdentity");
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }

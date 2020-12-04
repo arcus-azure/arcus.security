@@ -23,15 +23,29 @@ namespace Arcus.Security.Core
         /// <param name="createSecretProvider">The function to create a secret provider to add to the secret store.</param>
         /// <param name="mutateSecretName">The optional mutation function to transform secret names.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Use the other constructor overload with the " + nameof(SecretProviderOptions) + " instead")]
         public SecretStoreSource(
             Func<IServiceProvider, ISecretProvider> createSecretProvider, 
-            Func<string, string> mutateSecretName = null)
+            Func<string, string> mutateSecretName = null) 
+            : this(createSecretProvider, new SecretProviderOptions { MutateSecretName = mutateSecretName })
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
+        /// </summary>
+        /// <param name="createSecretProvider">The function to create a secret provider to add to the secret store.</param>
+        /// <param name="options">The optional options to configure the <see cref="ISecretProvider"/>. in the secret store.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreSource(
+            Func<IServiceProvider, ISecretProvider> createSecretProvider,
+            SecretProviderOptions options)
         {
             Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create an secret provider instance to register it in the secret store");
             
             _createSecretProvider = createSecretProvider;
-
-            MutateSecretName = mutateSecretName;
+            
+            Options = options ?? new SecretProviderOptions();
         }
 
         /// <summary>
@@ -40,10 +54,22 @@ namespace Arcus.Security.Core
         /// <param name="secretProvider">The secret provider to add to the secret store.</param>
         /// <param name="mutateSecretName">The optional mutation function to transform secret names.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Use the other constructor overload with the " + nameof(SecretProviderOptions) + " instead")]
         public SecretStoreSource(ISecretProvider secretProvider, Func<string, string> mutateSecretName = null)
+            : this(secretProvider, new SecretProviderOptions { MutateSecretName = mutateSecretName})
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
+        /// </summary>
+        /// <param name="secretProvider">The secret provider to add to the secret store.</param>
+        /// <param name="options">The optional options to configure the <see cref="ISecretProvider"/>. in the secret store.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        public SecretStoreSource(ISecretProvider secretProvider, SecretProviderOptions options)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to register it in the secret store");
-            
+
             _secretProvider = secretProvider;
 
             if (secretProvider is ICachedSecretProvider cachedSecretProvider)
@@ -51,7 +77,7 @@ namespace Arcus.Security.Core
                 CachedSecretProvider = cachedSecretProvider;
             }
 
-            MutateSecretName = mutateSecretName;
+            Options = options ?? new SecretProviderOptions();
         }
 
         /// <summary>
@@ -87,9 +113,9 @@ namespace Arcus.Security.Core
         public ICachedSecretProvider CachedSecretProvider { get; private set; }
 
         /// <summary>
-        /// Gets the (optional) mutation function that transforms secret names.
+        /// Gets the configured options for the registration of the <see cref="ISecretProvider"/> in the secret store.
         /// </summary>
-        internal Func<string, string> MutateSecretName { get; }
+        internal SecretProviderOptions Options { get; }
 
         /// <summary>
         /// Ensure that the <see cref="SecretProvider"/> and the <see cref="CachedSecretProvider"/> are initialized
@@ -136,7 +162,7 @@ namespace Arcus.Security.Core
                     ?? NullLogger<SecretStoreBuilder>.Instance;
                 
                 logger.LogError(exception, 
-                    "Failed to create an '{SecretProviderType}' using the provided lazy initialization in the secret store", nameof(ISecretProvider));
+                    "Failed to create an {Name} '{SecretProviderType}' using the provided lazy initialization in the secret store", Options.Name, nameof(ISecretProvider));
 
                 throw;
             }

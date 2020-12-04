@@ -160,7 +160,7 @@ public static class SecretStoreBuilderExtensions
     {
         var provider = RegistrySecretProvider();
         
-        return builder.AddProvider(secretProvider, secretName => secretName.Replace(".", "_").ToUpper());
+        return builder.AddProvider(secretProvider, options => options.MutateSecretName = secretName => secretName.Replace(".", "_").ToUpper());
     }
 }
 ```

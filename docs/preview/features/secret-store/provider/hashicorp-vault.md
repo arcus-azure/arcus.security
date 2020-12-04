@@ -59,6 +59,10 @@ public class Program
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
                         builder.AddHashiCorpVaultWithUserPass(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
 
+                        // Providing an unique name to this secret provider so it can be looked up later.
+                        // See: "Retrieve a specific secret provider from the secret store"
+                        builder.AddHashiCorpVault(..., name: "HashiCorp"); 
+
                         // Kubernetes authentication built-in overload:
                         // --------------------------------------------
                         builder.AddHashiCorpVaultWithKubernetes(
@@ -83,7 +87,11 @@ public class Program
 
                         // Adding the HashiCorp Vault secret provider with Kubernetes authentication, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
-                        builder.AddHashiCorpVaultWithKubernetes(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
+                        builder.AddHashiCorpVaultWithKubernetes(..., mutateSecretname: secretName => secretName.Replace(":", "-"));
+
+                        // Providing an unique name to this secret provider so it can be looked up later.
+                        // See: "Retrieve a specific secret provider from the secret store"
+                        builder.AddHashiCorpVault(..., name: "HashiCorp"); 
 
                         // Custom settings overload for when using the [VaultSharp](https://github.com/rajanadar/VaultSharp) settings directly:
                         // --------------------------------------------------------------------------------------------------------------------
@@ -103,6 +111,10 @@ public class Program
                         // Adding the HashiCorp Vault secret provider, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
                         builder.AddHashiCorpVault(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
+
+                        // Providing an unique name to this secret provider so it can be looked up later.
+                        // See: "Retrieve a specific secret provider from the secret store"
+                        builder.AddHashiCorpVault(..., name: "HashiCorp"); 
 
                         // Additional settings:
                         // -------------------
