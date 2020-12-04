@@ -9,7 +9,7 @@ The default workings of the secret store, is that a set of secret providers are 
 
 In some cases, you may want to retrieve a specific secret provider from the store because that secret provider has some functionality that the other providers don't have.
 
-In those cases, you can register your secret provider with a unique name. This name will be matched with the secret provider so that in a later stage, you can retrieve back your named provider.
+In those cases, you can register your secret provider with a unique name so that, in a later stage, you can retrieve back your named provider.
 
 ## Register a named secret provider
 
