@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Security.Authentication;
 using System.Security.Cryptography;
@@ -11,10 +13,11 @@ using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Arcus.Security.Tests.Unit.Core
+namespace Arcus.Security.Tests.Unit.Core.Extensions
 {
     public class IHostBuilderExtensionsTests
     {
@@ -225,6 +228,26 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
+        public async Task ConfigureSecretStore_WithoutCachingProviderWithOptionsMutation_DoesntFindCachedProvider()
+        {
+            // Arrange
+            var stubProvider = new InMemorySecretProvider(("Arcus.KeyVault.Secret", Guid.NewGuid().ToString()));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider, options => options.MutateSecretName = secretName => "Arcus." + secretName);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(
+                () => cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false));
+        }
+
+        [Fact]
         public async Task ConfigureSecretStore_WithCachingProviderWithMutation_DoesFindCachedProvider()
         {
             // Arrange
@@ -236,6 +259,27 @@ namespace Arcus.Security.Tests.Unit.Core
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddProvider(stubProvider, secretName => "Arcus." + secretName);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
+            Secret secret = await cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false);
+            Assert.Equal(expected, secret.Value);
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithCachingProviderWithOptionsMutation_DoesFindCachedProvider()
+        {
+            // Arrange
+            var expected = Guid.NewGuid().ToString();
+            var stubProvider = new InMemoryCachedSecretProvider(("Arcus.KeyVault.Secret", expected));
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider, options => options.MutateSecretName = secretName => "Arcus." + secretName);
             });
 
             // Assert
@@ -448,6 +492,316 @@ namespace Arcus.Security.Tests.Unit.Core
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
             await secretProvider.GetRawSecretAsync(secretName);
             Assert.Equal(emitSecurityEvents, spyLogger.Messages.Count(msg => msg.StartsWith("Event") && msg.Contains("Security")) == 1);
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithAuditingIncrement_LogsSecurityEvent()
+        {
+            // Arrange
+            string secretName = "MySecret";
+            var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));
+            var spyLogger = new InMemoryLogger();
+            var builder = new HostBuilder();
+            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider)
+                      .WithAuditing(options => options.EmitSecurityEvents = false)
+                      .WithAuditing(options => options.EmitSecurityEvents = true);
+            });
+
+            // Assert
+            IHost host = builder.Build();
+            var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+            await secretProvider.GetRawSecretAsync(secretName);
+            Assert.True(spyLogger.Messages.Count(msg => msg.StartsWith("Event") && msg.Contains("Security")) == 1);
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithNamedProvider_RetrievedCorrectProvider()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemorySecretProvider();
+            var stubProvider2 = new InMemorySecretProvider();
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                ISecretProvider actual = store.GetProvider(name);
+                Assert.Same(stubProvider1, actual);
+                Assert.NotSame(stubProvider2, actual);
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithNamedProviderT_RetrievedCorrectProvider()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemorySecretProvider();
+            var stubProvider2 = new InMemorySecretProvider();
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                var actual = store.GetProvider<InMemorySecretProvider>(name);
+                Assert.Same(stubProvider1, actual);
+                Assert.NotSame(stubProvider2, actual);
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithNamedCachedProvider_RetrievedCorrectProvider()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemoryCachedSecretProvider();
+            var stubProvider2 = new InMemoryCachedSecretProvider();
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                ISecretProvider actual = store.GetCachedProvider(name);
+                Assert.Same(stubProvider1, actual);
+                Assert.NotSame(stubProvider2, actual);
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithNamedCachedProviderT_RetrievedCorrectProvider()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemoryCachedSecretProvider();
+            var stubProvider2 = new InMemoryCachedSecretProvider();
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                var actual = store.GetCachedProvider<InMemoryCachedSecretProvider>(name);
+                Assert.Same(stubProvider1, actual);
+                Assert.NotSame(stubProvider2, actual);
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithoutCachedProvider_FailsWhenRetrievedCachedProvider()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemorySecretProvider();
+            var stubProvider2 = new InMemoryCachedSecretProvider();
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<NotSupportedException>(() => store.GetCachedProvider(name));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithoutCachedProviderT_FailsWhenRetrievedCachedProvider()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemorySecretProvider();
+            var stubProvider2 = new InMemoryCachedSecretProvider();
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<NotSupportedException>(() => store.GetCachedProvider<InMemoryCachedSecretProvider>(name));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithoutNamedProvider_Fails()
+        {
+            // Arrange
+            var stubProvider1 = new InMemorySecretProvider();
+            var stubProvider2 = new InMemorySecretProvider();
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<KeyNotFoundException>(() => store.GetCachedProvider("some ignored name"));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithoutNamedProviderT_Fails()
+        {
+            // Arrange
+            var stubProvider1 = new InMemorySecretProvider();
+            var stubProvider2 = new InMemorySecretProvider();
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1)
+                      .AddProvider(stubProvider2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<KeyNotFoundException>(() => store.GetCachedProvider<InMemoryCachedSecretProvider>("some ignored name"));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_GetProviderWithInvalidGenericType_Fails()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<InvalidCastException>(() => store.GetProvider<InMemorySecretProvider>(name));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_GetCachedProviderWithInvalidGenericType_Fails()
+        {
+            // Arrange
+            var name = $"provider-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(Mock.Of<ICachedSecretProvider>(), options => options.Name = name);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<InvalidCastException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithUniqueNames_Succeeds()
+        {
+            // Arrange
+            var name1 = $"name-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemorySecretProvider();
+            var name2 = $"name-{Guid.NewGuid()}";
+            var stubProvider2 = new InMemorySecretProvider();
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name1)
+                      .AddProvider(stubProvider2, options => options.Name = name2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var secretStore = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Same(stubProvider1, secretStore.GetProvider(name1));
+                Assert.Same(stubProvider2, secretStore.GetProvider<InMemorySecretProvider>(name2));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_Fails()
+        {
+            // Arrange
+            var name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name)
+                      .AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name);
+            });
+
+            // Assert
+            Assert.Throws<InvalidOperationException>(() => builder.Build());
         }
     }
 }
