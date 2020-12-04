@@ -78,7 +78,7 @@ public class HealthController : ControllerBase
 ```
 
 ### Using secret store outside .NET hosting
-The secret store is also available directly on the `IServiceCollection` for applications that run outside the .NET hosting but still want to use the Arcus secret store.
+The secret store is also available directly on the `IServiceCollection` for applications that run without a .NET hosting context but still want to make use of the Arcus secret store.
 
 Just like you would register the secret store on the `HostBuilder`, you can use the `.AddSecretStore` extension to register the secret store:
 
