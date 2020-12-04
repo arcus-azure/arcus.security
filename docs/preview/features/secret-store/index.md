@@ -77,10 +77,10 @@ public class HealthController : ControllerBase
 }
 ```
 
-### Using secret store outside .NET hosting
-The secret store is also available directly on the `IServiceCollection` for applications that run outside the .NET hosting but still want to use the Arcus secret store.
+### Configuring secret store without .NET host builder
+The secret store is also available directly on the `IServiceCollection` for applications that run without a .NET hosting context but still want to make use of the Arcus secret store.
 
-Just like you would register the secret store on the `HostBuilder`, you can use the `.AddSecretStore` extension to register the secret store:
+Just like you would register the secret store on the `HostBuilder`, you can use the `.AddSecretStore` extension method to register the secret store:
 
 ```csharp
 public void ConfigureServices(IServiceCollection services)
@@ -104,8 +104,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-When the dependency injection container injects the dependent services in the rest of your application, 
-the secret store will provide with you an `ISecretProvider` instance that contains the registered secret providers.
+When your application wants to access a secret, all it has to do is use `ISecretProvider` which will give you access to all the registered secret providers.
 
 ## Using secret store within Azure Functions
 
