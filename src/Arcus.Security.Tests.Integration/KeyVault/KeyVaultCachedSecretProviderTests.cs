@@ -46,7 +46,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 Assert.NotNull(secret);
                 Assert.NotNull(secret.Value);
                 Assert.NotNull(secret.Version);
-                Secret fetchedSecret = await keyVaultSecretProvider.GetSecretAsync(secretName);
+                Secret fetchedSecret = await cachedSecretProvider.GetSecretAsync(secretName);
                 Assert.Equal(secretValue, fetchedSecret.Value);
                 Assert.Equal(secret.Version, fetchedSecret.Version);
                 Assert.Equal(secret.Expires, fetchedSecret.Expires);
