@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Providers;
@@ -200,8 +201,11 @@ namespace Microsoft.Extensions.Hosting
         /// <summary>
         /// Builds the secret store and register the store into the <see cref="IServiceCollection"/>.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when one or more <see cref="ISecretProvider"/> was registered with the same name.</exception>
         internal void RegisterSecretStore()
         {
+            EnsureUniqueSecretProviderNames();
+
             foreach (SecretStoreSource source in SecretStoreSources)
             {
                 if (source is null)
@@ -234,6 +238,21 @@ namespace Microsoft.Extensions.Hosting
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+        }
+
+        private void EnsureUniqueSecretProviderNames()
+        {
+            IEnumerable<string> secretProvidersWithDuplicateNames =
+                SecretStoreSources.GroupBy(source => source.Options.Name)
+                                  .Where(group => @group.Key != null && @group.Count() > 1)
+                                  .Select(group => @group.Key);
+
+            if (secretProvidersWithDuplicateNames.Any())
+            {
+                string duplicateNames = String.Join(", ", secretProvidersWithDuplicateNames);
+                throw new InvalidOperationException(
+                    $"Cannot set up secret store because one or more {nameof(ISecretProvider)} was registered with the same name: {duplicateNames}");
+            }
         }
 
         private static SecretStoreSource CreateMutatedSecretSource(

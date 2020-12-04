@@ -693,54 +693,6 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
-        public void ConfigureSecretStore_WithMoreThanOneMatchingProvider_Fails()
-        {
-            // Arrange
-            var name = $"provider-{Guid.NewGuid()}";
-            var stubProvider1 = new InMemorySecretProvider();
-            var stubProvider2 = new InMemorySecretProvider();
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddProvider(stubProvider1, options => options.Name = name)
-                      .AddProvider(stubProvider2, options => options.Name = name);
-            });
-
-            // Assert
-            using (IHost host = builder.Build())
-            {
-                var store = host.Services.GetRequiredService<ISecretStore>();
-                Assert.Throws<KeyNotFoundException>(() => store.GetCachedProvider("some ignored name"));
-            }
-        }
-
-        [Fact]
-        public void ConfigureSecretStore_WithMoreThanOneMatchingProviderT_Fails()
-        {
-            // Arrange
-            var name = $"provider-{Guid.NewGuid()}";
-            var stubProvider1 = new InMemorySecretProvider();
-            var stubProvider2 = new InMemorySecretProvider();
-            var builder = new HostBuilder();
-
-            // Act
-            builder.ConfigureSecretStore((config, stores) =>
-            {
-                stores.AddProvider(stubProvider1, options => options.Name = name)
-                      .AddProvider(stubProvider2, options => options.Name = name);
-            });
-
-            // Assert
-            using (IHost host = builder.Build())
-            {
-                var store = host.Services.GetRequiredService<ISecretStore>();
-                Assert.Throws<KeyNotFoundException>(() => store.GetProvider<InMemorySecretProvider>("some ignored name"));
-            }
-        }
-
-        [Fact]
         public void ConfigureSecretStore_GetProviderWithInvalidGenericType_Fails()
         {
             // Arrange
@@ -780,6 +732,51 @@ namespace Arcus.Security.Tests.Unit.Core
                 var store = host.Services.GetRequiredService<ISecretStore>();
                 Assert.Throws<InvalidCastException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
             }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithUniqueNames_Succeeds()
+        {
+            // Arrange
+            var name1 = $"name-{Guid.NewGuid()}";
+            var stubProvider1 = new InMemorySecretProvider();
+            var name2 = $"name-{Guid.NewGuid()}";
+            var stubProvider2 = new InMemorySecretProvider();
+
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(stubProvider1, options => options.Name = name1)
+                      .AddProvider(stubProvider2, options => options.Name = name2);
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var secretStore = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Same(stubProvider1, secretStore.GetProvider(name1));
+                Assert.Same(stubProvider2, secretStore.GetProvider<InMemorySecretProvider>(name2));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_Fails()
+        {
+            // Arrange
+            var name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name)
+                      .AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name);
+            });
+
+            // Assert
+            Assert.Throws<InvalidOperationException>(() => builder.Build());
         }
     }
 }
