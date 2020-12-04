@@ -5,6 +5,7 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
+using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
@@ -28,17 +29,22 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
+            string tenantId = Configuration.GetTenantId();
+            string clientId = Configuration.GetServicePrincipalClientId();
+            string clientKey = Configuration.GetServicePrincipalClientSecret();
+            
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ManagedServiceIdentityAuthentication(),
-                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
-
-            var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider);
-
-            using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
+            
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
             {
+                var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                    tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential()),
+                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+                var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider);
+
                 // Act
                 Secret secret = await cachedSecretProvider.StoreSecretAsync(secretName, secretValue);
 
