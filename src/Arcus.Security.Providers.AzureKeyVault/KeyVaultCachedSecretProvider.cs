@@ -75,41 +75,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
             Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
-            Secret secret = await StoreSecretAsync(secretName, secretValue, ignoreCache: false);
-            return secret;
-        }
-
-        /// <summary>
-        /// Stores a secret value with a given secret name
-        /// </summary>
-        /// <param name="secretName">The name of the secret</param>
-        /// <param name="secretValue">The value of the secret</param>
-        /// <param name="ignoreCache">Indicates if the cache should be used or skipped</param>
-        /// <returns>Returns a <see cref="Secret"/> that contains the latest information for the given secret</returns>
-        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
-        /// <exception cref="ArgumentException">The <paramref name="secretValue"/> must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="secretValue"/> must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
-        public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue, bool ignoreCache)
-        {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
-            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
-
             Secret secret = await _secretProvider.StoreSecretAsync(secretName, secretValue);
-
-            if (!ignoreCache)
-            {
-                // Set cache options.
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    // Keep in cache for this time, reset time if accessed.
-                    .SetSlidingExpiration(Configuration.Duration);
-
-                // Save data in cache; upon existing entry, the value is updated.
-                MemoryCache.Set(secretName, secret, cacheEntryOptions); 
-            }
+            MemoryCache.Set(secretName, secret, CacheEntry);
 
             return secret;
         }
