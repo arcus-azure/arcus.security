@@ -23,7 +23,7 @@ First, the secret provider has to be registered with a unique name.
 })
 ```
 
-## Retrieve the named secret provider
+## Retrieving a named secret provider
 
 Now that the named environment variables secret provider is registered, we should be able to retrieve this provider somewhere else in the application.
 Normally, you inject the `ISecretProvider` in your application service and accesses the secrets, but now you'll have to inject the `ISecretStore` interface to access the specific secret store operations.
