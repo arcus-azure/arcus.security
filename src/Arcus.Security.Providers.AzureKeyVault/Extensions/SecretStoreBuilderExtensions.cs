@@ -326,7 +326,7 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential()),
+                new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = clientId }), 
                 new KeyVaultConfiguration(rawVaultUri),
                 configureOptions,
                 name,
@@ -424,7 +424,7 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential()),
+                new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = clientId }), 
                 new KeyVaultConfiguration(rawVaultUri),
                 cacheConfiguration,
                 configureOptions,
