@@ -787,7 +787,6 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.</exception>
-
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
