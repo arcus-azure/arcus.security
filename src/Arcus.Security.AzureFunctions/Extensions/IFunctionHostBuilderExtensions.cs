@@ -18,10 +18,11 @@ namespace Microsoft.Azure.Functions.Extensions.DependencyInjection
         /// </summary>
         /// <param name="functionsHostBuilder">The builder to append the secret store configuration to.</param>
         /// <param name="configureSecretStores">The customization of the different target secret store sources to include in the final <see cref="ISecretProvider"/>.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="functionsHostBuilder"/> or <paramref name="configureSecretStores"/> is <c>null</c>.</exception>
         public static IFunctionsHostBuilder ConfigureSecretStore(this IFunctionsHostBuilder functionsHostBuilder, Action<SecretStoreBuilder> configureSecretStores)
         {
-            Guard.NotNull(functionsHostBuilder, nameof(functionsHostBuilder));
-            Guard.NotNull(configureSecretStores, nameof(configureSecretStores));
+            Guard.NotNull(functionsHostBuilder, nameof(functionsHostBuilder), "Requires a functions host builder to add the secret store");
+            Guard.NotNull(configureSecretStores, nameof(configureSecretStores), "Requires a function to configure the secret store with potential secret providers");
 
             functionsHostBuilder.Services.AddSecretStore(configureSecretStores);
             return functionsHostBuilder;
