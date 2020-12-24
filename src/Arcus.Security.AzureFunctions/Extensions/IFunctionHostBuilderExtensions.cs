@@ -1,6 +1,7 @@
 ﻿using System;
 using Arcus.Security.Core;
 using GuardNet;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 // ReSharper disable once CheckNamespace
@@ -22,10 +23,7 @@ namespace Microsoft.Azure.Functions.Extensions.DependencyInjection
             Guard.NotNull(functionsHostBuilder, nameof(functionsHostBuilder));
             Guard.NotNull(configureSecretStores, nameof(configureSecretStores));
 
-            var builder = new SecretStoreBuilder(functionsHostBuilder.Services);
-            configureSecretStores(builder);
-            builder.RegisterSecretStore();
-
+            functionsHostBuilder.Services.AddSecretStore(configureSecretStores);
             return functionsHostBuilder;
         }
     }
