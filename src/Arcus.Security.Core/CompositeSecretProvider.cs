@@ -361,11 +361,13 @@ namespace Arcus.Security.Core
         {
             if (_auditingOptions.EmitSecurityEvents)
             {
-                _logger.LogSecurityEvent("Get Secret", new Dictionary<string, object>
+                var telemetryContext = new Dictionary<string, object>
                 {
                     ["SecretName"] = secretName,
-                    ["SecretProvider"] = source.SecretProvider.GetType().Name
-                }); 
+                    ["SecretProvider"] = source.Options.Name ?? source.SecretProvider.GetType().Name
+                };
+
+                _logger.LogSecurityEvent("Get Secret", telemetryContext);
             }
 
             Task<T> resultAsync = callRegisteredProvider(source);
