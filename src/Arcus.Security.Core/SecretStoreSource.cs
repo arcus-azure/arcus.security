@@ -162,7 +162,7 @@ namespace Arcus.Security.Core
                     ?? NullLogger<SecretStoreBuilder>.Instance;
                 
                 logger.LogError(exception, 
-                    "Failed to create an {Name} '{SecretProviderType}' using the provided lazy initialization in the secret store", Options.Name, nameof(ISecretProvider));
+                    "Failed to create an {Name} '{SecretProviderType}' using the provided lazy initialization in the secret store", Options?.Name, nameof(ISecretProvider));
 
                 throw;
             }

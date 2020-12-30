@@ -251,7 +251,7 @@ namespace Microsoft.Extensions.Hosting
         private void EnsureUniqueSecretProviderNames()
         {
             IEnumerable<string> secretProvidersWithDuplicateNames =
-                SecretStoreSources.GroupBy(source => source.Options.Name)
+                SecretStoreSources.GroupBy(source => source.Options?.Name)
                                   .Where(group => @group.Key != null && @group.Count() > 1)
                                   .Select(group => @group.Key);
 
