@@ -174,7 +174,7 @@ namespace Arcus.Security.Core
         private SecretStoreSource GetSecretSource(string name)
         {
             IEnumerable<SecretStoreSource> matchingProviders =
-                _secretProviders.Where(provider => provider.Options.Name == name);
+                _secretProviders.Where(provider => provider.Options?.Name == name);
 
             int count = matchingProviders.Count();
             if (count is 0)
@@ -364,8 +364,8 @@ namespace Arcus.Security.Core
                 _logger.LogSecurityEvent("Get Secret", new Dictionary<string, object>
                 {
                     ["SecretName"] = secretName,
-                    ["SecretProvider"] = source.SecretProvider.GetType().Name
-                }); 
+                    ["SecretProvider"] = source.Options?.Name ?? source.SecretProvider.GetType().Name
+                });
             }
 
             Task<T> resultAsync = callRegisteredProvider(source);
