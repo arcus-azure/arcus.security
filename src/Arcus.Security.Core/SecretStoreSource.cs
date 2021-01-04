@@ -115,7 +115,7 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Gets the configured options for the registration of the <see cref="ISecretProvider"/> in the secret store.
         /// </summary>
-        internal SecretProviderOptions Options { get; }
+        internal SecretProviderOptions Options { get; } = new SecretProviderOptions();
 
         /// <summary>
         /// Ensure that the <see cref="SecretProvider"/> and the <see cref="CachedSecretProvider"/> are initialized
@@ -162,7 +162,7 @@ namespace Arcus.Security.Core
                     ?? NullLogger<SecretStoreBuilder>.Instance;
                 
                 logger.LogError(exception, 
-                    "Failed to create an {Name} '{SecretProviderType}' using the provided lazy initialization in the secret store", Options.Name, nameof(ISecretProvider));
+                    "Failed to create an {Name} '{SecretProviderType}' using the provided lazy initialization in the secret store", Options?.Name, nameof(ISecretProvider));
 
                 throw;
             }
