@@ -14,6 +14,8 @@ The configuration secret provider is built-in as part of the package [Arcus.Secu
 ## Configuration
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)

@@ -42,6 +42,8 @@ PM > Install-Package Arcus.Security.Core
 The secret stores are configured during the initial application build-up in the `Program.cs`:
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)

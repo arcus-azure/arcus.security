@@ -20,6 +20,10 @@ You can easily extend the Key Vault provider by overriding the `GetSecret*Async`
 This useful to provide additional logging, for example, during the retrieval of the secrets.
 
 ```csharp
+using Microsoft.Extensions.Logging;
+using Arcus.Security.Core;
+using Arcus.Security.Providers.AzureKeyVault;
+
 public class LoggedKeyVaultSecretProvider : KeyVaultSecretProvider
 {
     private readonly ILogger _logger;

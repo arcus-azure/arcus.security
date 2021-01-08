@@ -17,6 +17,8 @@ PM > Install-Package Arcus.Security.Providers.HashiCorp
 After installing the package, the addtional extensions becomes available when building the secret store.
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)
