@@ -32,17 +32,25 @@ Now that the named environment variables secret provider is registered, we are a
 Instead of injecting `ISecretProvider` in your application to access secrets, we'll inject `ISecretStore` interface to retrieve named secret providers.
 
 ```csharp
-[ApiController]
-   public class OrderController : ControllerBase
-   {
-       public class OrderController(ISecretStore secretStore)
-       {
-            // Gets the `ISecretProvider` with the matched name (with either using the `ISecretProvider` as return type or your own generic type).
-            var secretprovider = secretStore.GetProvider<EnvironmentVariableSecretProvider>("environment-variables");
+using Arcus.Security.Core;
+using Arcus.Security.Core.Caching;
+using Arcus.Security.Core.Providers;
 
-            // Gets the `ICachedSecretProvider` with the matched name (with either using the `ICachedSecretProvider` as return type or your own generic type).
-            // Mark that this only works when the secret provider was regisered as a cached secret provider.
-            ICachedSecretProvider cachedSecretProvider = secretStore.GetCachedProvider("your-cached-secret-provider");
-       }
-   }
+namespace Application
+{
+
+    [ApiController]
+    public class OrderController : ControllerBase
+    {
+        public class OrderController(ISecretStore secretStore)
+        {
+             // Gets the `ISecretProvider` with the matched name (with either using the `ISecretProvider` as return type or your own generic type).
+             var secretprovider = secretStore.GetProvider<EnvironmentVariableSecretProvider>("environment-variables");
+
+             // Gets the `ICachedSecretProvider` with the matched name (with either using the `ICachedSecretProvider` as return type or your own generic type).
+             // Mark that this only works when the secret provider was regisered as a cached secret provider.
+             ICachedSecretProvider cachedSecretProvider = secretStore.GetCachedProvider("your-cached-secret-provider");
+        }
+    }
+}
 ```

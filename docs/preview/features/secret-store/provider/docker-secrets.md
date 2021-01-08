@@ -20,6 +20,8 @@ PM > Install-Package Arcus.Security.Providers.DockerSecrets
 After installing the package, the addtional extensions becomes available when building the secret store.
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)
@@ -64,27 +66,31 @@ secrets:
 After adding the Docker Secrets secret provider to the secret store, the Docker secrets can simply be retrieved by calling the appropriate methods on the `ISecretProvider`:
 
 ```csharp
-public class PersonController
+using Arcus.Security.Core;
+
+namespace Application.Controllers
 {
-    private readonly ISecretProvider _secrets;
-
-    public PersonController(ISecretProvider secrets)
+    public class PersonController
     {
-        _secrets = secrets;
-    }
+        private readonly ISecretProvider _secrets;
 
-    [HttpGet]
-    public async Task GetPerson(Guid personId)
-    {
-        string connectionstring = await _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
-
-        using (var connection = new SqlDbConnection(connectionstring))
+        public PersonController(ISecretProvider secrets)
         {
-            var person = new PersonRepository(connection).GetPersonById(personId);
-            return Ok(new { Id = person.Id, Name = person.Name });
+            _secrets = secrets;
         }
+
+        [HttpGet]
+        public async Task GetPerson(Guid personId)
+        {
+            string connectionstring = await _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
+
+           using (var connection = new SqlDbConnection(connectionstring))
+           {
+               var person = new PersonRepository(connection).GetPersonById(personId);
+               return Ok(new { Id = person.Id, Name = person.Name });
+           }
+       }
     }
-}
 ```
 
 [&larr; back](/)

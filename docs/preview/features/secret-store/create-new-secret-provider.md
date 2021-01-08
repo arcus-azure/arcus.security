@@ -17,6 +17,8 @@ layout: default
 The secret providers are configured during the initial application build-up in the `Program.cs`:
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)
@@ -44,30 +46,38 @@ This section describes how a new secret store source can be added to the pipelin
 2. Implement your own implementation of the `ISecretProvider` 
    ex:
    ```csharp
-   public class RegistrySecretProvider : ISecretProvider
-   {
-       public Task<string> GetRawSecretAsync(string secretName)
-       {
-           object value = Registry.LocalMachine.GetValue(secretName);
-           return Task.FromResult(value?.ToString());
-       }
+   using Arcus.Security.Core;
 
-       public async Task<Secret> GetSecretAsync(string secretName)
+   namespace Application.Security.CustomProviders
+   {
+       public class RegistrySecretProvider : ISecretProvider
        {
-           string secretValue = await GetRawSecretAsync(secretName);
-           return new Secret(secretValue);
+           public Task<string> GetRawSecretAsync(string secretName)
+           {
+               object value = Registry.LocalMachine.GetValue(secretName);
+               return Task.FromResult(value?.ToString());
+           }
+
+           public async Task<Secret> GetSecretAsync(string secretName)
+           {
+               string secretValue = await GetRawSecretAsync(secretName);
+               return new Secret(secretValue);
+           }
        }
    }
    ```
 3. Optionally, you can provide an extension for a consumer-friendly way to add the provider.
    ex:
    ```csharp
-    public static class SecretStoreBuilderExtensions
+    namespace Microsoft.Extensions.Hosting
     {
-        public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+        public static class SecretStoreBuilderExtensions
         {
-            var provider = new RegistrySecretProvider();
-            return builder.AddProvider(provider);
+            public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+            {
+                var provider = new RegistrySecretProvider();
+                return builder.AddProvider(provider);
+            }
         }
     }
    ``` 
@@ -90,11 +100,16 @@ This section describes how a new secret store source can be added to the pipelin
 4. Now, the secret source is available in the resulting `ISecretProvider` registered in the dependency injection container.
    ex:
    ```csharp
-   [ApiController]
-   public class OrderController : ControllerBase
+   using Arcus.Security.Core;
+
+   namespace Application.Controllers
    {
-       public class OrderController(ISecretProvider secretProvider)
+       [ApiController]
+       public class OrderController : ControllerBase
        {
+           public class OrderController(ISecretProvider secretProvider)
+           {
+           }
        }
    }
    ```
@@ -106,15 +121,21 @@ When your secret provider requires additional services, configured in the depend
 The example below shows how an `ILogger` instance is passed to the secret provider.
 
 ```csharp
-public static class SecretStoreBuilderExtensions
+using System;
+using Microsoft.Extensions.Logging;
+
+namespace Microsoft.Extensions.Hosting
 {
-    public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+    public static class SecretStoreBuilderExtensions
     {
-        return builder.AddProvider((IServiceProvider serviceProvider) =>
+        public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
         {
-            var logger = serviceProvider.GetRequiredService<ILogger<RegistrySecretProvider>>();
-            return new RegistrySecretProvider(logger);
-        });
+            return builder.AddProvider((IServiceProvider serviceProvider) =>
+            {
+                var logger = serviceProvider.GetRequiredService<ILogger<RegistrySecretProvider>>();
+                return new RegistrySecretProvider(logger);
+            });
+        }
     }
 }
 ```
@@ -124,14 +145,19 @@ public static class SecretStoreBuilderExtensions
 When your secret provider requires caching, you can wrap the provider in a `CachedSecretProvider` at registration:
 
 ```csharp
-public static class SecretStoreBuilderExtensions
+using Arcus.Security.Core.Caching;
+
+namespace Microsoft.Extensions.Hosting
 {
-    public static SecretStoreBuilder AddCachedRegistry(this SecretStoreBuilder builder)
+    public static class SecretStoreBuilderExtensions
     {
-        var provider = new RegistrySecretProvider();
-        var configuration = new CacheConfiguration(TimeSpan.FromSeconds(5));
-        
-        return builder.AddProvider(new CachedSecretProvider(provider, configuration));
+        public static SecretStoreBuilder AddCachedRegistry(this SecretStoreBuilder builder)
+        {
+            var provider = new RegistrySecretProvider();
+            var configuration = new CacheConfiguration(TimeSpan.FromSeconds(5));
+
+            return builder.AddProvider(new CachedSecretProvider(provider, configuration));
+        }
     }
 }
 ```
@@ -139,11 +165,16 @@ public static class SecretStoreBuilderExtensions
 When accessing the provider in the application, you can use the `ICachedSecretProvider` to have access to the cache-specific methods.
 ex:
 ```csharp
-[ApiController]
-public class OrderController : ControllerBase
+using Arcus.Security.Core.Caching;
+
+namespace Application.Controllers
 {
-    public class OrderController(ICachedSecretProvider secretProvider)
+    [ApiController]
+    public class OrderController : ControllerBase
     {
+        public class OrderController(ICachedSecretProvider secretProvider)
+        {
+        }
     }
 }
 ```
@@ -154,13 +185,16 @@ When you want secret names 'changed' or 'mutated' before they go through your se
 you can pass allong a custom mutation function during the registration:
 
 ```csharp
-public static class SecretStoreBuilderExtensions
+namespace Microsoft.Extensions.Hosting
 {
-    public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+    public static class SecretStoreBuilderExtensions
     {
-        var provider = RegistrySecretProvider();
-        
-        return builder.AddProvider(secretProvider, options => options.MutateSecretName = secretName => secretName.Replace(".", "_").ToUpper());
+        public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
+        {
+            var provider = RegistrySecretProvider();
+
+            return builder.AddProvider(secretProvider, options => options.MutateSecretName = secretName => secretName.Replace(".", "_").ToUpper());
+        }
     }
 }
 ```
@@ -168,15 +202,18 @@ public static class SecretStoreBuilderExtensions
 Or allow users to specify this:
 
 ```csharp
-public static class SecretStoreBuilderExtensions
+namespace Microsoft.Extensions.Hosting
 {
-    public static SecretStoreBuilder AddRegistry(
-    this SecretStoreBuilder builder, 
-    Func<string, string> mutateSecretName = null)
+    public static class SecretStoreBuilderExtensions
     {
-        var provider = RegistrySecretProvider();
+        public static SecretStoreBuilder AddRegistry(
+        this SecretStoreBuilder builder, 
+        Func<string, string> mutateSecretName = null)
+        {
+            var provider = RegistrySecretProvider();
 
-        return builder.AddProvider(secretprovider, mutateSecretName);
+            return builder.AddProvider(secretprovider, mutateSecretName);
+        }
     }
 }
 ```
@@ -201,20 +238,27 @@ If you don't provide any critical exceptions yourself, the exception may only be
 Adding these critical exception can be done during the registration of your secret provider:
 
 ```csharp
-public static class SecretStoreBuilderExtensions
+using System.Net;
+using System.Security.Authentication;
+using Microsoft.Rest;
+
+namespace Microsoft.Extensions.Hosting
 {
-    public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder)
+    public static class SecretStoreBuilderExtensions
     {
-        // Make sure that ALL exceptions of this type is considered critical.
-        builder.AddCriticalException<AuthenticationException>();
-
-        // Make sure that only exceptions of this type where the given filter succeeds is considered critical.
-        builder.AddCriticalException<HttpOperationException>(exception => 
+        public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder)
         {
-            return exception.Response.HttpStatusCode == HttpStatusCode.Forbidden;
-        });
+            // Make sure that ALL exceptions of this type is considered critical.
+            builder.AddCriticalException<AuthenticationException>();
 
-        return builder.AddProvider(new RegistrySecretProvider());
+            // Make sure that only exceptions of this type where the given filter succeeds is considered critical.
+            builder.AddCriticalException<HttpOperationException>(exception => 
+            {
+                return exception.Response.HttpStatusCode == HttpStatusCode.Forbidden;
+            });
+
+            return builder.AddProvider(new RegistrySecretProvider());
+        }
     }
 }
 ```
