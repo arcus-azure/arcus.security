@@ -75,11 +75,16 @@ public class Program
 Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
 
 ```csharp
-[ApiController]
-public class HealthController : ControllerBase
+using Arcus.Security.Core;
+
+namespace Application.Controllers
 {
-    public HealthController(ISecretProvider secretProvider)
+    [ApiController]
+    public class HealthController : ControllerBase
     {
+        public HealthController(ISecretProvider secretProvider)
+        {
+        }
     }
 }
 ```
