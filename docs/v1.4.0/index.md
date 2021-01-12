@@ -1,12 +1,9 @@
 ---
 title: "Home"
 layout: default
-permalink: /
-redirect_from:
- - /index.html
 ---
 
-[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.All?includePreReleases=true)](https://www.nuget.org/packages/Arcus.Security.All/)
+[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.All?packageVersion=1.4.0)](https://www.nuget.org/packages/Arcus.Security.All/1.4.0)
 
 # Installation
 
@@ -14,7 +11,7 @@ We provide a NuGet package per provider and area.
 
 Here is how you install all Arcus Security packages
 ```shell
-PM > Install-Package Arcus.Security.All
+PM > Install-Package Arcus.Security.All --Version 1.4.0
 ```
 
 Here is how you consume secrets for Azure Key Vault:
@@ -45,10 +42,10 @@ This is licensed under The MIT License (MIT). Which means that you can use, copy
 
 # Older versions
 
-- [v1.3.0](v1.3.0)
-- [v1.1.0](v1.1.0)
-- [v1.0.0](v1.0.0)
-- [v0.4.0](v0.4.0)
-- [v0.3.0](v0.3.0)
-- [v0.2.0](v0.2.0)
-- [v0.1.0](v0.1.0)
+- [v1.3.0](../v1.3.0)
+- [v1.1.0](../v1.1.0)
+- [v1.0.0](../v1.0.0)
+- [v0.4.0](../v0.4.0)
+- [v0.3.0](../v0.3.0)
+- [v0.2.0](../v0.2.0)
+- [v0.1.0](../v0.1.0)
