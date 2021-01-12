@@ -11,7 +11,7 @@ We provide a NuGet package per provider and area.
 
 Here is how you consume secrets for Azure Key Vault:
 ```shell
-PM > Install-Package Arcus.Security.Secrets.AzureKeyVault
+PM > Install-Package Arcus.Security.Secrets.AzureKeyVault --Version 0.3.0
 ```
 
 # Features
