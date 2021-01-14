@@ -42,6 +42,8 @@ PM > Install-Package Arcus.Security.Core
 The secret stores are configured during the initial application build-up in the `Program.cs`:
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)
@@ -73,11 +75,16 @@ public class Program
 Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
 
 ```csharp
-[ApiController]
-public class HealthController : ControllerBase
+using Arcus.Security.Core;
+
+namespace Application.Controllers
 {
-    public HealthController(ISecretProvider secretProvider)
+    [ApiController]
+    public class HealthController : ControllerBase
     {
+        public HealthController(ISecretProvider secretProvider)
+        {
+        }
     }
 }
 ```
@@ -124,6 +131,8 @@ PM > Install-Package Arcus.Security.AzureFunctions
 The secret stores are configured during the initial application build-up in the `Startup.cs`:
 
 ```csharp
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+
 [assembly: FunctionsStartup(typeof(Startup))]
 
 namespace MyHttpAzureFunction
@@ -148,18 +157,23 @@ namespace MyHttpAzureFunction
 Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
 
 ```csharp
-public class MyHttpTrigger
-{
-    public MyHttpTrigger(ISecretProvide secretProvider)
-    {
-    }
+using Arcus.Security.Core;
 
-    [FunctionName("MyHttpTrigger")]
-    public async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-        ILogger log)
+namespace Application
+{
+    public class MyHttpTrigger
     {
-        return new OkObjectResult("Response from function with injected dependencies.");
+        public MyHttpTrigger(ISecretProvider secretProvider)
+        {
+        }
+
+        [FunctionName("MyHttpTrigger")]
+        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            ILogger log)
+        {
+            return new OkObjectResult("Response from function with injected dependencies.");
+        }
     }
 }
 ```

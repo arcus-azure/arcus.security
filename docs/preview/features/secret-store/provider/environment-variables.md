@@ -13,6 +13,8 @@ The environment variable secret provider is built-in as part of the package [Arc
 The secret provider is available as an extension.
 
 ```csharp
+using Microsoft.Extensions.Hosting;
+
 public class Program
 {
     public static void Main(string[] args)

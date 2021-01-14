@@ -3,7 +3,7 @@ title: "Home"
 layout: default
 ---
 
-[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Secrets.AzureKeyVault?packageVersion=1.1.0)](https://www.nuget.org/packages/Arcus.Security.Secrets.AzureKeyVault/1.1.0)
+[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.Secrets.All?packageVersion=1.1.0)](https://www.nuget.org/packages/Arcus.Security.Secrets.All/1.1.0)
 
 # Installation
 
@@ -11,7 +11,7 @@ We provide a NuGet package per provider and area.
 
 Here is how you install all Arcus Security packages
 ```shell
-PM > Install-Package Arcus.Security.All
+PM > Install-Package Arcus.Security.All --Version 1.1.0
 ```
 
 Here is how you consume secrets for Azure Key Vault:
