@@ -536,6 +536,22 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
+       
+        [Theory]
+        [ClassData(typeof(Blanks))]
+        public void AddAzureKeyVaultWithManagedIdentitySimple_WithoutVaultUriWithoutClientId_Throws(string vaultUri)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore(
+                (config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(vaultUri));
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
         
         [Theory]
         [ClassData(typeof(Blanks))]
@@ -547,6 +563,22 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Act
             builder.ConfigureSecretStore(
                 (config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(vaultUri, "client-id"));
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+        
+        [Theory]
+        [ClassData(typeof(Blanks))]
+        public void AddAzureKeyVaultWithManagedIdentitySimpleCacheConfiguration_WithoutVaultUriWithoutClientId_Throws(string vaultUri)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            var cacheConfiguration = new CacheConfiguration();
+            
+            // Act
+            builder.ConfigureSecretStore(
+                (config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(vaultUri, cacheConfiguration));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -583,6 +615,21 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
+        
+        [Theory]
+        [ClassData(typeof(Blanks))]
+        public void AddAzureKeyVaultWithManagedIdentity_WithBlankVaultUriWithoutClientId_Throws(string vaultUri)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore(
+                (config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(vaultUri, configureOptions: null, name: null, mutateSecretName: null));
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
 
         [Theory]
         [ClassData(typeof(Blanks))]
@@ -601,6 +648,22 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
 
         [Theory]
         [ClassData(typeof(Blanks))]
+        public void AddAzureKeyVaultWithManagedIdentity_WithCachingWithBlankVaultUriWithoutClientId_Throws(string vaultUri)
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+
+            // Act
+            builder.ConfigureSecretStore(
+                (config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(vaultUri, cacheConfiguration: cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
+
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+        
+        [Theory]
+        [ClassData(typeof(Blanks))]
         public void AddAzureKeyVaultWithManagedIdentity_WithCachingWithBlankVaultUri_Throws(string vaultUri)
         {
             // Arrange
@@ -616,6 +679,30 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         }
         
         [Fact]
+        public void AddAzureKeyVaultWithManagedIdentity_WithValidArgumentsWithoutClientId_CreatesProvider()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore(
+                (config, stores) =>
+                {
+                    stores.AddAzureKeyVaultWithManagedIdentity(
+                        GenerateVaultUri(),
+                        configureOptions: options => options.TrackDependency = true,
+                        name: "Azure Key Vault",
+                        mutateSecretName: name => name.Replace(":", "."));
+                });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                Assert.NotNull(host.Services.GetRequiredService<ISecretProvider>());
+            }
+        }
+        
+        [Fact]
         public void AddAzureKeyVaultWithManagedIdentity_WithValidArguments_CreatesProvider()
         {
             // Arrange
@@ -628,6 +715,32 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
                     stores.AddAzureKeyVaultWithManagedIdentity(
                         GenerateVaultUri(),
                         "client-id",
+                        configureOptions: options => options.TrackDependency = true,
+                        name: "Azure Key Vault",
+                        mutateSecretName: name => name.Replace(":", "."));
+                });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                Assert.NotNull(host.Services.GetRequiredService<ISecretProvider>());
+            }
+        }
+        
+        [Fact]
+        public void AddAzureKeyVaultWithManagedIdentityWithCacheConfiguration_WithValidArgumentsWithoutClientId_CreatesProvider()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            var cacheConfiguration = new CacheConfiguration();
+            
+            // Act
+            builder.ConfigureSecretStore(
+                (config, stores) =>
+                {
+                    stores.AddAzureKeyVaultWithManagedIdentity(
+                        GenerateVaultUri(),
+                        cacheConfiguration: cacheConfiguration,
                         configureOptions: options => options.TrackDependency = true,
                         name: "Azure Key Vault",
                         mutateSecretName: name => name.Replace(":", "."));
