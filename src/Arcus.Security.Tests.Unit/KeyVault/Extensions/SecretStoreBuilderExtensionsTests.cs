@@ -552,7 +552,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
 
-        
         [Theory]
         [ClassData(typeof(Blanks))]
         public void AddAzureKeyVaultWithManagedIdentitySimple_WithoutVaultUri_Throws(string vaultUri)
