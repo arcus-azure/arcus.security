@@ -174,7 +174,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Assert
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             var provider = serviceProvider.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.InvalidateSecretAsync(secretKey));
+            await Assert.ThrowsAsync<NotSupportedException>(() => provider.InvalidateSecretAsync(secretKey));
         }
 
         [Fact]
