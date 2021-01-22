@@ -377,6 +377,27 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
+        ///     The optional client id to authenticate for a user assigned managed identity.
+        ///     More information on user assigned managed identities can be found here: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#how-a-user-assigned-managed-identity-works-with-an-azure-vm</param>
+        /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
+            this SecretStoreBuilder builder,
+            string rawVaultUri,
+            bool allowCaching = false)
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+
+            return AddAzureKeyVaultWithManagedIdentity(builder, rawVaultUri, clientId: null, allowCaching: allowCaching);
+        }
+        
+        /// <summary>
+        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="clientId">
         ///     The optional client id to authenticate for a user assigned managed identity.
         ///     More information on user assigned managed identities can be found here: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#how-a-user-assigned-managed-identity-works-with-an-azure-vm</param>
@@ -399,6 +420,38 @@ namespace Microsoft.Extensions.Hosting
                 configureOptions: null,
                 name: null,
                 mutateSecretName: null,
+                allowCaching: allowCaching);
+        }
+
+        /// <summary>
+        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
+        /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
+        /// <param name="configureOptions">The optional additional options to configure the Azure Key Vault secret source.</param>
+        /// <param name="name">The unique name to register this Azure Key Vault provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
+            this SecretStoreBuilder builder,
+            string rawVaultUri,
+            Action<KeyVaultOptions> configureOptions,
+            string name,
+            Func<string, string> mutateSecretName,
+            bool allowCaching = false)
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+
+            return AddAzureKeyVaultWithManagedIdentity(
+                builder,
+                rawVaultUri,
+                clientId: null,
+                configureOptions: configureOptions,
+                name: name,
+                mutateSecretName: mutateSecretName,
                 allowCaching: allowCaching);
         }
 
@@ -505,6 +558,29 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
+            this SecretStoreBuilder builder,
+            string rawVaultUri,
+            ICacheConfiguration cacheConfiguration)
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+
+            return AddAzureKeyVaultWithManagedIdentity(
+                builder,
+                rawVaultUri,
+                cacheConfiguration,
+                clientId: null);
+        }
+        
+        /// <summary>
+        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <param name="clientId">
         ///     The optional client id to authenticate for a user assigned managed identity.
         ///     More information on user assigned managed identities can be found here: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#how-a-user-assigned-managed-identity-works-with-an-azure-vm</param>
@@ -528,6 +604,38 @@ namespace Microsoft.Extensions.Hosting
                 configureOptions: null,
                 name: null,
                 mutateSecretName: null);
+        }
+        
+        /// <summary>
+        /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
+        /// <param name="cacheConfiguration">The configuration to control how the caching will be done.</param>
+        /// <param name="configureOptions">The optional additional options to configure the Azure Key Vault secret source.</param>
+        /// <param name="name">The unique name to register this Azure Key Vault provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
+            this SecretStoreBuilder builder,
+            string rawVaultUri,
+            ICacheConfiguration cacheConfiguration,
+            Action<KeyVaultOptions> configureOptions,
+            string name,
+            Func<string, string> mutateSecretName)
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
+            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
+
+            return AddAzureKeyVaultWithManagedIdentity(
+                builder,
+                rawVaultUri,
+                cacheConfiguration,
+                clientId: null,
+                configureOptions: configureOptions,
+                name: name,
+                mutateSecretName: mutateSecretName);
         }
 
         /// <summary>
