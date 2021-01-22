@@ -204,7 +204,7 @@ namespace Arcus.Security.Core
             {
                 return subsetSecretStore.Value;
             }
-            
+
             throw new KeyNotFoundException(
                 $"Could not retrieve the named {nameof(ISecretProvider)} because no secret provider was registered with the name '{name}'");
         }
