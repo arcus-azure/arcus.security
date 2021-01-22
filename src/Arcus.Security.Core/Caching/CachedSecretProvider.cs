@@ -52,7 +52,7 @@ namespace Arcus.Security.Core.Caching
         /// Creating a new CachedSecretProvider with a standard generated MemoryCache and default TimeSpan of 5 minutes
         /// </summary>
         public CachedSecretProvider(ISecretProvider secretProvider) :
-            this(secretProvider, new CacheConfiguration(), new MemoryCache(new MemoryCacheOptions()))
+            this(secretProvider, CacheConfiguration.Default, new MemoryCache(new MemoryCacheOptions()))
         {
         }
 

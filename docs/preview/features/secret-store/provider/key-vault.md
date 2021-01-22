@@ -17,6 +17,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 After installing the package, the addtional extensions becomes available when building the secret store.
 
 ```csharp
+using Arcus.Security.Core.Caching.Configuration;
 using Microsoft.Extensions.Hosting;
 
 public class Program
@@ -48,7 +49,7 @@ public class Program
                         builder.AddAzureKeyVault(vaultAuthentication, vaultConfiguration);
 
                         // Adding a default cached variant of the Azure Key Vault provider (default: 5 min caching).
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, allowCaching: true);
+                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration: CacheConfiguration.Default);
 
                         // Assing a configurable cached variant of the Azure Key Vault provider.
                         var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(1));

@@ -9,28 +9,32 @@ namespace Arcus.Security.Core.Caching.Configuration
     public class CacheConfiguration : ICacheConfiguration
     {
         /// <summary>
-        ///     Duration for which an entry should be cached
+        /// Initializes a new instance of the <see cref="CacheConfiguration"/> class with default cache entry of 5 minutes.
         /// </summary>
-        public TimeSpan Duration { get; }
+        public CacheConfiguration() : this(TimeSpan.FromMinutes(5))
+        {
+        }
 
         /// <summary>
-        ///     Constructor
+        /// Initializes a new instance of the <see cref="CacheConfiguration"/> class.
         /// </summary>
-        /// <param name="duration">Duration for which an entry should be cached</param>
-        /// <exception cref="ArgumentException">Exception thrown when default timespan is specified as cache duration</exception>
+        /// <param name="duration">The duration for which an entry should be cached.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="duration"/> is outside the bounds of a valid cache duration.</exception>
         public CacheConfiguration(TimeSpan duration)
         {
-            Guard.For<ArgumentException>(() => duration <= default(TimeSpan), "Caching duration should be a positive interval");
+            Guard.For<ArgumentOutOfRangeException>(() => duration <= default(TimeSpan), "Requires a caching duration of a positive time interval");
 
             Duration = duration;
         }
 
         /// <summary>
-        ///     Constructor with default cache entry of 5 minutes
+        /// Gets the default <see cref="ICacheConfiguration"/> that takes in 5 minutes as default cache duration.
         /// </summary>
-        public CacheConfiguration()
-        {
-            Duration = TimeSpan.FromMinutes(5);
-        }
+        public static ICacheConfiguration Default { get; } = new CacheConfiguration();
+
+        /// <summary>
+        /// Gets the duration for which an entry should be cached.
+        /// </summary>
+        public TimeSpan Duration { get; }
     }
 }
