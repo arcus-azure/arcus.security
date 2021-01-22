@@ -1,5 +1,6 @@
 ﻿using System;
 using Arcus.Security.Core.Caching.Configuration;
+using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Core.Caching
@@ -23,8 +24,14 @@ namespace Arcus.Security.Core.Caching
         ///     <see cref="MemoryCache" /> instance
         /// </param>
         /// <returns>A secret provider that caches values</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> or <paramref name="memoryCache"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="cachingDuration"/> is outside the bounds of a valid cache duration.</exception>
         public static ICachedSecretProvider WithCaching(this ISecretProvider secretProvider, TimeSpan cachingDuration, IMemoryCache memoryCache)
         {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to create a cached version");
+            Guard.For<ArgumentOutOfRangeException>(() => cachingDuration <= default(TimeSpan), "Requires a caching duration of a positive time interval");
+            Guard.NotNull(memoryCache, nameof(memoryCache), "Requires a memory cache to store the cached results");
+            
             return new CachedSecretProvider(secretProvider, new CacheConfiguration(cachingDuration), memoryCache);
         }
 
@@ -38,8 +45,13 @@ namespace Arcus.Security.Core.Caching
         /// </param>
         /// <param name="cachingDuration">The duration to cache secrets in memory</param>
         /// <returns>A secret provider that caches values</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="cachingDuration"/> is outside the bounds of a valid cache duration.</exception>
         public static ICachedSecretProvider WithCaching(this ISecretProvider secretProvider, TimeSpan cachingDuration)
         {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to create a cached version");
+            Guard.For<ArgumentOutOfRangeException>(() => cachingDuration <= default(TimeSpan), "Requires a caching duration of a positive time interval");
+
             return new CachedSecretProvider(secretProvider, new CacheConfiguration(cachingDuration));
         }
 
@@ -52,8 +64,11 @@ namespace Arcus.Security.Core.Caching
         ///     not cached
         /// </param>
         /// <returns>A secret provider that caches values</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public static ICachedSecretProvider WithCaching(this ISecretProvider secretProvider)
         {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to create a cached version");
+
             return new CachedSecretProvider(secretProvider);
         }
     }
