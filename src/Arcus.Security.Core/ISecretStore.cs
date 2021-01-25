@@ -48,7 +48,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ICachedSecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
         /// <exception cref="NotSupportedException">
-        ///     Thrown when their was either none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
+        ///     Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
         ///     or there was an <see cref="ISecretProvider"/> registered but not with caching.
         /// </exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
