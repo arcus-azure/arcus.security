@@ -113,7 +113,7 @@ namespace Arcus.Security.Core
                 throw new InvalidOperationException(
                     $"Cannot cast registered {nameof(ISecretProvider)} with name '{name}' to type '{typeof(TSecretProvider).Name}' " +
                     $"because multiple secret providers were registered with the name '{name}', " +
-                    $"use the non-generic '{nameof (GetProvider})' to retrieve them");
+                    $"use the non-generic '{nameof(GetProvider)}' to retrieve them");
             }
 
             throw new InvalidCastException(
