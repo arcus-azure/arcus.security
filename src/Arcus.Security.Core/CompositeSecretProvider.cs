@@ -306,12 +306,13 @@ namespace Arcus.Security.Core
 
                 await invalidateSecretAsync;
                 return "ignored result";
-            });
+            }, eventName: "Invalidate Secret");
         }
 
         private async Task<T> WithCachedSecretStoreAsync<T>(
             string secretName,
-            Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider,
+            string eventName = "Get Secret") where T : class
         {
             Guard.For<NotSupportedException>(
                 () => !HasCachedSecretProviders, 
@@ -331,10 +332,13 @@ namespace Arcus.Security.Core
                 }
 
                 return await registeredProvider;
-            });
+            }, eventName);
         }
 
-        private async Task<T> WithSecretStoreAsync<T>(string secretName, Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
+        private async Task<T> WithSecretStoreAsync<T>(
+            string secretName, 
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider, 
+            string eventName = "Get Secret") where T : class
         {
             EnsureAnySecretProvidersConfigured(secretName);
 
@@ -343,7 +347,7 @@ namespace Arcus.Security.Core
             {
                 try
                 {
-                    T result = await GetSecretFromProviderAsync(secretName, source, callRegisteredProvider);
+                    T result = await GetSecretFromProviderAsync(secretName, source, callRegisteredProvider, eventName);
                     if (result is null)
                     {
                         continue;
@@ -382,11 +386,12 @@ namespace Arcus.Security.Core
         private async Task<T> GetSecretFromProviderAsync<T>(
             string secretName, 
             SecretStoreSource source, 
-            Func<SecretStoreSource, Task<T>> callRegisteredProvider) where T : class
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider,
+            string eventName) where T : class
         {
             if (_auditingOptions.EmitSecurityEvents)
             {
-                _logger.LogSecurityEvent("Get Secret", new Dictionary<string, object>
+                _logger.LogSecurityEvent(eventName, new Dictionary<string, object>
                 {
                     ["SecretName"] = secretName,
                     ["SecretProvider"] = source.Options?.Name ?? source.SecretProvider.GetType().Name
