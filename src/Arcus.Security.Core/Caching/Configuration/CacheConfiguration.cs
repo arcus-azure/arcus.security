@@ -17,10 +17,10 @@ namespace Arcus.Security.Core.Caching.Configuration
         ///     Constructor
         /// </summary>
         /// <param name="duration">Duration for which an entry should be cached</param>
-        /// <exception cref="ArgumentException">Exception thrown when default timespan is specified as cache duration</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the cache duration is not a positive time duration.</exception>
         public CacheConfiguration(TimeSpan duration)
         {
-            Guard.For<ArgumentException>(() => duration <= default(TimeSpan), "Caching duration should be a positive interval");
+            Guard.NotLessThan(duration, TimeSpan.Zero, nameof(duration), "Requires a positive time duration in which the caching should take place");
 
             Duration = duration;
         }
