@@ -281,6 +281,19 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
 
+        [Fact]
+        public async Task GetSecret_WithoutSecretResult_ReturnsNull()
+        {
+            // Arrange
+            var provider = new EnvironmentVariableSecretProvider();
+            
+            // Act
+            Secret result = await provider.GetSecretAsync($"random-not-found-secret-{Guid.NewGuid()}");
+            
+            // Assert
+            Assert.Null(result);
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]
