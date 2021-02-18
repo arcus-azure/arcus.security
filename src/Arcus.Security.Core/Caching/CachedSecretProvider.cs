@@ -8,7 +8,7 @@ namespace Arcus.Security.Core.Caching
 {
     /// <inheritdoc cref="ISecretProvider"/>
     /// <summary>
-    /// A Secret Provider that will cache secrets in memory, to improve performance
+    /// A <see cref="ISecretProvider"/> that will cache secrets in memory, to improve performance.
     /// </summary>
     public class CachedSecretProvider : ICachedSecretProvider
     {
@@ -16,18 +16,23 @@ namespace Arcus.Security.Core.Caching
         private readonly ICacheConfiguration _cacheConfiguration;
 
         /// <summary>
-        /// Creating a new CachedSecretProvider with all required information
+        /// Creating a new <see cref="CachedSecretProvider"/> with all required information.
         /// </summary>
         /// <param name="secretProvider">The internal <see cref="ISecretProvider"/> used to retrieve the actual Secret Value, when not cached</param>
         /// <param name="cacheConfiguration">The <see cref="ICacheConfiguration"/> which defines how the cache works</param>
         /// <param name="memoryCache">A <see cref="IMemoryCache"/> implementation that can cache data in memory.</param>
-        /// <exception cref="ArgumentNullException">The secretProvider and memoryCache parameters must not be null</exception>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown when the <paramref name="secretProvider"/>, <paramref name="memoryCache"/>, or <paramref name="cacheConfiguration"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <see cref="ICacheConfiguration.Duration"/> is not a positive time duration.</exception>
         public CachedSecretProvider(ISecretProvider secretProvider, ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider));
-            Guard.NotNull(memoryCache, nameof(memoryCache));
-            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration));
-
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
+            Guard.NotNull(memoryCache, nameof(memoryCache), "Requires a memory caching implementation to include caching while retrieving secrets");
+            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration), "Requires a configuration instance to influence the caching during the retrieval of secrets");
+            Guard.NotLessThan(cacheConfiguration.Duration, TimeSpan.Zero, nameof(cacheConfiguration), 
+                "Requires a positive time duration in the cache configuration in which the caching should take place");
+            
             _secretProvider = secretProvider;
             _cacheConfiguration = cacheConfiguration;
             
@@ -40,8 +45,12 @@ namespace Arcus.Security.Core.Caching
 
         /// <inheritdoc />
         /// <summary>
-        /// Creating a new CachedSecretProvider with a standard generated MemoryCache
+        /// Creating a new <see cref="CachedSecretProvider"/> with a standard generated <see cref="IMemoryCache"/>.
         /// </summary>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown when the <paramref name="secretProvider"/> or <paramref name="cacheConfiguration"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <see cref="ICacheConfiguration.Duration"/> is not a positive time duration.</exception>
         public CachedSecretProvider(ISecretProvider secretProvider, ICacheConfiguration cacheConfiguration) :
             this(secretProvider, cacheConfiguration, new MemoryCache(new MemoryCacheOptions()))
         {
@@ -49,8 +58,9 @@ namespace Arcus.Security.Core.Caching
 
         /// <inheritdoc />
         /// <summary>
-        /// Creating a new CachedSecretProvider with a standard generated MemoryCache and default TimeSpan of 5 minutes
+        /// Creating a new <see cref="CachedSecretProvider"/> with a standard generated <see cref="IMemoryCache"/> and default <see cref="TimeSpan"/> of 5 minutes.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public CachedSecretProvider(ISecretProvider secretProvider) :
             this(secretProvider, CacheConfiguration.Default, new MemoryCache(new MemoryCacheOptions()))
         {
@@ -81,6 +91,8 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            
             return GetRawSecretAsync(secretName, ignoreCache: false);
         }
 
@@ -94,6 +106,8 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            
             return GetSecretAsync(secretName, ignoreCache: false);
         }
 
@@ -108,6 +122,8 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            
             Secret secret = await GetSecretAsync(secretName, ignoreCache);
             return secret?.Value;
         }
@@ -123,6 +139,8 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            
             if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret cachedSecret))
             {
                 return cachedSecret;
@@ -142,7 +160,7 @@ namespace Arcus.Security.Core.Caching
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
         public Task InvalidateSecretAsync(string secretName)
         {
-            Guard.NotNullOrEmpty(secretName, nameof(secretName), "Cannot invalidate a cached secret with an empty name");
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to invalidate the cached secret");
 
             MemoryCache.Remove(secretName);
             return Task.CompletedTask;

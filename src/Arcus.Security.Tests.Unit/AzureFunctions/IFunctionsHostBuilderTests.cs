@@ -61,7 +61,7 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
             // Assert
             IServiceProvider serviceProvider = builder.Build();
             var secretProvider = serviceProvider.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.InvalidateSecretAsync(secretKey));
+            await Assert.ThrowsAsync<NotSupportedException>(() => secretProvider.InvalidateSecretAsync(secretKey));
         }
 
         [Fact]
@@ -115,6 +115,75 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
             Assert.Equal(secretValue1, await secretProvider.GetRawSecretAsync(secretKey1));
             Assert.Equal(secretValue2, await secretProvider.GetRawSecretAsync(secretKey2));
             Assert.Equal(secretValue3, await secretProvider.GetRawSecretAsync(secretKey3));
+        }
+        
+        [Fact]
+        public async Task ConfigureSecretStore_WithDuplicateNames_MakesSubsetOfDuplicateSecretProviderNames()
+        {
+            // Arrange
+            var name = $"duplicate-name-{Guid.NewGuid()}";
+            string secretName1 = "MySecret-1", secretName2 = "My-Secret2", secretName3 = "My-Secret3", secretName4 = $"My-Secret4";
+            string secretValue1 = $"secret-{Guid.NewGuid()}",
+                   secretValue2 = $"secret-{Guid.NewGuid()}",
+                   secretValue3 = $"secret-{Guid.NewGuid()}",
+                   secretValue4 = $"secret-{Guid.NewGuid()}";
+            var builder = new StubFunctionsHostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore(stores =>
+            {
+                stores.AddProvider(new InMemorySecretProvider((secretName1, secretValue1)), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider((secretName3, secretValue3)), options => options.Name = "some other name")
+                      .AddProvider(new InMemoryCachedSecretProvider((secretName2, secretValue2)), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider((secretName4, secretValue4)));
+            });
+
+            // Assert
+            var store = builder.Build().GetRequiredService<ISecretStore>();
+            ISecretProvider provider = store.GetProvider(name);
+            Assert.IsNotType<InMemoryCachedSecretProvider>(provider);
+            Assert.Equal(secretValue1, await provider.GetRawSecretAsync(secretName1));
+            Assert.Equal(secretValue2, await provider.GetRawSecretAsync(secretName2));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretName3));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretName4));
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_FailsWhenRetrievingTypedSecretProvider()
+        {
+            // Arrange
+            string name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new StubFunctionsHostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore(stores =>
+            {
+                stores.AddProvider(new InMemorySecretProvider(), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider(), options => options.Name = name);
+            });
+            
+            // Assert
+            var store = builder.Build().GetRequiredService<ISecretStore>();
+            Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemorySecretProvider>(name));
+        }
+        
+        [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_FailsWhenRetrievingTypedCachedSecretProvider()
+        {
+            // Arrange
+            string name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new StubFunctionsHostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore(stores =>
+            {
+                stores.AddProvider(new InMemoryCachedSecretProvider(), options => options.Name = name)
+                      .AddProvider(new InMemoryCachedSecretProvider(), options => options.Name = name);
+            });
+            
+            // Assert
+            var store = builder.Build().GetRequiredService<ISecretStore>();
+            Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
         }
     }
 }

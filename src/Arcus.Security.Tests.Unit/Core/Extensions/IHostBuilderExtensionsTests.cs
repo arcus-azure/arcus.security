@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Org.BouncyCastle.Asn1;
 using Xunit;
 using Xunit.Sdk;
 
@@ -96,9 +97,11 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             builder.ConfigureSecretStore((config, stores) => stores.AddProvider(stubProvider));
 
             // Assert
-            IHost host = builder.Build();
-            var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.InvalidateSecretAsync(secretKey));
+            using (IHost host = builder.Build())
+            {
+                var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+                await Assert.ThrowsAsync<NotSupportedException>(() => provider.InvalidateSecretAsync(secretKey));
+            }
         }
 
         [Fact]
@@ -223,7 +226,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Assert
             IHost host = builder.Build();
             var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(
+            await Assert.ThrowsAsync<NotSupportedException>(
                 () => cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false));
         }
 
@@ -243,7 +246,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Assert
             IHost host = builder.Build();
             var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(
+            await Assert.ThrowsAsync<NotSupportedException>(
                 () => cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false));
         }
 
@@ -419,7 +422,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Assert
             IHost host = builder.Build();
             var cachedSecretProvider = host.Services.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(
+            await Assert.ThrowsAsync<NotSupportedException>(
                 () => cachedSecretProvider.GetSecretAsync("KeyVault.Secret", ignoreCache: false));
         }
 
@@ -675,8 +678,8 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         public void ConfigureSecretStore_WithoutNamedProvider_Fails()
         {
             // Arrange
-            var stubProvider1 = new InMemorySecretProvider();
-            var stubProvider2 = new InMemorySecretProvider();
+            var stubProvider1 = new InMemoryCachedSecretProvider();
+            var stubProvider2 = new InMemoryCachedSecretProvider();
             var builder = new HostBuilder();
 
             // Act
@@ -698,8 +701,8 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         public void ConfigureSecretStore_WithoutNamedProviderT_Fails()
         {
             // Arrange
-            var stubProvider1 = new InMemorySecretProvider();
-            var stubProvider2 = new InMemorySecretProvider();
+            var stubProvider1 = new InMemoryCachedSecretProvider();
+            var stubProvider2 = new InMemoryCachedSecretProvider();
             var builder = new HostBuilder();
 
             // Act
@@ -787,21 +790,81 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         }
 
         [Fact]
-        public void ConfigureSecretStore_WithDuplicateNames_Fails()
+        public async Task ConfigureSecretStore_WithDuplicateNames_MakesSubsetOfDuplicateSecretProviderNames()
         {
             // Arrange
             var name = $"duplicate-name-{Guid.NewGuid()}";
+            string secretName1 = "MySecret-1", secretName2 = "My-Secret2", secretName3 = "My-Secret3", secretName4 = $"My-Secret4";
+            string secretValue1 = $"secret-{Guid.NewGuid()}",
+                   secretValue2 = $"secret-{Guid.NewGuid()}",
+                   secretValue3 = $"secret-{Guid.NewGuid()}",
+                   secretValue4 = $"secret-{Guid.NewGuid()}";
             var builder = new HostBuilder();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name)
-                      .AddProvider(Mock.Of<ISecretProvider>(), options => options.Name = name);
+                stores.AddProvider(new InMemorySecretProvider((secretName1, secretValue1)), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider((secretName3, secretValue3)), options => options.Name = "some other name")
+                      .AddProvider(new InMemoryCachedSecretProvider((secretName2, secretValue2)), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider((secretName4, secretValue4)));
             });
 
             // Assert
-            Assert.Throws<InvalidOperationException>(() => builder.Build());
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                ISecretProvider provider = store.GetProvider(name);
+                Assert.IsNotType<InMemoryCachedSecretProvider>(provider);
+                Assert.Equal(secretValue1, await provider.GetRawSecretAsync(secretName1));
+                Assert.Equal(secretValue2, await provider.GetRawSecretAsync(secretName2));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretName3));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretName4));
+            }
+        }
+
+        [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_FailsWhenRetrievingTypedSecretProvider()
+        {
+            // Arrange
+            string name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(new InMemorySecretProvider(), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider(), options => options.Name = name);
+            });
+            
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemorySecretProvider>(name));
+            }
+        }
+        
+        [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_FailsWhenRetrievingTypedCachedSecretProvider()
+        {
+            // Arrange
+            string name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(new InMemoryCachedSecretProvider(), options => options.Name = name)
+                      .AddProvider(new InMemoryCachedSecretProvider(), options => options.Name = name);
+            });
+            
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
+            }
         }
     }
 }

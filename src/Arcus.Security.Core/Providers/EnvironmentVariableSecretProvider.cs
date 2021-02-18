@@ -42,6 +42,11 @@ namespace Arcus.Security.Core.Providers
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
             
             string secretValue = await GetRawSecretAsync(secretName);
+            if (secretValue is null)
+            {
+                return null;
+            }
+
             return new Secret(secretValue);
         }
 
