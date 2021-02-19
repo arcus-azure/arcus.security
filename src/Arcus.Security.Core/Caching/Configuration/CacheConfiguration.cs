@@ -30,7 +30,7 @@ namespace Arcus.Security.Core.Caching.Configuration
         /// <summary>
         /// Gets the default <see cref="ICacheConfiguration"/> that takes in 5 minutes as default cache duration.
         /// </summary>
-        public static ICacheConfiguration Default { get; } = new CacheConfiguration();
+        public static ICacheConfiguration Default { get; } = new CacheConfiguration(TimeSpan.FromMinutes(5));
 
         /// <summary>
         /// Gets the duration for which an entry should be cached.
