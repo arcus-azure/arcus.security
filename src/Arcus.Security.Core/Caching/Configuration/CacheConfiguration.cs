@@ -9,28 +9,32 @@ namespace Arcus.Security.Core.Caching.Configuration
     public class CacheConfiguration : ICacheConfiguration
     {
         /// <summary>
-        ///     Duration for which an entry should be cached
+        /// Initializes a new instance of the <see cref="CacheConfiguration"/> class with default cache entry of 5 minutes.
         /// </summary>
-        public TimeSpan Duration { get; }
+        [Obsolete ("Use the " + nameof(Default) + " static property to retrieve a default caching configuration instance")]
+        public CacheConfiguration() : this(TimeSpan.FromMinutes(5))
+        {
+        }
 
         /// <summary>
-        ///     Constructor
+        /// Initializes a new instance of the <see cref="CacheConfiguration"/> class.
         /// </summary>
         /// <param name="duration">Duration for which an entry should be cached</param>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the cache duration is not a positive time duration.</exception>
         public CacheConfiguration(TimeSpan duration)
         {
             Guard.NotLessThan(duration, TimeSpan.Zero, nameof(duration), "Requires a positive time duration in which the caching should take place");
-
             Duration = duration;
         }
 
         /// <summary>
-        ///     Constructor with default cache entry of 5 minutes
+        /// Gets the default <see cref="ICacheConfiguration"/> that takes in 5 minutes as default cache duration.
         /// </summary>
-        public CacheConfiguration()
-        {
-            Duration = TimeSpan.FromMinutes(5);
-        }
+        public static ICacheConfiguration Default { get; } = new CacheConfiguration(TimeSpan.FromMinutes(5));
+
+        /// <summary>
+        /// Gets the duration for which an entry should be cached.
+        /// </summary>
+        public TimeSpan Duration { get; }
     }
 }

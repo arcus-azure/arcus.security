@@ -24,7 +24,7 @@ namespace Arcus.Security.Core.Caching
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
             Guard.NotLessThan(cachingDuration, TimeSpan.Zero, nameof(cachingDuration), "Requires a positive time duration in which the caching should take place");
             Guard.NotNull(memoryCache, nameof(memoryCache), "Requires a memory caching implementation to include caching while retrieving secrets");
-            
+
             return new CachedSecretProvider(secretProvider, new CacheConfiguration(cachingDuration), memoryCache);
         }
 
@@ -41,7 +41,7 @@ namespace Arcus.Security.Core.Caching
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
             Guard.NotLessThan(cachingDuration, TimeSpan.Zero, nameof(cachingDuration), "Requires a positive time duration in which the caching should take place");
-            
+
             return new CachedSecretProvider(secretProvider, new CacheConfiguration(cachingDuration));
         }
 
@@ -55,7 +55,7 @@ namespace Arcus.Security.Core.Caching
         public static ICachedSecretProvider WithCaching(this ISecretProvider secretProvider)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
-            
+
             return new CachedSecretProvider(secretProvider);
         }
     }

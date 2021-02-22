@@ -62,7 +62,7 @@ namespace Arcus.Security.Core.Caching
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public CachedSecretProvider(ISecretProvider secretProvider) :
-            this(secretProvider, new CacheConfiguration(), new MemoryCache(new MemoryCacheOptions()))
+            this(secretProvider, CacheConfiguration.Default, new MemoryCache(new MemoryCacheOptions()))
         {
         }
 
