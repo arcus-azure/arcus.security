@@ -1,12 +1,9 @@
 ---
 title: "Home"
 layout: default
-permalink: /
-redirect_from:
- - /index.html
 ---
 
-[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.All?includePreReleases=true)](https://www.nuget.org/packages/Arcus.Security.All/)
+[![NuGet Badge](https://buildstats.info/nuget/Arcus.Security.All?packageVersion=1.5.0)](https://www.nuget.org/packages/Arcus.Security.All/1.5.0)
 
 # Installation
 
@@ -45,12 +42,12 @@ This is licensed under The MIT License (MIT). Which means that you can use, copy
 
 # Older versions
 
-- [v1.4.1](v1.4.1)
-- [v1.4.0](v1.4.0)
-- [v1.3.0](v1.3.0)
-- [v1.1.0](v1.1.0)
-- [v1.0.0](v1.0.0)
-- [v0.4.0](v0.4.0)
-- [v0.3.0](v0.3.0)
-- [v0.2.0](v0.2.0)
-- [v0.1.0](v0.1.0)
+- [v1.4.1](../v1.4.1)
+- [v1.4.0](../v1.4.0)
+- [v1.3.0](../v1.3.0)
+- [v1.1.0](../v1.1.0)
+- [v1.0.0](../v1.0.0)
+- [v0.4.0](../v0.4.0)
+- [v0.3.0](../v0.3.0)
+- [v0.2.0](../v0.2.0)
+- [v0.1.0](../v0.1.0)
