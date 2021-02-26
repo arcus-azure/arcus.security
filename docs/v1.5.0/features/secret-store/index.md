@@ -107,7 +107,7 @@ public void ConfigureServices(IServiceCollection services)
         stores.AddEnvironmentVariables();
         
         #if DEBUG
-        builder.AddConfiguration(configuration);
+        stores.AddConfiguration(configuration);
         #endif
     
         var keyVaultName = configuration["KeyVault_Name"];
@@ -143,10 +143,10 @@ namespace MyHttpAzureFunction
         {
             builder.ConfigureSecretStore(stores =>
             {
-                builder.AddEnvironmentVariables();
+                stores.AddEnvironmentVariables();
 
                 var keyVaultName = config["KeyVault_Name"];
-                builder.AddEnvironmentVariables()
+                stores.AddEnvironmentVariables()
                        .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
             })
         }
