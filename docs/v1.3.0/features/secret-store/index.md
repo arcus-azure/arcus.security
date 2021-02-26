@@ -100,11 +100,11 @@ namespace MyHttpAzureFunction
         {
             builder.ConfigureSecretStore(stores =>
             {
-                builder.AddEnvironmentVariables();
+                stores.AddEnvironmentVariables();
 
                 var keyVaultName = config["KeyVault_Name"];
-                builder.AddEnvironmentVariables()
-                       .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
+                stores.AddEnvironmentVariables()
+                      .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
             })
         }
     }

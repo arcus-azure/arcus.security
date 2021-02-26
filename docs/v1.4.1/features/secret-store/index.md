@@ -107,7 +107,7 @@ public void ConfigureServices(IServiceCollection services)
         stores.AddEnvironmentVariables();
         
         #if DEBUG
-        builder.AddConfiguration(configuration);
+        stores.AddConfiguration(configuration);
         #endif
     
         var keyVaultName = configuration["KeyVault_Name"];
