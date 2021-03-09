@@ -16,7 +16,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ## Configuration
 After installing the package, the addtional extensions becomes available when building the secret store.
 
-[Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) authentication is the recommaned approach to interact with Azure Key Vault.
+[Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) authentication is the recommended approach to interact with Azure Key Vault.
 
 See [Service-to-service authentication to Azure Key Vault using .NET - Connection String Support](https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication#connection-string-support) for supported connection strings and [National clouds - Azure AD authentication endpoints](https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints) for valid azure AD instances. 
 
