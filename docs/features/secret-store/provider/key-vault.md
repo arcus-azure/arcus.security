@@ -1,7 +1,6 @@
 ---
 title: "Azure Key Vault secret provider"
 layout: default
-redirect_from: /features/auth/azure-key-vault
 ---
 
 # Azure Key Vault secret provider
