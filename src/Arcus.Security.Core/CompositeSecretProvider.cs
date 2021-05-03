@@ -420,7 +420,7 @@ namespace Arcus.Security.Core
                 }
             }
 
-            _logger.LogInformation("Found secret with name '{SecretName}'", secretName);
+            _logger.LogTrace("Found secret with name '{SecretName}'", secretName);
         }
 
         private bool IsCriticalException(Exception exceptionCandidate)

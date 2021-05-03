@@ -10,7 +10,7 @@ using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.DockerSecrets
 {
-    public class SecretStoreBuilderExtensionTests : IntegrationTest, IDisposable
+    public class SecretStoreBuilderExtensionTests : IntegrationTest
     {
         private readonly string _secretLocation = Path.Combine(Path.GetTempPath(), "dockersecretstests");
 
@@ -77,9 +77,12 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
             await File.WriteAllTextAsync(Path.Combine(_secretLocation, secretKey), secretValue);
         }
 
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        public void Dispose()
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
             Directory.Delete(_secretLocation, true);
         }
     }
