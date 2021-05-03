@@ -225,7 +225,7 @@ GEM
     rb-fsevent (0.10.4)
     rb-inotify (0.10.1)
       ffi (~> 1.0)
-    rexml (3.2.4)
+    rexml (3.2.5)
     rouge (3.19.0)
     ruby-enum (0.8.0)
       i18n
@@ -260,8 +260,9 @@ PLATFORMS
   x64-mingw32
 
 DEPENDENCIES
-  github-pages
-  nokogiri (>= 1.10.4)
+  github-pages (>= 207)
+  jekyll-redirect-from
+  nokogiri (>= 1.11.0)
 
 BUNDLED WITH
    1.17.2
