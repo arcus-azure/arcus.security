@@ -16,10 +16,10 @@ GEM
     colorator (1.1.0)
     commonmarker (0.17.13)
       ruby-enum (~> 0.5)
-    concurrent-ruby (1.1.7)
+    concurrent-ruby (1.1.8)
     dnsruby (1.61.4)
       simpleidn (~> 0.1)
-    em-websocket (0.5.1)
+    em-websocket (0.5.2)
       eventmachine (>= 0.12.9)
       http_parser.rb (~> 0.6.0)
     ethon (0.12.0)
@@ -29,8 +29,8 @@ GEM
     execjs (2.7.0)
     faraday (1.0.1)
       multipart-post (>= 1.2, < 3)
-    ffi (1.13.1)
-    ffi (1.13.1-x64-mingw32)
+    ffi (1.15.0)
+    ffi (1.15.0-x64-mingw32)
     forwardable-extended (2.6.0)
     gemoji (3.0.1)
     github-pages (207)
@@ -199,7 +199,7 @@ GEM
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
     liquid (4.0.3)
-    listen (3.2.1)
+    listen (3.5.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
     mercenary (0.3.6)
@@ -261,8 +261,8 @@ PLATFORMS
 
 DEPENDENCIES
   github-pages (>= 207)
-  jekyll-redirect-from
+  jekyll-redirect-from (>= 0.15.0)
   nokogiri (>= 1.11.0)
 
 BUNDLED WITH
-   1.17.2
+   1.17.3
