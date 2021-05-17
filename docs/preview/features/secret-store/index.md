@@ -21,6 +21,8 @@ Several built in secret providers available in the package.
 And several additional providers in seperate packages.
 
 * [Azure Key Vault](./../../features/secret-store/provider/key-vault)
+* [Command line](./../../features/secret-store/provider/cmd-line)
+* [Docker secrets](./../../features/secret-store/provider/docker-secrets)
 * [HashiCorp](./../../features/secret-store//provider/hashicorp-vault)
 * [User Secrets](./../../features/secret-store/provider/user-secrets)
 

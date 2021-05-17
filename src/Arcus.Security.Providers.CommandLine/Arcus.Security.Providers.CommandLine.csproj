@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <Authors>Arcus</Authors>
+    <Description>Provides support for command line arguments with Arcus Secret Store</Description>
+    <Copyright>Copyright (c) Arcus</Copyright>
+    <PackageLicenseUrl>https://github.com/arcus-azure/arcus.security/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/arcus-azure/arcus.security</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/arcus-azure/arcus.security</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>CommandLine;Cmd;Console</PackageTags>
+    <AssemblyName>Arcus.Security.Providers.CommandLine</AssemblyName>
+    <RootNamespace>Arcus.Security.Providers.CommandLine</RootNamespace>
+    <PackageId>Arcus.Security.Providers.CommandLine</PackageId>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
+  </ItemGroup>
+
+</Project>
