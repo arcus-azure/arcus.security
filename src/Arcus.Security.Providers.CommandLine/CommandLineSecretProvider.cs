@@ -42,7 +42,6 @@ namespace Arcus.Security.Providers.CommandLine
             }
 
             return new Secret(secretValue);
-
         }
 
         /// <summary>
@@ -59,7 +58,7 @@ namespace Arcus.Security.Providers.CommandLine
             {
                 return Task.FromResult(secretValue);
             }
-            
+
             return Task.FromResult<string>(null);
         }
     }
