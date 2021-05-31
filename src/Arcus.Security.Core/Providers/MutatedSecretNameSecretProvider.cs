@@ -147,7 +147,7 @@ namespace Arcus.Security.Core.Providers
             {
                 Logger.LogTrace("Start mutating secret name '{SecretName}'...", secretName);
                 string mutateSecretName = _mutateSecretName(secretName);
-                Logger.LogInformation("Secret name '{OriginalSecretName}' mutated to '{MutatedSecretName}'", secretName, mutateSecretName);
+                Logger.LogTrace("Secret name '{OriginalSecretName}' mutated to '{MutatedSecretName}'", secretName, mutateSecretName);
 
                 return mutateSecretName;
             }

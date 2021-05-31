@@ -1,30 +1,30 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Authors>Arcus</Authors>
-    <Description>Provides support for Docker Secrets</Description>
+    <Description>Provides support for command line arguments with Arcus Secret Store</Description>
     <Copyright>Copyright (c) Arcus</Copyright>
     <PackageLicenseUrl>https://github.com/arcus-azure/arcus.security/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/arcus-azure/arcus.security</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/arcus-azure/arcus.security</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>Docker;Docker secrets;Docker Secrets Manager;Key Per File;Security</PackageTags>
-    <AssemblyName>Arcus.Security.Providers.DockerSecrets</AssemblyName>
-    <RootNamespace>Arcus.Security.Providers.DockerSecrets</RootNamespace>
-    <PackageId>Arcus.Security.Providers.DockerSecrets</PackageId>
+    <PackageTags>CommandLine;Cmd;Console</PackageTags>
+    <AssemblyName>Arcus.Security.Providers.CommandLine</AssemblyName>
+    <RootNamespace>Arcus.Security.Providers.CommandLine</RootNamespace>
+    <PackageId>Arcus.Security.Providers.CommandLine</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>NU5125;NU5048</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.8" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.KeyPerFile" Version="3.1.7" />
+    <ProjectReference Include="..\Arcus.Security.Core\Arcus.Security.Core.csproj" />
   </ItemGroup>
 
 </Project>

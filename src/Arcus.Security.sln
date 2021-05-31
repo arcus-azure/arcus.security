@@ -27,6 +27,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Providers.Ha
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Arcus.Security.Providers.DockerSecrets", "Arcus.Security.Providers.DockerSecrets\Arcus.Security.Providers.DockerSecrets.csproj", "{EBCA7E71-5F09-43B3-BC44-73B1980477C7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arcus.Security.Providers.CommandLine", "Arcus.Security.Providers.CommandLine\Arcus.Security.Providers.CommandLine.csproj", "{D6749062-90BB-4828-86ED-FD8F89ACE8AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{EBCA7E71-5F09-43B3-BC44-73B1980477C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBCA7E71-5F09-43B3-BC44-73B1980477C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBCA7E71-5F09-43B3-BC44-73B1980477C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6749062-90BB-4828-86ED-FD8F89ACE8AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6749062-90BB-4828-86ED-FD8F89ACE8AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6749062-90BB-4828-86ED-FD8F89ACE8AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6749062-90BB-4828-86ED-FD8F89ACE8AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +91,7 @@ Global
 		{BF7F5713-6566-452A-B1F9-C8DA3AB1EB85} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
 		{2C4BCF60-7D87-404A-827A-A52CAC431D63} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
 		{EBCA7E71-5F09-43B3-BC44-73B1980477C7} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
+		{D6749062-90BB-4828-86ED-FD8F89ACE8AB} = {DD66B1E8-3676-4C13-8C37-AEA80E1C21B7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D3310D31-C37D-47F4-A6D3-325EE3806698}

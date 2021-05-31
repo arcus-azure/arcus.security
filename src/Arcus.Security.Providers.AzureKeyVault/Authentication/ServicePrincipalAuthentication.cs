@@ -59,7 +59,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         {
             _logger.LogTrace("Start authenticating with service principal to Azure Key Vault...");
             IKeyVaultClient keyVaultClient = new KeyVaultClient(GetTokenAsync);
-            _logger.LogInformation("Authenticated with service principal to Azure Key Vault");
+            _logger.LogTrace("Authenticated with service principal to Azure Key Vault");
 
             return Task.FromResult(keyVaultClient);
         }

@@ -377,8 +377,6 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
-        ///     The optional client id to authenticate for a user assigned managed identity.
-        ///     More information on user assigned managed identities can be found here: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#how-a-user-assigned-managed-identity-works-with-an-azure-vm</param>
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
