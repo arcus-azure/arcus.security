@@ -12,6 +12,18 @@ Once register, you can fetch all secrets by using `ISecretProvider` which will g
 
 > :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality whitin Azure Functions.
 
+## Why would I use it?
+Why would you use our Arcus secret store instead of just using the Azure SDK directly to access Azure Key Vault secrets?
+The Arcus secret store has some advantages over using the Azure SDK or `IConfiguration` directly:
+
+✔ **Caching**: we provide caching so the secret providers will not be called upon every secret retrieval.
+
+✔ **Multiple locations**: we support multiple secret providers so with a single secret retrieval can multiple secret providers be called (also multiple Azure Key Vaults).
+
+✔ **Extensibility**: the Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
+
+✔ **Security**: ex: placing secrets in the `IConfiguration` can be good for development, but it's not a safe approach. With the secret store, we provide a single place to retrieve secrets instead of the functionality is scattered across the application. 
+
 ## Built-in secret providers
 Several built in secret providers available in the package.
 
