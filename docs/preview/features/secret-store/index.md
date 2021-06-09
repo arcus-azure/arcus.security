@@ -17,7 +17,7 @@ Why would you use our Arcus secret store instead of just using the Azure SDK dir
 
 The Arcus secret store has some advantages over using the Azure SDK or configuration directly:
 
-✔ **Caching**: we provide caching so the secret providers will not be called upon every secret retrieval.
+✔ **Caching**: We provide caching so the secret providers will not be called upon every secret retrieval. This helps you avoiding hitting service limitations and we provide [asynchronous cache invalidation](https://background-jobs.arcus-azure.net/features/security/auto-invalidate-secrets).
 
 ✔ **Multiple locations**: we support multiple secret providers so with a single secret retrieval can multiple secret providers be called (also multiple Azure Key Vaults).
 
