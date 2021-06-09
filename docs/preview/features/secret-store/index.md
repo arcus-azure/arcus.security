@@ -21,7 +21,7 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 
 ✔ **Multiple locations**: We support using multiple secret providers so with a single secret retrieval can query multiple secret providers (also multiple Azure Key Vaults).
 
-✔ **Extensibility**: the Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
+✔ **Extensibility**: Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
 
 ✔ **Security**: ex: placing secrets in the `IConfiguration` can be good for development, but it's not a safe approach. With the secret store, we provide a single place to retrieve secrets instead of the functionality is scattered across the application. 
 
