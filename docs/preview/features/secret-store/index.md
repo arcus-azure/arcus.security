@@ -17,15 +17,18 @@ Why would you use our Arcus secret store instead of just using the Azure SDK dir
 
 The Arcus secret store has some advantages over using the Azure SDK or configuration directly:
 
-* **Caching**: We provide caching so the secret providers will not be called upon every secret retrieval. This helps you avoiding hitting service limitations and we provide [asynchronous cache invalidation](https://background-jobs.arcus-azure.net/features/security/auto-invalidate-secrets).
+**✔ Caching**
+* We provide caching so the secret providers will not be called upon every secret retrieval. This helps you avoiding hitting service limitations and we provide [asynchronous cache invalidation](https://background-jobs.arcus-azure.net/features/security/auto-invalidate-secrets).
 
-* **Plug & play**: We support using multiple and combinations of secret providers so with a single secret retrieval can query multiple secret providers (also multiple Azure Key Vaults).
+**✔ Plug & play**
+* We support using multiple and combinations of secret providers so with a single secret retrieval can query multiple secret providers (also multiple Azure Key Vaults).
 
-* **Design for security**: 
-    * While using configuration for storing secrets can be good for development it is not a safe approach. With the secret store, we provide a single place to retrieve secrets instead of scattering the integration across the application. 
-    * Seperating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
+**✔ Design for security** 
+* While using configuration for storing secrets can be good for development it is not a safe approach. With the secret store, we provide a single place to retrieve secrets instead of scattering the integration across the application. 
+* Seperating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
 
-* **Extensibility**: Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
+**✔ Extensibility**
+* Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
 
 ## Built-in secret providers
 Several built in secret providers available in the package.
