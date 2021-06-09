@@ -59,7 +59,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         {
             _logger.LogTrace("Start authenticating with managed service identity to the Azure Key Vault...");
             IKeyVaultClient keyVaultClient = AuthenticateClient();
-            _logger.LogInformation("Authenticated with managed service identity to the Azure Key Vault");
+            _logger.LogTrace("Authenticated with managed service identity to the Azure Key Vault");
 
             return Task.FromResult(keyVaultClient);
         }

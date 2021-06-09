@@ -1,19 +1,18 @@
 ﻿using System;
 using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Integration.Fixture;
-using Arcus.Testing.Logging;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
-using Serilog.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration
 {
     public class IntegrationTest : IDisposable
     {
+        private bool _disposed;
+        
         protected TestConfig Configuration { get; }
         protected Logger Logger { get; }
         protected InMemoryLogSink InMemoryLogSink { get; }
@@ -36,6 +35,21 @@ namespace Arcus.Security.Tests.Integration
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            
+            Dispose(true);
+            
+            _disposed = true;
+        }
+        
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary> 
+        protected virtual void Dispose(bool disposing)
         {
             Logger.Dispose();
         }

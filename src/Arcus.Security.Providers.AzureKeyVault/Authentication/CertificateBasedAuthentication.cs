@@ -59,7 +59,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
         {
             _logger.LogTrace("Start authenticating with certificate to the Azure Key Vault...");
             IKeyVaultClient client = new KeyVaultClient(AuthenticationCallbackAsync);
-            _logger.LogInformation("Authenticated with certificate to the Azure Key Vault");
+            _logger.LogTrace("Authenticated with certificate to the Azure Key Vault");
 
             return Task.FromResult(client);
         }

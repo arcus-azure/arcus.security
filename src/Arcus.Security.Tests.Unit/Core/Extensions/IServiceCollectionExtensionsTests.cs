@@ -183,7 +183,8 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Arrange
             var services = new ServiceCollection();
             var spyLogger = new SpyLogger();
-            services.AddLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Trace)
+                                                  .AddProvider(new TestLoggerProvider(spyLogger)));
 
             const string secretName = "MySecret";
             var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));

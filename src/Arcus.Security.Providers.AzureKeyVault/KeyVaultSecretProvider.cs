@@ -50,7 +50,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// </summary>
         protected readonly Regex SecretNameRegex = new Regex(SecretNamePattern, RegexOptions.Compiled);
 
+#pragma warning disable 618
         private readonly IKeyVaultAuthentication _authentication;
+#pragma warning restore 618
         private readonly SecretClient _secretClient;
         private readonly KeyVaultOptions _options;
         private readonly bool _isUsingAzureSdk;
@@ -66,7 +68,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        [Obsolete("Use the constructor without the " + nameof(IKeyVaultAuthentication) + " but with the Azure SDK " + nameof(TokenCredential) + " instead")]
+        [Obsolete("Use the constructor without the with the Azure SDK " + nameof(TokenCredential) + " instead")]
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration)
             : this(authentication, vaultConfiguration, new KeyVaultOptions(), NullLogger<KeyVaultSecretProvider>.Instance)
         {
@@ -81,7 +83,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        [Obsolete("Use the constructor without the " + nameof(IKeyVaultAuthentication) + " but with the Azure SDK " + nameof(TokenCredential) + " instead")]
+        [Obsolete("Use the constructor without with the Azure SDK " + nameof(TokenCredential) + " instead")]
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
