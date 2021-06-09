@@ -14,7 +14,8 @@ Once register, you can fetch all secrets by using `ISecretProvider` which will g
 
 ## Why would I use it?
 Why would you use our Arcus secret store instead of just using the Azure SDK directly to access Azure Key Vault secrets?
-The Arcus secret store has some advantages over using the Azure SDK or `IConfiguration` directly:
+
+The Arcus secret store has some advantages over using the Azure SDK or configuration directly:
 
 ✔ **Caching**: we provide caching so the secret providers will not be called upon every secret retrieval.
 
