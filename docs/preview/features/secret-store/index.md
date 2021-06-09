@@ -19,7 +19,7 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 
 ✔ **Caching**: We provide caching so the secret providers will not be called upon every secret retrieval. This helps you avoiding hitting service limitations and we provide [asynchronous cache invalidation](https://background-jobs.arcus-azure.net/features/security/auto-invalidate-secrets).
 
-✔ **Multiple locations**: we support multiple secret providers so with a single secret retrieval can multiple secret providers be called (also multiple Azure Key Vaults).
+✔ **Multiple locations**: We support using multiple secret providers so with a single secret retrieval can query multiple secret providers (also multiple Azure Key Vaults).
 
 ✔ **Extensibility**: the Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
 
