@@ -27,9 +27,10 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
   - [What is it?](features/secret-store/)
   - Providers
     - [Azure Key Vault](features/secret-store/provider/key-vault)
+    - [Command line arguments](features/secret-store/provider/cmd-line)
     - [Configuration](features/secret-store/provider/configuration)
     - [Docker secrets](features/secret-store/provider/docker-secrets)
-    - [Environment variables](features/secret-store/provider/environment-variables)    
+    - [Environment variables](features/secret-store/provider/environment-variables)
     - [HashiCorp Vault](features/secret-store/provider/hashicorp-vault)
     - [User Secrets](features/secret-store/provider/user-secrets)
   - [Creating your own secret provider](features/secret-store/create-new-secret-provider)
@@ -44,6 +45,7 @@ This is licensed under The MIT License (MIT). Which means that you can use, copy
 
 # Older versions
 
+- [v1.5.0](v1.5.0)
 - [v1.4.1](v1.4.1)
 - [v1.4.0](v1.4.0)
 - [v1.3.0](v1.3.0)
