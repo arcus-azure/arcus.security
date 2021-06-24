@@ -39,7 +39,7 @@ stages:
     jobs:
       - job: Compile
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-latest'
         steps:
           - template: 'nuget/determine-pr-version.yml@templates'
             parameters:
@@ -72,7 +72,7 @@ stages:
       - job: UnitTests
         displayName: 'Run unit tests'
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-latest'
         steps:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download build artifacts'
@@ -97,7 +97,7 @@ stages:
       - job: IntegrationTests
         displayName: 'Run integration tests'
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-latest'
         steps:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download build artifacts'
@@ -129,7 +129,7 @@ stages:
       - job: PushToMyGet
         displayName: 'Push to MyGet'
         pool:
-          vmImage: 'ubuntu-16.04'
+          vmImage: 'ubuntu-latest'
         steps:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download build artifacts'
