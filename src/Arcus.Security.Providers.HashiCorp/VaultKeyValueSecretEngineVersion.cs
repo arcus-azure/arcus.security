@@ -13,7 +13,7 @@
         V1 = 1,
 
         /// <summary>
-        /// <para>Uses the KeyValue V! secret engine <see cref="VaultSharp.V1.SecretsEngines.KeyValue.V2.IKeyValueSecretsEngineV2"/> when reading secrets in the <see cref="HashiCorpSecretProvider"/>.</para>
+        /// <para>Uses the KeyValue V2 secret engine <see cref="VaultSharp.V1.SecretsEngines.KeyValue.V2.IKeyValueSecretsEngineV2"/> when reading secrets in the <see cref="HashiCorpSecretProvider"/>.</para>
         /// <para>See the HashiCorp Vault docs: <a href="https://www.vaultproject.io/docs/secrets/kv/kv-v2" /> for more information on this version of the secret engine.</para>
         /// </summary>
         V2 = 2
