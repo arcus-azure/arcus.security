@@ -24,7 +24,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -60,7 +60,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -98,7 +98,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -150,7 +150,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -189,7 +189,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -244,7 +244,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -277,7 +277,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
@@ -323,7 +323,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <typeparam name="TSecretProvider">The custom implementation type that implements the <see cref="HashiCorpSecretProvider"/>.</typeparam>
@@ -346,7 +346,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
         /// </para>
         /// <para>
-        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
         /// </para>
         /// </summary>
         /// <typeparam name="TSecretProvider">The custom implementation type that implements the <see cref="HashiCorpSecretProvider"/>.</typeparam>

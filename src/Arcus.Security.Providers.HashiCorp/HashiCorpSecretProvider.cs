@@ -17,7 +17,7 @@ namespace Arcus.Security.Providers.HashiCorp
     ///     Represents an <see cref="ISecretProvider"/> that interacts with a HashiCorp Vault KeyVault engine to retrieve secrets.
     /// </para>
     /// <para>
-    ///     See more information on HashiCorp Vault: https://www.vaultproject.io/docs.
+    ///     See more information on HashiCorp Vault: <a href="https://www.vaultproject.io/docs" />.
     /// </para>
     /// </summary>
     public class HashiCorpSecretProvider : ISecretProvider
