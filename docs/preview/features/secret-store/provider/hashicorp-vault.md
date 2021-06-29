@@ -116,7 +116,7 @@ public class Program
 
                         // Providing an unique name to this secret provider so it can be looked up later.
                         // See: "Retrieve a specific secret provider from the secret store"
-                        builder.AddHashiCorpVault(..., name: "HashiCorp"); 
+                        builder.AddHashiCorpVault(..., name: "HashiCorp");
 
                         // Additional settings:
                         // -------------------
@@ -126,6 +126,116 @@ public class Program
                         builder.AddHashiCorpVault(..., options => options.TrackDependency = true);
                     })
                     .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
+    }
+}
+```
+
+### Custom implementation
+We allow custom implementations of the HashiCorp Vault secret provider. 
+This can come in handy when you want to perform additional actions during the secret retrieval or want to extend the available HashiCorp Vault authentication options.
+
+In this example we'll add retry functionality, using [Polly](https://github.com/App-vNext/Polly), to the secret provider.
+First, you'll have to implement the `HashiCorpSecretProvider`.
+
+```csharp
+using Polly;
+using Polly.Retry;
+
+public class RetryableHashiCorpSecretProvider : HashiCorpSecretProvider
+{
+    private readonly AsyncRetryPolicy _retryPolicy;
+
+    public RetryableHashiCorpSecretProvider(
+        VaultClientSettings settings,
+        string secretPath,
+        HashiCorpVaultOptions options,
+        AsyncRetryPolicy retryPolicy,
+        ILogger<HashiCorpSecretProvider> logger)
+        : base(settings, secretPath, options, logger)
+    {
+        _retryPolicy = rectryPolicy;
+    }
+
+    public override async Task<Secret> GetSecretAsync(string secretName)
+    {
+        await _retryPolicy.ExecuteAsync(async () => 
+        {
+            await base.GetSecretAsync(secretName);
+        });
+    }
+
+    public override async Task<string> GetRawSecretAsync(string secretName)
+    {
+        await _retryPolicy.ExecuteAsync(async () => 
+        {
+            await base.GetRawSecretAsync(secretName);
+        });
+    }
+}
+```
+
+As you can see, we allo both secret retrieval methods to be overwritten so we can prepend our retryable functionality.
+To use this within the secret store, you can use the available method extension that allows you to provide your custom implementation type:
+
+```csharp
+using Microsoft.Extensions.Hosting;
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        CreateHostBuilder(args).Build().Run();
+    }
+
+    public static IHostBuilder CreateHostBuilder(string[] args)
+    {    
+        return Host.CreateDefaultBuilder(args)
+                   .ConfigureSecretStore((context, config, stores) =>
+                   {
+                        stores.AddHashiCorp<RetryableHashiCorpSecretProvider>((IServiceProvider serviceProvider) =>
+                        {
+                            // UserPass authentication options.
+                            var options = new HashiCorpVaultUserPassOptions();
+                            var authenticationMethod = new UserPassAuthMethodInfo(options.UserPassMountPoint, "admin"", "P@ssw0rd");
+                            var settings = new VaultClientSettings("https://uri.to.your.running.vault:5200", authenticationMethod);
+                            var logger = serviceProvider.GetService<ILogger<RetryableHashiCorpSecretProvider>>();
+
+                            // Retryable options.
+                            var retryPolicy =
+                                Policy.Handle(exceptionPredicate)
+                                      .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(1));
+
+                            return new RetryableHashiCorpSecretProvider(settings, "my-secrets-path", options, retryPolicy, logger);
+                        });
+                   });
+    }
+}
+```
+That's all it takes to use your custom implementation.
+
+We also recommend to use a custom extension on the secret store builder to make this more user-friendly.
+
+```csharp
+public static class SecretStoreBuilderExtensions
+{
+    public static SecretStoreBuilder AddRetryableHashiCorpWithUserPass(
+        this SecretStoreBuilder builder,
+        string vaultServerUriWithPort,
+        string username,
+        string password,
+        string secretPath,
+        AsyncRetryPolicy retryPolicy,
+        Action<HashiCorpVaultUserPassOptions> configureOptions)
+    {
+        builder.AddProvider<RetryableHashiCorpSecretProvider>((IServiceProvider serviceProvider) =>
+        {
+            var options = new HashiCorpVaultUserPassOptions();
+            var authenticationMethod = new UserPassAuthMethodInfo(options.UserPassMountPoint, username, password);
+            var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
+            var logger = serviceProvider.GetService<ILogger<RetryableHashiCorpSecretProvider>>();
+
+            return new RetryableHashiCorpSecretProvider(settings, secretPath, options, retryPolicy, logger);
+        });
     }
 }
 ```

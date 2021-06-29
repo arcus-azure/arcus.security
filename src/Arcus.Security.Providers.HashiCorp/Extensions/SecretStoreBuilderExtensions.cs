@@ -27,7 +27,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="vaultServerUriWithPort">The URI that points to the running HashiCorp Vault.</param>
         /// <param name="username">The username of the UserPass authentication method.</param>
         /// <param name="password">The password of the UserPass authentication method.</param>
@@ -63,7 +63,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="vaultServerUriWithPort">The URI that points to the running HashiCorp Vault.</param>
         /// <param name="username">The username of the UserPass authentication method.</param>
         /// <param name="password">The password of the UserPass authentication method.</param>
@@ -101,7 +101,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="vaultServerUriWithPort">The URI that points to the running HashiCorp Vault.</param>
         /// <param name="username">The username of the UserPass authentication method.</param>
         /// <param name="password">The password of the UserPass authentication method.</param>
@@ -153,7 +153,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="vaultServerUriWithPort">The URI that points to the running HashiCorp Vault.</param>
         /// <param name="roleName">
         ///     The name of the role in the Kubernetes authentication.
@@ -192,7 +192,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="vaultServerUriWithPort">The URI that points to the running HashiCorp Vault.</param>
         /// <param name="roleName">
         ///     The name of the role in the Kubernetes authentication.
@@ -247,7 +247,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="settings"></param>
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <exception cref="ArgumentNullException">
@@ -280,7 +280,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
         /// </para>
         /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets to.</param>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="settings"></param>
         /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
         /// <param name="configureOptions">The function to set the additional options to configure the HashiCorp Vault KeyValue.</param>
@@ -317,6 +317,62 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
                 secretProviderOptions.MutateSecretName = mutateSecretName;
             });
         }
+        
+        /// <summary>
+        /// <para>
+        ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
+        /// </para>
+        /// <para>
+        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TSecretProvider">The custom implementation type that implements the <see cref="HashiCorpSecretProvider"/>.</typeparam>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
+        /// <param name="implementationFactory">The factory function to create an implementation of the <see cref="HashiCorpSecretProvider"/>.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddHashiCorpVault<TSecretProvider>(
+            this SecretStoreBuilder builder, 
+            Func<IServiceProvider, TSecretProvider> implementationFactory)
+            where TSecretProvider : HashiCorpSecretProvider
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
+            Guard.NotNull(implementationFactory, nameof(implementationFactory), "Requires a factory function to create a HashiCorp KeyValue Vault secret provider implementation");
+
+            return AddHashiCorpVault(builder, implementationFactory, name: null, mutateSecretName: null);
+        }
+
+        /// <summary>
+        /// <para>
+        ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
+        /// </para>
+        /// <para>
+        ///     See more information on HashiCorp: https://www.vaultproject.io/docs.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="TSecretProvider">The custom implementation type that implements the <see cref="HashiCorpSecretProvider"/>.</typeparam>
+        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
+        /// <param name="implementationFactory">The factory function to create an implementation of the <see cref="HashiCorpSecretProvider"/>.</param>
+        /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
+        /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddHashiCorpVault<TSecretProvider>(
+            this SecretStoreBuilder builder, 
+            Func<IServiceProvider, TSecretProvider> implementationFactory,
+            string name,
+            Func<string, string> mutateSecretName)
+            where TSecretProvider : HashiCorpSecretProvider
+        {
+            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
+            Guard.NotNull(implementationFactory, nameof(implementationFactory), "Requires a factory function to create a HashiCorp KeyValue Vault secret provider implementation");
+            
+            AddHashiCorpCriticalExceptions(builder);
+
+            return builder.AddProvider(implementationFactory, options =>
+            {
+                options.Name = name;
+                options.MutateSecretName = mutateSecretName;
+            });
+        }
 
         private static SecretStoreBuilder AddHashiCorpVault(
             SecretStoreBuilder builder,
@@ -325,12 +381,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             HashiCorpVaultOptions options,
             Action<SecretProviderOptions> configureSecretProviderOptions)
         {
-            // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
-            builder.AddCriticalException<VaultApiException>(exception =>
-            {
-                return exception.HttpStatusCode == HttpStatusCode.BadRequest
-                       || exception.HttpStatusCode == HttpStatusCode.Forbidden;
-            });
+            AddHashiCorpCriticalExceptions(builder);
 
             return builder.AddProvider(serviceProvider =>
             {
@@ -339,6 +390,16 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
                 
                 return provider;
             }, configureSecretProviderOptions);
+        }
+
+        private static void AddHashiCorpCriticalExceptions(SecretStoreBuilder builder)
+        {
+            // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
+            builder.AddCriticalException<VaultApiException>(exception =>
+            {
+                return exception.HttpStatusCode == HttpStatusCode.BadRequest
+                       || exception.HttpStatusCode == HttpStatusCode.Forbidden;
+            });
         }
     }
 }
