@@ -619,7 +619,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
             });
             
             // Assert
-            Assert.Throws<ArgumentException>(() => builder.Build());
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
     }
 }
