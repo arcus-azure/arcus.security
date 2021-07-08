@@ -174,7 +174,7 @@ public class RetryableHashiCorpSecretProvider : HashiCorpSecretProvider
 }
 ```
 
-As you can see, we allo both secret retrieval methods to be overwritten so we can prepend our retryable functionality.
+As you can see, we allow both secret retrieval methods to be overwritten so we can prepend our retryable functionality.
 To use this within the secret store, you can use the available method extension that allows you to provide your custom implementation type:
 
 ```csharp
