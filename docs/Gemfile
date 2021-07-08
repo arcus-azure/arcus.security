@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 gem 'github-pages', '>= 214', group: :jekyll_plugins
 gem 'nokogiri', '>= 1.11.4'
-gem 'jekyll-redirect-from', group: :jekyll_plugins
+gem 'jekyll-redirect-from', '>= 0.16.0', group: :jekyll_plugins
