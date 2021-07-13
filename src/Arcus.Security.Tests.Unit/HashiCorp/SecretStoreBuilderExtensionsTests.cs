@@ -1,8 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp;
+using Arcus.Security.Providers.HashiCorp.Configuration;
 using Arcus.Security.Providers.HashiCorp.Extensions;
+using Arcus.Security.Tests.Unit.HashiCorp.Fixture;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
@@ -554,6 +561,63 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
                     mutateSecretName: null);
             });
 
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Fact]
+        public async Task AddHashiCorpT_WithCustomImplementation_Succeeds()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            var expected = $"secret-{Guid.NewGuid()}";
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVault(serviceProvider => new SingleValueHashiCorpSecretProvider(expected));
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+                string actual = await secretProvider.GetRawSecretAsync("MySecret");
+                Assert.Equal(expected, actual);
+            }
+        }
+        
+        [Fact]
+        public void AddHashiCorpTWithNameAndSecretNameMutation_WithoutImplementationFactory_Fails()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVault<SingleValueHashiCorpSecretProvider>(
+                    implementationFactory: null,
+                    name: "HashiCorp",
+                    mutateSecretName: name => name);
+            });
+            
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => builder.Build());
+        }
+
+        [Fact]
+        public void AddHashiCorpT_WithoutImplementationFactory_Fails()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddHashiCorpVault<SingleValueHashiCorpSecretProvider>(implementationFactory: null);
+            });
+            
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
