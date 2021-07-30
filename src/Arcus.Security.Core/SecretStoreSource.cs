@@ -115,7 +115,7 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Gets the configured options for the registration of the <see cref="ISecretProvider"/> in the secret store.
         /// </summary>
-        internal SecretProviderOptions Options { get; } = new SecretProviderOptions();
+        internal SecretProviderOptions Options { get; }
 
         /// <summary>
         /// Ensure that the <see cref="SecretProvider"/> and the <see cref="CachedSecretProvider"/> are initialized

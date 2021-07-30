@@ -17,7 +17,7 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
-        private ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
+        private readonly ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
@@ -94,6 +94,7 @@ namespace Microsoft.Extensions.Hosting
             var options = new SecretProviderOptions();
             configureOptions?.Invoke(options);
 
+            // ReSharper disable once ConstantConditionalAccessQualifier - options can still be 'null' when consumer set it to 'null'.
             if (options?.MutateSecretName is null)
             {
                 SecretStoreSources.Add(new SecretStoreSource(secretProvider, options));
@@ -143,6 +144,7 @@ namespace Microsoft.Extensions.Hosting
             var options = new SecretProviderOptions();
             configureOptions?.Invoke(options);
 
+            // ReSharper disable once ConstantConditionalAccessQualifier - options can still be 'null' when the consumer set it to 'null'.
             if (options?.MutateSecretName is null)
             {
                 SecretStoreSources.Add(new SecretStoreSource(createSecretProvider, options));
