@@ -72,6 +72,32 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
             Assert.Equal(expectedValue, actualValue);
         }
 
+        [Fact]
+        public void DockerSecrets_WithRelativeDirectoryPath_Fails()
+        {
+            // Arrange
+            var hostBuilder = new HostBuilder();
+            
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddDockerSecrets("./foo"));
+            
+            // Assert
+            Assert.ThrowsAny<ArgumentException>(() => hostBuilder.Build());
+        }
+
+        [Fact]
+        public void DockerSecrets_WithNonExistingDirectory_Fails()
+        {
+            // Arrange
+            var hostBuilder = new HostBuilder();
+            
+            // Act
+            hostBuilder.ConfigureSecretStore((config, stores) => stores.AddDockerSecrets("/foo/bar"));
+            
+            // Assert
+            Assert.Throws<DirectoryNotFoundException>(() => hostBuilder.Build());
+        }
+
         private async Task SetSecretAsync(string secretKey, string secretValue)
         {
             await File.WriteAllTextAsync(Path.Combine(_secretLocation, secretKey), secretValue);

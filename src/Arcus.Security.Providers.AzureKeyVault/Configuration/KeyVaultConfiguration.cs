@@ -20,11 +20,11 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         public Uri VaultUri { get; }
 
         /// <summary>
-        ///     Constructor
+        /// Initializes a new instance of the <see cref="KeyVaultConfiguration"/> class.
         /// </summary>
-        /// <param name="vaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
-        /// <exception cref="ArgumentNullException">No <paramref name="vaultUri"/> was specified</exception>
-        /// <exception cref="UriFormatException">Exception thrown when the vault is not using https</exception>
+        /// <param name="vaultUri">The URI of the Azure Key Vault you want to connect to.</param>
+        /// <exception cref="ArgumentNullException">Thrown when no <paramref name="vaultUri"/> was specified.</exception>
+        /// <exception cref="UriFormatException">Thrown when the <paramref name="vaultUri"/> is not using https.</exception>
         public KeyVaultConfiguration(Uri vaultUri)
         {
             Guard.NotNull(vaultUri, nameof(vaultUri));
@@ -39,10 +39,10 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         }
 
         /// <summary>
-        ///     Constructor
+        /// Initializes a new instance of the <see cref="KeyVaultConfiguration"/> class.
         /// </summary>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
-        /// <exception cref="ArgumentNullException">Exception thrown when the vault is not using https</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="rawVaultUri"/> is not using https.</exception>
         public KeyVaultConfiguration(string rawVaultUri) : this(new Uri(rawVaultUri))
         {
         }
