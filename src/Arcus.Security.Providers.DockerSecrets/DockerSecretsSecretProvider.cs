@@ -18,23 +18,21 @@ namespace Arcus.Security.Providers.DockerSecrets
         /// <summary>
         /// Initializes a new instance of the <see cref="DockerSecretsSecretProvider"/> class.
         /// </summary>
-        /// <param name="secretsDirectoryPath">The path inside the docker container where the secrets are located.</param>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretsDirectoryPath"/> is blank.</exception>
+        /// <param name="secretsDirectoryPath">The directory path inside the Docker container where the secrets are located.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretsDirectoryPath"/> is blank or not an absolute path.</exception>
+        /// <exception cref="DirectoryNotFoundException">Thrown when the <paramref name="secretsDirectoryPath"/> is not found on the system.</exception>
         public DockerSecretsSecretProvider(string secretsDirectoryPath)
         {
-            Guard.NotNullOrWhitespace(secretsDirectoryPath, nameof(secretsDirectoryPath));
-
-            if (!Path.IsPathRooted(secretsDirectoryPath))
-            {
-                throw new ArgumentException($"The {nameof(secretsDirectoryPath)} must be an absolute path", nameof(secretsDirectoryPath));
-            }
+            Guard.NotNullOrWhitespace(secretsDirectoryPath, nameof(secretsDirectoryPath), "Requires a directory path inside the Docker container where the secrets are located");
+            Guard.For(() => !Path.IsPathRooted(secretsDirectoryPath), 
+                new ArgumentException("Requires an absolute directory path inside the Docker container to located the secrets", nameof(secretsDirectoryPath)));
 
             if (!Directory.Exists(secretsDirectoryPath))
             {
                 throw new DirectoryNotFoundException($"The directory {secretsDirectoryPath} which is configured as secretsDirectoryPath does not exist.");
             }
 
-            KeyPerFileConfigurationSource configuration = new KeyPerFileConfigurationSource
+            var configuration = new KeyPerFileConfigurationSource
             {
                 FileProvider = new PhysicalFileProvider(secretsDirectoryPath),
                 Optional = false
@@ -44,26 +42,6 @@ namespace Arcus.Security.Providers.DockerSecrets
             provider.Load();
 
             _provider = provider;
-        }
-
-        /// <summary>
-        /// Retrieves the secret value, based on the given name
-        /// </summary>
-        /// <param name="secretName">The name of the secret key</param>
-        /// <returns>Returns the secret key.</returns>
-        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
-        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public Task<string> GetRawSecretAsync(string secretName)
-        {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a Docker secret");
-
-            if (_provider.TryGet(secretName, out string value))
-            {
-                return Task.FromResult(value);
-            }
-
-            return Task.FromResult<string>(null);
         }
 
         /// <summary>
@@ -85,6 +63,26 @@ namespace Arcus.Security.Providers.DockerSecrets
             }
 
             return new Secret(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        public Task<string> GetRawSecretAsync(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a Docker secret");
+
+            if (_provider.TryGet(secretName, out string value))
+            {
+                return Task.FromResult(value);
+            }
+
+            return Task.FromResult<string>(null);
         }
     }
 }
