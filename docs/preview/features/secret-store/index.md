@@ -1,6 +1,8 @@
 ---
 title: "Secret store integration"
 layout: default
+slug: /features/secret-store
+sidebar_position: 1
 ---
 
 # Using secret store
@@ -33,23 +35,23 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 ## Built-in secret providers
 Several built in secret providers available in the package.
 
-* [Configuration](./../../features/secret-store/provider/configuration)
-* [Environment variables](./../../features/secret-store/provider/environment-variables)
+* [Configuration](features/secret-store/provider/configuration)
+* [Environment variables](features/secret-store/provider/environment-variables)
 
 And several additional providers in seperate packages.
 
-* [Azure Key Vault](./../../features/secret-store/provider/key-vault)
-* [Command line](./../../features/secret-store/provider/cmd-line)
-* [Docker secrets](./../../features/secret-store/provider/docker-secrets)
-* [HashiCorp](./../../features/secret-store//provider/hashicorp-vault)
-* [User Secrets](./../../features/secret-store/provider/user-secrets)
+* [Azure Key Vault](features/secret-store/provider/key-vault)
+* [Command line](features/secret-store/provider/cmd-line)
+* [Docker secrets](features/secret-store/provider/docker-secrets)
+* [HashiCorp](features/secret-store//provider/hashicorp-vault)
+* [User Secrets](features/secret-store/provider/user-secrets)
 
-If you require an additional secret providers that aren't available here, please [this document](./../../features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
+If you require an additional secret providers that aren't available here, please [this document](features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
 
 ## Additional features
 Lists all the additional functions of the secret store.
 
-* [Retrieve a specific secret provider](./named-secret-providers)
+* [Retrieve a specific secret provider](features/secret-store/named-secret-providers)
 
 ## Installation
 For this feature, the following package needs to be installed:
@@ -215,4 +217,3 @@ This functionality is available in both the regular .NET Core as Azure Functions
 })
 ```
 
-[&larr; back](/)
