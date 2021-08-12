@@ -1,6 +1,8 @@
-﻿using Arcus.Security.Core;
+﻿using System;
+using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Providers.AzureKeyVault.Configuration
 {
@@ -15,6 +17,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <param name="secretProvider">The provider to retrieve the secret values for configuration tokens.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        [Obsolete("Secrets should not be added to the application configuration, use the " + nameof(IHostBuilderExtensions.ConfigureSecretStore) + " to add the secrets to the secret store")]
         public static IConfigurationBuilder AddAzureKeyVault(this IConfigurationBuilder configurationBuilder, ISecretProvider secretProvider)
         {
             Guard.NotNull(configurationBuilder, nameof(configurationBuilder), $"Requires an {nameof(IConfigurationBuilder)} instance");
