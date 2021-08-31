@@ -246,7 +246,7 @@ namespace Microsoft.Extensions.Hosting
 {
     public static class SecretStoreBuilderExtensions
     {
-        public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder)
+        public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder, string endpoint)
         {
             // Make sure that ALL exceptions of this type is considered critical.
             builder.AddCriticalException<AuthenticationException>();
@@ -257,7 +257,7 @@ namespace Microsoft.Extensions.Hosting
                 return exception.Response.HttpStatusCode == HttpStatusCode.Forbidden;
             });
 
-            return builder.AddProvider(new RegistrySecretProvider());
+            return builder.AddProvider(new HttpVaultSecretProvider(endpoint));
         }
     }
 }
