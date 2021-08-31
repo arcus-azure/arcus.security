@@ -9,7 +9,7 @@ layout: default
 - [Developing a secret provider](#developing-a-secret-provider)
 - [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
 - [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
-- [Adding critical exceptions](#add-critical-exceptions)
+- [Adding critical exceptions](#adding-critical-exceptions)
 - [Contribute your secret provider](#contribute-your-secret-provider)
 
 ## Prerequisites
@@ -246,7 +246,7 @@ namespace Microsoft.Extensions.Hosting
 {
     public static class SecretStoreBuilderExtensions
     {
-        public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder)
+        public static SecretStoreBuilder AddHttpVault(this SecretStoreBuilder builder, string endpoint)
         {
             // Make sure that ALL exceptions of this type is considered critical.
             builder.AddCriticalException<AuthenticationException>();
@@ -257,7 +257,7 @@ namespace Microsoft.Extensions.Hosting
                 return exception.Response.HttpStatusCode == HttpStatusCode.Forbidden;
             });
 
-            return builder.AddProvider(new RegistrySecretProvider());
+            return builder.AddProvider(new HttpVaultSecretProvider(endpiont));
         }
     }
 }
