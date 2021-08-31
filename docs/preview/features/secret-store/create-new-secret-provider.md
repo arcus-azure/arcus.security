@@ -9,7 +9,7 @@ layout: default
 - [Developing a secret provider](#developing-a-secret-provider)
 - [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
 - [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
-- [Adding critical exceptions](#add-critical-exceptions)
+- [Adding critical exceptions](#adding-critical-exceptions)
 - [Contribute your secret provider](#contribute-your-secret-provider)
 
 ## Prerequisites
