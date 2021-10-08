@@ -12,7 +12,15 @@ module.exports = {
   organizationName: 'arcus-azure', // Usually your GitHub org/user name.
   projectName: 'Arcus - Security', // Usually your repo name.
   themeConfig: {
-    sidebarCollapsible: false,
+    algolia: {
+      apiKey: 'fdbac718aeb246ac60aeae5bd286cbbf',
+      indexName: 'arcus-azure',
+      // Set `contextualSearch` to `true` when having multiple versions!!!
+      contextualSearch: true,
+      searchParameters: {
+        facetFilters: ["tags:security"]
+      },
+    },
     image: 'img/arcus.jpg',
     navbar: {
       title: 'Security',
@@ -73,6 +81,7 @@ module.exports = {
           sidebarPath: require.resolve('./sidebars.js'),
           routeBasePath: '/',
           path: 'preview',
+          sidebarCollapsible: false,
           // Please change this to your repo.
           editUrl:
             'https://github.com/arcus-azure/arcus.security/edit/master/docs',
