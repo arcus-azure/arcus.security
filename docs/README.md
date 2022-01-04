@@ -43,7 +43,7 @@ When tagging a new version, the document versioning mechanism will:
 - Create a versioned sidebars file based from your current sidebar configuration (if it exists) - saved as `versioned_sidebars/version-<version>-sidebars.json`.
 - Append the new version number to `versions.json`.
 
-## Syntax higlighting
+## Syntax highlighting
 
 To have syntax highlighting within the codeblocks you have to use one of the prism supported languages:
 
