@@ -1,6 +1,6 @@
 variables:
-  DotNet.Sdk.Version: '3.1.201'
+  DotNet.Sdk.Version: '6.0.100'
   # Backwards compatible .NET SDK version
-  DotNet.Sdk.VersionBC: '2.2.105'
+  DotNet.Sdk.VersionBC: '3.1.201'
   Project: 'Arcus.Security'
   Vm.Image: 'ubuntu-latest'
