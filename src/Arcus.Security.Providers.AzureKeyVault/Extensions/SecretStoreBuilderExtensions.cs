@@ -384,7 +384,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
-        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload with " + nameof(CacheConfiguration.Default) + " instead to allow default caching")]
+        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload and pass CacheConfiguration.Default as parameter for the cacheConfiguration to allow default caching")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -395,7 +395,7 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVaultWithManagedIdentity(builder, rawVaultUri, clientId: null, allowCaching: allowCaching);
         }
-        
+
         /// <summary>
         /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
         /// </summary>
@@ -407,7 +407,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
-        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload with " + nameof(CacheConfiguration.Default) + " instead to allow default caching")]
+        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload and pass CacheConfiguration.Default as parameter for the cacheConfiguration to allow default caching")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -438,7 +438,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
-        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload with " + nameof(CacheConfiguration.Default) + " instead to allow default caching")]
+        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload and pass CacheConfiguration.Default as parameter for the cacheConfiguration to allow default caching")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -474,7 +474,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
-        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload with " + nameof(CacheConfiguration.Default) + " instead to allow default caching")]
+        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload and pass CacheConfiguration.Default as parameter for the cacheConfiguration to allow default caching")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
