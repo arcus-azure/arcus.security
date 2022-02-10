@@ -384,7 +384,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="allowCaching">The flag to indicate whether to include caching during secret retrieval in Azure key vault.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
-        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload and pass CacheConfiguration.Default as parameter for the cacheConfiguration to allow default caching")]
+        [Obsolete("Use the " + nameof(AddAzureKeyVaultWithManagedIdentity) + " method overload and pass " + nameof(CacheConfiguration) + "." + nameof(CacheConfiguration.Default) + " as parameter for the cacheConfiguration to allow default caching")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
