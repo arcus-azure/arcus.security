@@ -14,7 +14,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
 
 ## Configuration
-After installing the package, the addtional extensions becomes available when building the secret store.
+After installing the package, the additional extensions becomes available when building the secret store.
 
 [Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) authentication is the recommended approach to interact with Azure Key Vault.
 
