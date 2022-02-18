@@ -1,5 +1,5 @@
 ---
-title: "Secret store within Azure Functions"
+title: "Using secret store within Azure Functions"
 layout: default
 ---
 
