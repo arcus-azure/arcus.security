@@ -5,12 +5,14 @@ layout: default
 
 # Create a new secret provider
 
-- [Prerequisites](#prerequisites)
-- [Developing a secret provider](#developing-a-secret-provider)
-- [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
-- [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
-- [Adding critical exceptions](#adding-critical-exceptions)
-- [Contribute your secret provider](#contribute-your-secret-provider)
+- [Create a new secret provider](#create-a-new-secret-provider)
+  - [Prerequisites](#prerequisites)
+  - [Developing a secret provider](#developing-a-secret-provider)
+    - [Adding dependency services to your secret provider](#adding-dependency-services-to-your-secret-provider)
+    - [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
+    - [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
+    - [Adding critical exceptions](#adding-critical-exceptions)
+  - [Contribute your secret provider](#contribute-your-secret-provider)
 
 ## Prerequisites
 
