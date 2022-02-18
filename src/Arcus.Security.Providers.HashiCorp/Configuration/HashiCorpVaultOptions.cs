@@ -9,7 +9,11 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
     /// </summary>
     public class HashiCorpVaultOptions
     {
-        private string _keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2;
+#if NET6_0
+        private string _keyValueMountPoint = SecretsEngineMountPoints.Defaults.KeyValueV2;
+#else
+        private string _keyValueMountPoint = SecretsEngineDefaultPaths.KeyValueV2; 
+#endif
         private VaultKeyValueSecretEngineVersion _engineVersion = VaultKeyValueSecretEngineVersion.V2;
 
         /// <summary>
