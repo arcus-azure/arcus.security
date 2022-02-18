@@ -184,7 +184,7 @@ namespace Application.Controllers
 ### Adding secret name mutation before looking up secret
 
 When you want secret names 'changed' or 'mutated' before they go through your secret provider (ex. changing `Arcus.Secret` to `ARCUS_SECRET`);
-you can pass allong a custom mutation function during the registration:
+you can pass along a custom mutation function during the registration:
 
 ```csharp
 namespace Microsoft.Extensions.Hosting
@@ -232,7 +232,7 @@ So they can provide a custom mutation:
 ### Adding critical exceptions
 
 When implementing your own `ISecretProvider`, you may come across situations where you want to throw an critical exception (for example: authentication, authorization failures...)
-and that this critical exception is eventually throwed by the secret store when you're looking up secrets.
+and that this critical exception is eventually thrown by the secret store when you're looking up secrets.
 
 When the authentication (for example) only happens when your secret provider _actually_ looks for secrets, then you may want to benefit from this feature.
 If you don't provide any critical exceptions yourself, the exception may only be logged and you may end up with only a `SecretNotFoundException`.
@@ -266,7 +266,7 @@ namespace Microsoft.Extensions.Hosting
 ```
 
 > Note that when multiple secret providers in the secret store are throwing critical exceptions upon retrieving a secret, then these critical exceptions will be wrapped inside a `AggregateException`.
-> In the other case the single critical exception is being throwed.
+> In the other case the single critical exception is being thrown.
 
 ## Contribute your secret provider
 

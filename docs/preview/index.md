@@ -23,7 +23,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 # Features
 - **Using a Secret Store**
   - [What is it?](features/secret-store/)
-  - [Use within Azure Functions](features/secret-store#using-secret-store-within-azure-functions)
+  - [Use within Azure Functions](features/secret-store/azure-functions)
   - Providers
     - [Azure Key Vault](features/secret-store/provider/key-vault)
     - [Command line arguments](features/secret-store/provider/cmd-line)
