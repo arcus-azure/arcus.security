@@ -233,7 +233,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
 
