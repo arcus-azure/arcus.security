@@ -9,23 +9,36 @@ Security for Azure development in a breeze.
 # Installation
 Easy to install it via NuGet:
 
-- **Azure Key Vault secret provider**
-
-```shell
-PM > Install-Package Arcus.Security.Providers.AzureKeyVault
-```
-
-- **HashiCorp Vault secret provider**
-
-```shell
-PM > Install-Package Arcus.Security.Providers.HashiCorp
-```
-
 - **Secret store**
 
 ```shell
 PM > Install-Package Arcus.Security.Core
 ```
+
+- **Secret providers**
+
+    - Azure Key Vault
+    ```shell
+    PM > Install-Package Arcus.Security.Providers.AzureKeyVault
+    ```
+    - Command line
+    ```shell
+    PM > Install-Package Arcus.Security.Providers.CommandLine
+    ```
+    - Configuration (built-in) (with [`IConfiguration`](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.iconfiguration?view=dotnet-plat-ext-6.0))
+    - Docker secrets
+    ```shell
+    PM > Install-Package Arcus.Security.Providers.DockerSecrets
+    ```
+    - Environment (built-in)
+    - HashiCorp
+    ```shell
+    PM > Install-Package Arcus.Security.Providers.HashiCorp
+    ```
+    - User secrets
+    ```shell
+    PM > Install-Package Arcus.Security.Providers.UserSecrets
+    ```
 
 - **Secret store for Azure Functions**
 
