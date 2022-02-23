@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
@@ -71,15 +70,19 @@ namespace Arcus.Security.Tests.Integration.Fixture
         /// <summary>
         /// Gets the configured HashiCorp Vault execution file.
         /// </summary>
+        /// <exception cref="KeyNotFoundException">Thrown when no installation file path was found in the configuration app settings.</exception>
+        /// <exception cref="FileNotFoundException">Thrown when the installation file path doesn't point to a valid HashiCorp Vault execution file.</exception>
         public FileInfo GetHashiCorpVaultBin()
         {
             const string key = "Arcus:HashiCorp:VaultBin";
             string vaultBin = _configuration[key];
 
-            if (String.IsNullOrWhiteSpace(vaultBin))
+            if (string.IsNullOrWhiteSpace(vaultBin))
             {
                 throw new KeyNotFoundException(
-                    $"Could not find HashiCorp Vault execution file for key: '{key}', was blank");
+                    "Could not find the installation file path of the HashiCorp Vault in the local app settings" 
+                    + "please install the HashiCorp Vault on this machine (https://releases.hashicorp.com/vault/) "
+                    + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
             FileInfo vaultFile;
@@ -90,13 +93,17 @@ namespace Arcus.Security.Tests.Integration.Fixture
             catch (Exception exception)
             {
                 throw new FileNotFoundException(
-                    $"File path returned for key '{key}' doesn't point to valid HashiCorp vault execution file", exception);
+                    $"Could not find file path returned for key '{key}' because it doesn't point to valid HashiCorp vault execution file, " 
+                    + "please install the HashiCorp Vault on this machine (https://releases.hashicorp.com/vault/) " 
+                    + $"and add the installation folder as configuration key '{key}' to your local app settings", exception);
             }
 
             if (!vaultFile.Exists || !vaultFile.Name.StartsWith("vault"))
             {
                 throw new FileNotFoundException(
-                    $"File path returned for key '{key}' doesn't point to valid HashiCorp vault execution file");
+                    $"Could not find file path returned for key '{key}' because it doesn't point to valid HashiCorp vault execution file ('vault'), " 
+                    + "please install the HashiCorp Vault on this machine (https://releases.hashicorp.com/vault/) " 
+                    + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
             return vaultFile;
@@ -105,7 +112,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
         private string GetRequiredValue(string key)
         {
             string value = _configuration[key];
-            if (String.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(value))
             {
                 throw new KeyNotFoundException(
                     $"Could not find configuration value for key: '{key}', was blank");
