@@ -5,12 +5,14 @@ layout: default
 
 # Create a new secret provider
 
-- [Prerequisites](#prerequisites)
-- [Developing a secret provider](#developing-a-secret-provider)
-- [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
-- [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
-- [Adding critical exceptions](#adding-critical-exceptions)
-- [Contribute your secret provider](#contribute-your-secret-provider)
+- [Create a new secret provider](#create-a-new-secret-provider)
+  - [Prerequisites](#prerequisites)
+  - [Developing a secret provider](#developing-a-secret-provider)
+    - [Adding dependency services to your secret provider](#adding-dependency-services-to-your-secret-provider)
+    - [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
+    - [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
+    - [Adding critical exceptions](#adding-critical-exceptions)
+  - [Contribute your secret provider](#contribute-your-secret-provider)
 
 ## Prerequisites
 
@@ -182,7 +184,7 @@ namespace Application.Controllers
 ### Adding secret name mutation before looking up secret
 
 When you want secret names 'changed' or 'mutated' before they go through your secret provider (ex. changing `Arcus.Secret` to `ARCUS_SECRET`);
-you can pass allong a custom mutation function during the registration:
+you can pass along a custom mutation function during the registration:
 
 ```csharp
 namespace Microsoft.Extensions.Hosting
@@ -191,7 +193,7 @@ namespace Microsoft.Extensions.Hosting
     {
         public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
         {
-            var provider = RegistrySecretProvider();
+            var secretProvider = new RegistrySecretProvider();
 
             return builder.AddProvider(secretProvider, options => options.MutateSecretName = secretName => secretName.Replace(".", "_").ToUpper());
         }
@@ -210,9 +212,9 @@ namespace Microsoft.Extensions.Hosting
         this SecretStoreBuilder builder, 
         Func<string, string> mutateSecretName = null)
         {
-            var provider = RegistrySecretProvider();
+            var secretProvider = new RegistrySecretProvider();
 
-            return builder.AddProvider(secretprovider, mutateSecretName);
+            return builder.AddProvider(secretProvider, mutateSecretName);
         }
     }
 }
@@ -230,7 +232,7 @@ So they can provide a custom mutation:
 ### Adding critical exceptions
 
 When implementing your own `ISecretProvider`, you may come across situations where you want to throw an critical exception (for example: authentication, authorization failures...)
-and that this critical exception is eventually throwed by the secret store when you're looking up secrets.
+and that this critical exception is eventually thrown by the secret store when you're looking up secrets.
 
 When the authentication (for example) only happens when your secret provider _actually_ looks for secrets, then you may want to benefit from this feature.
 If you don't provide any critical exceptions yourself, the exception may only be logged and you may end up with only a `SecretNotFoundException`.
@@ -264,7 +266,7 @@ namespace Microsoft.Extensions.Hosting
 ```
 
 > Note that when multiple secret providers in the secret store are throwing critical exceptions upon retrieving a secret, then these critical exceptions will be wrapped inside a `AggregateException`.
-> In the other case the single critical exception is being throwed.
+> In the other case the single critical exception is being thrown.
 
 ## Contribute your secret provider
 

@@ -68,9 +68,9 @@ public class HealthController : ControllerBase
 ## Built-in secret providers
 Several built in secret providers available in the package.
 
-* [Environment variables](features/secret-store/provider/environment-variables)
-* [Configuration](features/secret-store/provider/configuration)
-* [Azure key vault](features/secret-store/provider/key-vault)
+* [Environment variables](./provider/environment-variables.md)
+* [Configuration](./provider/configuration.md)
+* [Azure key vault](./provider/key-vault.md)
 
-If you require an additional secret providers that aren't available here, please [this document](features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
+If you require an additional secret providers that aren't available here, please [this document](./create-new-secret-provider.md) that describes how you can create your own secret provider.
 

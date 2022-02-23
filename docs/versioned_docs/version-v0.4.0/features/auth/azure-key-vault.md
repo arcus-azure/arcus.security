@@ -46,7 +46,7 @@ var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthenticator, vaul
 
 ## Certificate
 
-Authentication via client ID and certificate is supported with the `CertifidateBasedAuthentication`.
+Authentication via client ID and certificate is supported with the `CertificateBasedAuthentication`.
 
 ```csharp
 var clientId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ClientId");

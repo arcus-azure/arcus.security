@@ -12,7 +12,7 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
-> :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality whitin Azure Functions.
+> :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality within Azure Functions.
 
 ## Why would I use it?
 Why would you use our Arcus secret store instead of just using the Azure SDK directly to access Azure Key Vault secrets?
@@ -27,7 +27,7 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 
 **✔ Design for security** 
 * While using configuration for storing secrets can be good for development it is not a safe approach. With the secret store, we provide a single place to retrieve secrets instead of scattering the integration across the application. 
-* Seperating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
+* Separating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
 
 **✔ Extensibility**
 * Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
@@ -35,21 +35,21 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 ## Built-in secret providers
 Several built in secret providers available in the package.
 
-* [Configuration](features/secret-store/provider/configuration)
-* [Environment variables](features/secret-store/provider/environment-variables)
+* [Configuration](./provider/configuration.md)
+* [Environment variables](./provider/environment-variables.md)
 
-And several additional providers in seperate packages.
+And several additional providers in separate packages.
 
-* [Azure Key Vault](features/secret-store/provider/key-vault)
-* [HashiCorp](features/secret-store/provider/hashicorp-vault)
-* [User Secrets](features/secret-store/provider/user-secrets)
+* [Azure Key Vault](./provider/key-vault.md)
+* [HashiCorp](./provider/hashicorp-vault.md)
+* [User Secrets](./provider/user-secrets.md)
 
-If you require an additional secret providers that aren't available here, please [this document](features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
+If you require an additional secret providers that aren't available here, please [this document](./create-new-secret-provider.md) that describes how you can create your own secret provider.
 
 ## Additional features
 Lists all the additional functions of the secret store.
 
-* [Retrieve a specific secret provider](features/secret-store/named-secret-providers)
+* [Retrieve a specific secret provider](./named-secret-providers.md)
 
 ## Installation
 For this feature, the following package needs to be installed:

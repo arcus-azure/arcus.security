@@ -16,7 +16,7 @@ PM > Install-Package Arcus.Security.Providers.UserSecrets
 ```
 
 ## Configuration
-After installing the package, the addtional extensions becomes available when building the secret store.
+After installing the package, the additional extensions becomes available when building the secret store.
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -36,7 +36,7 @@ public class Program
                          // Adds the user secrets secret source with specified user secrets ID.
                          // A user secrets ID is a unique value used to store and identify a collection of secrets.
 
-                         // `Progam`: The type from the assembly to search for an instance of `UserSecretsIdAttribute`.
+                         // `Program`: The type from the assembly to search for an instance of `UserSecretsIdAttribute`.
                          builder.AddUserSecrets<Program>();
 
                          // The user secrets ID which gets provided directly without looking up the `UserSecretsIdAttribute` in the assembly.
