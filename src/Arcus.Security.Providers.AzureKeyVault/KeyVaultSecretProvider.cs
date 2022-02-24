@@ -28,7 +28,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
         /// </summary>
-        [Obsolete("Will be removed in v2.0")]
         protected const string DependencyName = "Azure key vault";
 
         /// <summary>
