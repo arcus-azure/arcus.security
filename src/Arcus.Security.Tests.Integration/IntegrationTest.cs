@@ -40,9 +40,10 @@ namespace Arcus.Security.Tests.Integration
             {
                 return;
             }
-            
+
             Dispose(true);
-            
+            GC.SuppressFinalize(this);
+
             _disposed = true;
         }
         
