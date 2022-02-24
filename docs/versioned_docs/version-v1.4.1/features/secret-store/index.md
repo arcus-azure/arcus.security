@@ -17,21 +17,21 @@ Once register, you can fetch all secrets by using `ISecretProvider` which will g
 ## Built-in secret providers
 Several built in secret providers available in the package.
 
-* [Configuration](./provider/configuration)
-* [Environment variables](./provider/environment-variables)
+* [Configuration](./provider/configuration.md)
+* [Environment variables](./provider/environment-variables.md)
 
 And several additional providers in separate packages.
 
-* [Azure Key Vault](./provider/key-vault)
-* [HashiCorp](./provider/hashicorp-vault)
-* [User Secrets](./provider/user-secrets)
+* [Azure Key Vault](./provider/key-vault.md)
+* [HashiCorp](./provider/hashicorp-vault.md)
+* [User Secrets](./provider/user-secrets.md)
 
-If you require an additional secret providers that aren't available here, please [this document](./create-new-secret-provider) that describes how you can create your own secret provider.
+If you require an additional secret providers that aren't available here, please [this document](./create-new-secret-provider.md) that describes how you can create your own secret provider.
 
 ## Additional features
 Lists all the additional functions of the secret store.
 
-* [Retrieve a specific secret provider](./named-secret-providers)
+* [Retrieve a specific secret provider](./named-secret-providers.md)
 
 ## Installation
 For this feature, the following package needs to be installed:
