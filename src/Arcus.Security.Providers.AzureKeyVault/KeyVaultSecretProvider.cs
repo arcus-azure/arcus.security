@@ -28,11 +28,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
         /// </summary>
+        [Obsolete("Will be removed in v2.0")]
         protected const string DependencyName = "Azure key vault";
 
         /// <summary>
         /// Gets the pattern which the Azure Key Vault URI should match against. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
         /// </summary>
+        [Obsolete("Will be removed in v2.0")]
         protected const string VaultUriPattern = "^https:\\/\\/[0-9a-zA-Z\\-]{3,24}\\.vault.azure.net(\\/)?$";
 
         /// <summary>
@@ -43,11 +45,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Gets the regular expression that can check if the Azure Key Vault URI matches the <see cref="VaultUriPattern"/>. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
         /// </summary>
+        [Obsolete("Will be removed in v2.0")]
         protected readonly Regex VaultUriRegex = new Regex(VaultUriPattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Gets the regular expression that can check if the Azure Key Vault URI matches the <see cref="SecretNamePattern"/>. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
         /// </summary>
+        [Obsolete("Will be removed in v2.0")]
         protected readonly Regex SecretNameRegex = new Regex(SecretNamePattern, RegexOptions.Compiled);
 
 #pragma warning disable 618
@@ -68,7 +72,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        [Obsolete("Use the constructor without the with the Azure SDK " + nameof(TokenCredential) + " instead")]
+        [Obsolete("Use the constructor with the Azure SDK " + nameof(TokenCredential) + " instead")]
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration)
             : this(authentication, vaultConfiguration, new KeyVaultOptions(), NullLogger<KeyVaultSecretProvider>.Instance)
         {
@@ -83,16 +87,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="authentication"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
-        [Obsolete("Use the constructor without with the Azure SDK " + nameof(TokenCredential) + " instead")]
+        [Obsolete("Use the constructor with the Azure SDK " + nameof(TokenCredential) + " instead")]
         public KeyVaultSecretProvider(IKeyVaultAuthentication authentication, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
             Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
             Guard.NotNull(authentication, nameof(authentication), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
-            Guard.For<UriFormatException>(
-                () => !VaultUriRegex.IsMatch(VaultUri),
-                "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _authentication = authentication;
             _options = options;
@@ -128,9 +129,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
-            Guard.For<UriFormatException>(
-                () => !VaultUriRegex.IsMatch(VaultUri), 
-                "Requires the Azure Key Vault host to be in the right format, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             _secretClient = new SecretClient(vaultConfiguration.VaultUri, tokenCredential);
             _options = options;
@@ -161,7 +159,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
@@ -179,10 +176,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             var isSuccessful = false;
-            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
+#if NET6_0
+            using (DurationMeasurement measurement = DurationMeasurement.Start())
+#else
+            using (DependencyMeasurement measurement = DependencyMeasurement.Start()) 
+#endif
             {
                 try
                 {
@@ -236,7 +236,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
-            Guard.For<FormatException>(() => !SecretNameRegex.IsMatch(secretName), "Requires a secret name in the correct format to request a secret in Azure Key Vault, see https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning");
 
             Task<Secret> storeSecretTask;
             if (_isUsingAzureSdk)
@@ -250,7 +249,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
             Logger.LogTrace("Storing secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
             var secret = await storeSecretTask;
-            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", secret.Version, VaultUri);
+            Logger.LogTrace("Got secret {SecretName} (version: {SecretVersion}) from Azure Key Vault {VaultUri}", secretName, secret.Version, VaultUri);
 
             return secret;
         }

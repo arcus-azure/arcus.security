@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <Authors>Arcus</Authors>
     <Company>Arcus</Company>
     <Description>Contains core functionality for Arcus.Security</Description>
@@ -18,11 +18,18 @@
     <NoWarn>NU5125;NU5048</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Arcus.Observability.Telemetry.Core" Version="[2.4.0,3.0.0)" />
+    <PackageReference Include="Guard.Net" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
     <PackageReference Include="Arcus.Observability.Telemetry.Core" Version="[2.0.0,3.0.0)" />
+    <PackageReference Include="Guard.Net" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="3.1.8" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.8" />
-    <PackageReference Include="Guard.Net" Version="1.2.0" />
   </ItemGroup>
 
 </Project>
