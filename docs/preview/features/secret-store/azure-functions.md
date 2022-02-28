@@ -17,6 +17,8 @@ The secret stores are configured during the initial application build-up in the 
 
 ```csharp
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -26,6 +28,7 @@ namespace MyHttpAzureFunction
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            IConfiguration config = builder.GetContext().Configuration;
             builder.ConfigureSecretStore(stores =>
             {
                 var keyVaultName = config["KeyVault_Name"];
