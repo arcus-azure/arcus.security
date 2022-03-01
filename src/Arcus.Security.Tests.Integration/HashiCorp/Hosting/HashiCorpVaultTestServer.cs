@@ -121,7 +121,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             }
             catch (Exception exception)
             {
-                var message = "An unexpected problem occured while trying to start the HashiCorp Vault";
+                var message = "An unexpected problem occurred while trying to start the HashiCorp Vault";
                 logger.LogError(exception, message);
                 
                 throw new CouldNotStartHashiCorpVaultException(message, exception);
@@ -140,7 +140,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             listener.Start();
             int port = ((IPEndPoint) listener.LocalEndpoint).Port;
             listener.Stop();
-            
+
             return port;
         }
 
@@ -286,11 +286,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             if (!_process.HasExited)
             {
-#if NETCOREAPP3_1
-                _process.Kill(entireProcessTree: true); 
-#else
-                _process.Kill();
-#endif
+                _process.Kill(entireProcessTree: true);
             }
 
             _process.Dispose();

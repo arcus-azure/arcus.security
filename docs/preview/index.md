@@ -23,6 +23,7 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 # Features
 - **Using a Secret Store**
   - [What is it?](./features/secret-store/index.md)
+  - [Use within Azure Functions](./features/secret-store/azure-functions.md)
   - Providers
     - [Azure Key Vault](./features/secret-store/provider/key-vault.md)
     - [Command line arguments](./features/secret-store/provider/cmd-line.md)
@@ -31,7 +32,9 @@ PM > Install-Package Arcus.Security.Providers.AzureKeyVault
     - [Environment variables](./features/secret-store/provider/environment-variables.md)
     - [HashiCorp Vault](./features/secret-store/provider/hashicorp-vault.md)
     - [User Secrets](./features/secret-store/provider/user-secrets.md)
-  - [Creating your own secret provider](./features/secret-store/create-new-secret-provider.md)
+  - Advanced
+    - [Retrieve specific secret provider](./features/secret-store/named-secret-providers.md)
+    - [Creating your own secret provider](./features/secret-store/create-new-secret-provider.md)
 - **Interacting with Secrets**
     - [General](./features/secrets/general.md)
     - [Consume from Azure Key Vault](./features/secrets/consume-from-key-vault.md)

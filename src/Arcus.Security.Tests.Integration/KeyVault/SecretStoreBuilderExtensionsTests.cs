@@ -1333,9 +1333,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
         private void AssertTrackedAzureKeyVaultDependency(bool trackDependency)
         {
-            Assert.Equal(
-                Convert.ToInt16(trackDependency), 
-                InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.StartsWith("Dependency")));
+            var expectedTrackedDependencyCount = Convert.ToInt16(trackDependency);
+            int actualTrackedDependencyCount = InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
+
+            Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);
         }
     }
 }

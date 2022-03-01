@@ -12,7 +12,7 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
-> :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality within Azure Functions.
+> :bulb: See [this section](./azure-functions.md) if you want to use the secret store functionality within Azure Functions.
 
 ## Why would I use it?
 Why would you use our Arcus secret store instead of just using the Azure SDK directly to access Azure Key Vault secrets?
@@ -30,7 +30,7 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 * Separating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
 
 **✔ Extensibility**
-* Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
+* Arcus secret store is highly extensible and can be extended with [your own custom secret providers](./create-new-secret-provider.md), [in-memory secret providers for testing](https://github.com/arcus-azure/arcus.testing/blob/master/docs/v0.3/features/inmemory-secret-provider.md)...
 
 ## Built-in secret providers
 Several built in secret providers available in the package.
@@ -68,7 +68,7 @@ using Microsoft.Extensions.Hosting;
 
 public class Program
 {
-    public static void Main(string[] args)
+        public static void Main(string[] args)
         {
             CreateHostBuilder(args).Build().Run();
         }
@@ -141,64 +141,7 @@ public void ConfigureServices(IServiceCollection services)
 When your application wants to access a secret, all it has to do is use `ISecretProvider` which will give you access to all the registered secret providers.
 
 ## Using secret store within Azure Functions
-
-### Installation
-For this feature, the following package needs to be installed:
-
-```shell
-PM > Install-Package Arcus.Security.AzureFunctions
-```
-
-### Usage
-The secret stores are configured during the initial application build-up in the `Startup.cs`:
-
-```csharp
-using Microsoft.Azure.Functions.Extensions.DependencyInjection;
-
-[assembly: FunctionsStartup(typeof(Startup))]
-
-namespace MyHttpAzureFunction
-{
-    public class Startup : FunctionsStartup
-    {
-        public override void Configure(IFunctionsHostBuilder builder)
-        {
-            builder.ConfigureSecretStore(stores =>
-            {
-                stores.AddEnvironmentVariables();
-
-                var keyVaultName = config["KeyVault_Name"];
-                stores.AddEnvironmentVariables()
-                      .AddAzureKeyVaultWithManagedServiceIdentity($"https://{keyVaultName}.vault.azure.net");
-            })
-        }
-    }
-}
-```
-
-Once the secret providers are defined, the `ISecretProvider` can be used as any other registered service:
-
-```csharp
-using Arcus.Security.Core;
-
-namespace Application
-{
-    public class MyHttpTrigger
-    {
-        public MyHttpTrigger(ISecretProvider secretProvider)
-        {
-        }
-
-        [FunctionName("MyHttpTrigger")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
-        {
-            return new OkObjectResult("Response from function with injected dependencies.");
-        }
-    }
-}
-```
+See  how the secret store can be used within Azure Functions.
 
 ## Secret store configuration
 The secret store as additional configuration that controls the behavior of the store.
