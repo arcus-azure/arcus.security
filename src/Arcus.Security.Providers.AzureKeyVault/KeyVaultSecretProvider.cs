@@ -28,7 +28,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
         /// </summary>
-        [Obsolete("Will be removed in v2.0")]
         protected const string DependencyName = "Azure key vault";
 
         /// <summary>
@@ -40,6 +39,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Gets the pattern which a Azure Key Vault secret name should match against. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
         /// </summary>
+        [Obsolete("Will be removed in v2.0")]
         internal const string SecretNamePattern = "^[a-zA-Z][a-zA-Z0-9\\-]{0,126}$";
 
         /// <summary>
