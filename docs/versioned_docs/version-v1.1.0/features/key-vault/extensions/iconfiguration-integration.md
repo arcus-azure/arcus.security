@@ -33,7 +33,7 @@ var host = new WebHostBuilder()
     .UseStartup<Startup>();
 ```
 
-Note that the above codesample does not provide any caching capabilities.  In contrary to the `AzureKeyVaultConfigurationProvider`, the `Arcus.KeyVaultSecretProvider` does not cache retrieved secrets nor does it retrieve all secrets from KeyVault upfront as the `AzureKeyVaultConfigurationProvider` does.  Each time a secret is requested, it will be fetched from KeyVault.
+Note that the above code sample does not provide any caching capabilities.  In contrary to the `AzureKeyVaultConfigurationProvider`, the `Arcus.KeyVaultSecretProvider` does not cache retrieved secrets nor does it retrieve all secrets from KeyVault upfront as the `AzureKeyVaultConfigurationProvider` does.  Each time a secret is requested, it will be fetched from KeyVault.
 
 To provide caching capabilities, you can make use of the `CachedSecretProvider` as shown below:
 

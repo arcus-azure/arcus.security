@@ -12,7 +12,7 @@ var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
 var keyVaultSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vaultConfiguration)
 ```
 
-You can find a list of supported authentication schemes for Azure Key Vault [here](features/auth/azure-key-vault).
+You can find a list of supported authentication schemes for Azure Key Vault [here](../auth/azure-key-vault.md).
 
 ## Open for extension
 You can easily extend the Key Vault provider by overriding the `GetSecret*Async` methods on the it.

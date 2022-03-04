@@ -193,7 +193,7 @@ namespace Microsoft.Extensions.Hosting
     {
         public static SecretStoreBuilder AddRegistry(this SecretStoreBuilder builder)
         {
-            var provider = RegistrySecretProvider();
+            var secretProvider = new RegistrySecretProvider();
 
             return builder.AddProvider(secretProvider, options => options.MutateSecretName = secretName => secretName.Replace(".", "_").ToUpper());
         }
@@ -212,9 +212,9 @@ namespace Microsoft.Extensions.Hosting
         this SecretStoreBuilder builder, 
         Func<string, string> mutateSecretName = null)
         {
-            var provider = RegistrySecretProvider();
+            var secretProvider = new RegistrySecretProvider();
 
-            return builder.AddProvider(secretprovider, mutateSecretName);
+            return builder.AddProvider(secretProvider, mutateSecretName);
         }
     }
 }

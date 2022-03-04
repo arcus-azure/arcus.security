@@ -14,7 +14,7 @@ PM > Install-Package Arcus.Security.Providers.HashiCorp
 ```
 
 ## Configuration
-After installing the package, the addtional extensions becomes available when building the secret store.
+After installing the package, the additional extensions becomes available when building the secret store.
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -89,7 +89,7 @@ public class Program
 
                         // Adding the HashiCorp Vault secret provider with Kubernetes authentication, using `-` instead of `:` when looking up secrets.
                         // Example - When looking up `Foo:Bar` it will be changed to `Foo-Bar`.
-                        builder.AddHashiCorpVaultWithKubernetes(..., mutateSecretname: secretName => secretName.Replace(":", "-"));
+                        builder.AddHashiCorpVaultWithKubernetes(..., mutateSecretName: secretName => secretName.Replace(":", "-"));
 
                         // Providing an unique name to this secret provider so it can be looked up later.
                         // See: "Retrieve a specific secret provider from the secret store"
