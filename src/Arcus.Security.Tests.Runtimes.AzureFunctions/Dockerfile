@@ -1,22 +1,20 @@
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/azure-functions/dotnet:4.0 AS base
-WORKDIR /home/site/wwwroot
+FROM mcr.microsoft.com/azure-functions/dotnet:4 AS base
+WORKDIR /app
 EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0.100-bullseye-slim AS build
 WORKDIR /src
-COPY ["Arcus.WebApi.Tests.Runtimes.AzureFunction/Arcus.WebApi.Tests.Runtimes.AzureFunction.csproj", "Arcus.WebApi.Tests.Runtimes.AzureFunction/"]
-RUN dotnet restore "Arcus.WebApi.Tests.Runtimes.AzureFunction/Arcus.WebApi.Tests.Runtimes.AzureFunction.csproj"
+COPY ["Arcus.Security.Tests.Runtimes.AzureFunctions.csproj", ""]
+
 COPY . .
-WORKDIR "/src/Arcus.WebApi.Tests.Runtimes.AzureFunction"
-RUN dotnet build "Arcus.WebApi.Tests.Runtimes.AzureFunction.csproj" -c Release -o /app/build
+WORKDIR "/src/."
+RUN dotnet build "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish "Arcus.WebApi.Tests.Runtimes.AzureFunction.csproj" -c Release -o /app/publish
+RUN dotnet publish "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app
 
 FROM base AS final
-WORKDIR /home/site/wwwroot
-COPY --from=publish /app/publish .
-ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
+WORKDIR /app
+COPY --from=publish /app .
+ENV AzureWebJobsScriptRoot=/app \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
