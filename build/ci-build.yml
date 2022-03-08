@@ -111,7 +111,7 @@ stages:
               vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
           - template: templates/run-integration-tests.yml
             parameters:
-              dockerProjectName: '$(Project).Tests.Runtimes.AzureFunction'
+              dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
 
   - stage: ReleaseToMyget
     displayName: 'Release to MyGet'
