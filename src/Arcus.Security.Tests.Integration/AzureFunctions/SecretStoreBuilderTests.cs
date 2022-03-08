@@ -23,7 +23,7 @@ namespace Arcus.Security.Tests.Integration.AzureFunctions
         public SecretStoreBuilderTests(ITestOutputHelper outputWriter)
         {
             var config = TestConfig.Create();
-            var httpPort = config.GetValue<int>("Arcus.AzureFunctions.HttpPort");
+            var httpPort = config.GetValue<int>("Arcus:AzureFunctions:HttpPort");
             _defaultRoute = $"http://localhost:{httpPort}/api/OrderFunction";
             
             _logger = new XunitTestLogger(outputWriter);
