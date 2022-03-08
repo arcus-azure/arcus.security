@@ -88,32 +88,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             Assert.NotNull(secretProvider);
         }
 
-        [Theory]
-        [ClassData(typeof(InvalidSecretNames))]
-        public async Task KeyVaultSecretProvider_GetsRawSecretWithIncorrectSecretNameFormat_Throws(string secretName)
-        {
-            // Arrange
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation("some ignored secret value");
-
-            // Act / Assert
-            await Assert.ThrowsAnyAsync<FormatException>(() => provider.GetRawSecretAsync(secretName));
-        }
-
-        [Theory]
-        [ClassData(typeof(ValidSecretNames))]
-        public async Task KeyVaultSecretProvider_GetsRawSecretWithCorrectFormat(string secretName)
-        {
-            // Arrange
-            string expected = $"secret-{Guid.NewGuid()}";
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
-
-            // Act
-            string actual = await provider.GetRawSecretAsync(secretName);
-
-            // Assert
-            Assert.Equal(actual, expected);
-        }
-
         [Fact]
         public async Task KeyVaultSecretProvider_GetsRawSecretAsync_AfterRetriedTooManyRequestException()
         {
@@ -146,18 +120,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             Assert.Equal(expected, actual.Value);
             Assert.NotNull(actual.Version);
             Assert.Equal(expirationDate, actual.Expires);
-        }
-
-        [Theory]
-        [ClassData(typeof(InvalidSecretNames))]
-        public async Task KeyVaultSecretProvider_StoreSecretWithIncorrectSecretNameFormat_Throws(string secretName)
-        {
-            // Arrange
-            var secretValue = Guid.NewGuid().ToString();
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation("some ignored secret value");
-
-            // Act / Assert
-            await Assert.ThrowsAnyAsync<FormatException>(() => provider.StoreSecretAsync(secretName, secretValue));
         }
 
         private static KeyVaultSecretProvider CreateSecretProviderWithTooManyRequestSimulation(string expected, DateTime? expirationDate = null)

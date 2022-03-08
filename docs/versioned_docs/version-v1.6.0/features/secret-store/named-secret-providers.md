@@ -44,7 +44,7 @@ namespace Application
              // Gets the `ISecretProvider` with the matched name (with either using the `ISecretProvider` as return type or your own generic type).
              // ⚠ The name of the registered secret providers should be unique when retrieving the concrete secret provider; 
              //         otherwise, an exception will be thrown when you try to access the `GetProvider<>` or `GetCachedProvider<>`.
-             var secretprovider = secretStore.GetProvider<EnvironmentVariableSecretProvider>("environment-variables");
+             var secretProvider = secretStore.GetProvider<EnvironmentVariableSecretProvider>("environment-variables");
 
              // Gets the `ICachedSecretProvider` with the matched name (with either using the `ICachedSecretProvider` as return type or your own generic type).
              // Mark that this only works when the secret provider was regisered as a cached secret provider.

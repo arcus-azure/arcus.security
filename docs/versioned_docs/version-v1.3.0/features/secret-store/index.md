@@ -12,17 +12,17 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
-> :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality whitin Azure Functions.
+> :bulb: See [this section](#using-secret-store-within-azure-functions) if you want to use the secret store functionality within Azure Functions.
 
 ## Built-in secret providers
 Several built in secret providers available in the package.
 
-* [Environment variables](features/secret-store/provider/environment-variables)
-* [Configuration](features/secret-store/provider/configuration)
-* [Azure key vault](features/secret-store/provider/key-vault)
-* [User Secrets](features/secret-store/provider/user-secrets)
+* [Environment variables](./provider/environment-variables.md)
+* [Configuration](./provider/configuration.md)
+* [Azure key vault](./provider/key-vault.md)
+* [User Secrets](./provider/user-secrets.md)
 
-If you require an additional secret providers that aren't available here, please [this document](features/secret-store/create-new-secret-provider) that describes how you can create your own secret provider.
+If you require an additional secret providers that aren't available here, please [this document](./create-new-secret-provider.md) that describes how you can create your own secret provider.
 
 ## Installation
 For this feature, the following package needs to be installed:

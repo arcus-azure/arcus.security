@@ -233,7 +233,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
 
@@ -465,7 +465,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
@@ -841,7 +841,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
             string tenantId = Configuration.GetTenantId();
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
 
@@ -1183,7 +1183,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             string tenantId = Configuration.GetTenantId();
             string clientId = Configuration.GetServicePrincipalClientId();
             string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = "Unknown.Secret.Name";
+            var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
@@ -1333,9 +1333,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
         private void AssertTrackedAzureKeyVaultDependency(bool trackDependency)
         {
-            Assert.Equal(
-                Convert.ToInt16(trackDependency), 
-                InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.StartsWith("Dependency")));
+            var expectedTrackedDependencyCount = Convert.ToInt16(trackDependency);
+            int actualTrackedDependencyCount = InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
+
+            Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);
         }
     }
 }

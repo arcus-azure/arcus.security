@@ -55,7 +55,7 @@ public class Program
                         // Adding a default cached variant of the Azure Key Vault provider (default: 5 min caching).
                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration: CacheConfiguration.Default);
 
-                        // Assing a configurable cached variant of the Azure Key Vault provider.
+                        // Assign a configurable cached variant of the Azure Key Vault provider.
                         var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(1));
                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration);
 

@@ -138,7 +138,11 @@ namespace Arcus.Security.Providers.HashiCorp
             };
 
             var isSuccessful = false;
-            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
+#if NET6_0
+            using (DurationMeasurement measurement = DurationMeasurement.Start())
+#else
+            using (DependencyMeasurement measurement = DependencyMeasurement.Start()) 
+#endif
             {
                 try
                 {

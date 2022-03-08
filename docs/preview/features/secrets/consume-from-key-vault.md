@@ -6,14 +6,14 @@ layout: default
 # Consuming Azure Key Vault secrets
 
 ## Store Azure Key vault secrets
-The [Azure Key vault secret provider](../secret-store/provider/key-vault) provides the capability to also store secrets. This functionality is only available on the secret provider itself and not on the entire secret store.
+The [Azure Key vault secret provider](../secret-store/provider/key-vault.md) provides the capability to also store secrets. This functionality is only available on the secret provider itself and not on the entire secret store.
 
 Following steps guide you to store an Azure Key Vault secret via the Azure Key vault secret provider.
-1. Register the Azure Key Vault secret provider as a [named secret provider](../secret-store/named-secret-providers).
+1. Register the Azure Key Vault secret provider as a [named secret provider](../secret-store/named-secret-providers.md).
     ```csharp
     stores.AddAzureKeyVaultWithManagedIdentity(..., name: "AzureKeyVault.ManagedIdentity");
     ```
-2. Retrieve the Azure Key Vault secret provider from the `ISecretStore` (see the [named secret provider docs](../secret-store/named-secret-providers) for info)
+2. Retrieve the Azure Key Vault secret provider from the `ISecretStore` (see the [named secret provider docs](../secret-store/named-secret-providers.md) for info)
    ```csharp
    ISecretStore secretStore = ...
    var secretProvider = secretStore.GetProvider<KeyVaultSecretProvider>("AzureKeyVault.ManagedIdentity);

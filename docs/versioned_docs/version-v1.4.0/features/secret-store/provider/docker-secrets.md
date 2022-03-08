@@ -17,7 +17,7 @@ PM > Install-Package Arcus.Security.Providers.DockerSecrets
 ```
 
 ## Configuration
-After installing the package, the addtional extensions becomes available when building the secret store.
+After installing the package, the additional extensions becomes available when building the secret store.
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -82,9 +82,9 @@ namespace Application.Controllers
         [HttpGet]
         public async Task GetPerson(Guid personId)
         {
-            string connectionstring = await _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
+            string connectionString = await _secrets.GetRawSecretAsync("ConnectionStrings:PersonDatabase")
 
-           using (var connection = new SqlDbConnection(connectionstring))
+           using (var connection = new SqlDbConnection(connectionString))
            {
                var person = new PersonRepository(connection).GetPersonById(personId);
                return Ok(new { Id = person.Id, Name = person.Name });
