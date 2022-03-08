@@ -24,7 +24,7 @@ namespace Arcus.Security.Tests.Integration.AzureFunctions
         {
             var config = TestConfig.Create();
             var httpPort = config.GetValue<int>("Arcus:AzureFunctions:HttpPort");
-            _defaultRoute = $"http://localhost:{httpPort}/api/OrderFunction";
+            _defaultRoute = $"http://localhost:{httpPort}/api/order";
             
             _logger = new XunitTestLogger(outputWriter);
         }
@@ -37,6 +37,7 @@ namespace Arcus.Security.Tests.Integration.AzureFunctions
             using (HttpResponseMessage response = await HttpClient.GetAsync(_defaultRoute))
             {
                 // Assert
+                _logger.LogInformation("{StatusCode} <- {Uri}", response.StatusCode, _defaultRoute);
                 string contents = await response.Content.ReadAsStringAsync();
                 Assert.Equal("TestSecret", contents);
             }
