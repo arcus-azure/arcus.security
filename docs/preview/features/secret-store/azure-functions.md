@@ -28,8 +28,7 @@ namespace MyHttpAzureFunction
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            IConfiguration config = builder.GetContext().Configuration;
-            builder.ConfigureSecretStore(stores =>
+            builder.ConfigureSecretStore((FunctionsHostBuilderContext context, IConfiguration config, SecretStoreBuilder stores) =>
             {
                 var keyVaultName = config["KeyVault_Name"];
                 stores.AddEnvironmentVariables()
