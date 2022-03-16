@@ -1,4 +1,4 @@
 name: "Arcus CodeQL config"
 
-paths-ignore: 
+paths-ignore:
   - src/Arcus.Security.Tests.Integration/
