@@ -15,6 +15,7 @@
     <PackageId>Arcus.Security.Core</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>NU5125;NU5048</NoWarn>
   </PropertyGroup>
 
