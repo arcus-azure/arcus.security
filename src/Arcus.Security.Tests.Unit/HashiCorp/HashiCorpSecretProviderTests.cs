@@ -21,7 +21,12 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         [Fact]
         public void CreateProvider_WithoutSecretPaths_Throws()
         {
-            var settings = new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("username", "password"));
+            // Arrange
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
+            var settings = new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo(userName, password));
+            
+            // Act / Assert
             Assert.ThrowsAny<ArgumentException>(
                 () => new HashiCorpSecretProvider(settings, secretPath: null, options: new HashiCorpVaultOptions(), logger: null));
         }
@@ -29,7 +34,12 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         [Fact]
         public void CreateProvider_WithInvalidVaultUri_Throws()
         {
-            var settings = new VaultClientSettings("not a valid vault URI", new UserPassAuthMethodInfo("username", "password"));
+            // Arrange
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
+            var settings = new VaultClientSettings("not a valid vault URI", new UserPassAuthMethodInfo(userName, password));
+
+            // Act / Assert
             Assert.ThrowsAny<ArgumentException>(
                 () => new HashiCorpSecretProvider(settings, secretPath: "secret/path", options: new HashiCorpVaultOptions(), logger: null));
         }

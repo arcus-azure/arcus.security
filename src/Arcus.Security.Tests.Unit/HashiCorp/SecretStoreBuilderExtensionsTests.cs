@@ -30,11 +30,12 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password: "P@$$w0rd", secretPath: "secret/path");
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, secretPath: "secret/path");
             });
 
             // Assert
@@ -47,11 +48,12 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", password, secretPath: "secret/path");
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, secretPath: "secret/path");
             });
 
             // Assert
@@ -64,11 +66,12 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password: "P@$$w0rd", secretPath: "secret/path", configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, secretPath: "secret/path", configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -81,11 +84,12 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", password, secretPath: "secret/path", configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, secretPath: "secret/path", configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -166,11 +170,13 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass(vaultUri, "username", "password", "secret/path");
+                stores.AddHashiCorpVaultWithUserPass(vaultUri, userName, password, "secret/path");
             });
 
             // Assert
@@ -183,11 +189,13 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass(vaultUri, "username", "password", "secret/path", configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddHashiCorpVaultWithUserPass(vaultUri, userName, password, "secret/path", configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -234,11 +242,13 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", "password", secretPath);
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, secretPath);
             });
 
             // Assert
@@ -251,11 +261,13 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", "password", secretPath, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, secretPath, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
@@ -292,11 +304,13 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", "username", "password", "secret/path", options => options.KeyValueVersion = secretEngineVersion);
+                stores.AddHashiCorpVaultWithUserPass("https://vault.uri:456", userName, password, "secret/path", options => options.KeyValueVersion = secretEngineVersion);
             });
 
             // Assert
@@ -364,7 +378,9 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var settings = new VaultClientSettings(vaultUri, new UserPassAuthMethodInfo("username", "password"));
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
+            var settings = new VaultClientSettings(vaultUri, new UserPassAuthMethodInfo(userName, password));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -383,7 +399,9 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var settings = new VaultClientSettings(vaultUri, new UserPassAuthMethodInfo("username", "password"));
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
+            var settings = new VaultClientSettings(vaultUri, new UserPassAuthMethodInfo(userName, password));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -436,14 +454,16 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddHashiCorpVaultWithUserPass(
                     "https://vault.uri:456",
-                    "username",
-                    "password",
+                    userName,
+                    password,
                     "secret/path",
                     options =>
                     {
@@ -490,14 +510,16 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
                 stores.AddHashiCorpVaultWithUserPass(
                     "https://vault.uri:456",
-                    "username",
-                    "password",
+                    userName,
+                    password,
                     "secret/path",
                     options =>
                     {
