@@ -22,7 +22,9 @@ namespace Arcus.Security.Tests.Unit.HashiCorp.Fixture
         public SingleValueHashiCorpSecretProvider(string secretValue) 
             : base(settings: new VaultClientSettings(
                        vaultServerUriWithPort: "https://vault.uri:456", 
-                       authMethodInfo: new UserPassAuthMethodInfo($"user-{Guid.NewGuid()}", $"pass-{Guid.NewGuid()}")), 
+                       authMethodInfo: new UserPassAuthMethodInfo(
+                           username: Guid.NewGuid().ToString(), 
+                           password: Guid.NewGuid().ToString())), 
                    secretPath: "secret/path", 
                    options: new HashiCorpVaultOptions(), 
                    logger: NullLogger<HashiCorpSecretProvider>.Instance)

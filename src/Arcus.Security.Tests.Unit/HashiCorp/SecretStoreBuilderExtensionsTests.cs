@@ -320,8 +320,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
             var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo(userName, password));
 
             // Act
@@ -565,7 +565,9 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo("username", "password"));
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
+            var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo(userName, password));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
