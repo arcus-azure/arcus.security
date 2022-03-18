@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp;
-using Arcus.Security.Providers.HashiCorp.Configuration;
 using Arcus.Security.Providers.HashiCorp.Extensions;
 using Arcus.Security.Tests.Unit.HashiCorp.Fixture;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging.Abstractions;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
@@ -30,7 +27,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var password = $"pass-{Guid.NewGuid()}";
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -48,7 +45,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -66,7 +63,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var password = $"pass-{Guid.NewGuid()}";
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -84,7 +81,7 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -170,8 +167,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -189,8 +186,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -242,8 +239,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -261,8 +258,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -304,8 +301,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -323,7 +320,9 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo("username", "password"));
+            var userName = $"user-{Guid.NewGuid()}";
+            var password = $"pass-{Guid.NewGuid()}";
+            var settings = new VaultClientSettings("https://vault.uri:456", new UserPassAuthMethodInfo(userName, password));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -378,8 +377,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
             var settings = new VaultClientSettings(vaultUri, new UserPassAuthMethodInfo(userName, password));
 
             // Act
@@ -399,8 +398,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
             var settings = new VaultClientSettings(vaultUri, new UserPassAuthMethodInfo(userName, password));
 
             // Act
@@ -454,8 +453,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -510,8 +509,8 @@ namespace Arcus.Security.Tests.Unit.HashiCorp
         {
             // Arrange
             var builder = new HostBuilder();
-            var userName = $"user-{Guid.NewGuid()}";
-            var password = $"pass-{Guid.NewGuid()}";
+            var userName = Guid.NewGuid().ToString();
+            var password = Guid.NewGuid().ToString();
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
