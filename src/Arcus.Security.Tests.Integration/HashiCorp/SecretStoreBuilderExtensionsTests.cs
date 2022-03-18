@@ -47,7 +47,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
             string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
             string password = _config["Arcus:HashiCorp:UserPass:Password"];
-            string invalidPassword = $"invalid password-{Guid.NewGuid()}";
+            string invalidPassword = Guid.NewGuid().ToString();
 
             const string policyName = "my-policy";
 
