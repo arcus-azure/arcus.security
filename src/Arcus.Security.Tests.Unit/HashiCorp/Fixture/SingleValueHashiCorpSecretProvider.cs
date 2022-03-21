@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Providers.HashiCorp.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,7 +22,9 @@ namespace Arcus.Security.Tests.Unit.HashiCorp.Fixture
         public SingleValueHashiCorpSecretProvider(string secretValue) 
             : base(settings: new VaultClientSettings(
                        vaultServerUriWithPort: "https://vault.uri:456", 
-                       authMethodInfo: new UserPassAuthMethodInfo("username", "password")), 
+                       authMethodInfo: new UserPassAuthMethodInfo(
+                           username: Guid.NewGuid().ToString(), 
+                           password: Guid.NewGuid().ToString())), 
                    secretPath: "secret/path", 
                    options: new HashiCorpVaultOptions(), 
                    logger: NullLogger<HashiCorpSecretProvider>.Instance)
