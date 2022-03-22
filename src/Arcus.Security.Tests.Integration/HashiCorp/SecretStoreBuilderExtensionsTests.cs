@@ -45,8 +45,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = "arcus";
-            string password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
+            string invalidPassword = Guid.NewGuid().ToString();
 
             const string policyName = "my-policy";
 
@@ -66,7 +67,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
                 {
-                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, "invalid password", secretPath, options =>
+                    stores.AddHashiCorpVaultWithUserPass(server.ListenAddress.ToString(), userName, invalidPassword, secretPath, options =>
                     {
                         options.KeyValueMountPoint = secretPath;
                         options.TrackDependency = trackDependency;
@@ -95,8 +96,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = "arcus";
-            string password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             const string policyName = "my-policy";
 

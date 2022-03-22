@@ -44,8 +44,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = "arcus";
-            string password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
             {
@@ -78,8 +78,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = "arcus";
-            string password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
             {
@@ -110,7 +110,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = "arcus", password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
             const string secretNamePrefix = "Test-";
             
             var builder = new HostBuilder();
@@ -147,8 +148,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = "arcus", password = "123";
-            
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
+
             var builder = new HostBuilder();
 
             using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
@@ -181,7 +183,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = "arcus", password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
             const string secretNamePrefix = "Test-";
             
             var builder = new HostBuilder();
@@ -220,7 +223,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = "arcus", password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             var builder = new HostBuilder();
 
@@ -258,8 +262,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = "arcus";
-            string password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             const string mountPoint = "secret-v1";
             const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
@@ -296,8 +300,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = "arcus";
-            string password = "123";
+            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
+            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             const string mountPoint = "secret-v1";
             const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
