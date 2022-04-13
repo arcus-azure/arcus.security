@@ -51,6 +51,7 @@ If you require an additional secret providers that aren't available here, please
 ## Additional features
 Lists all the additional functions of the secret store.
 
+* [Custom secret provider](./create-new-secret-provider.md)
 * [Retrieve a specific secret provider](./named-secret-providers.md)
 
 ## Installation
@@ -141,7 +142,7 @@ public void ConfigureServices(IServiceCollection services)
 When your application wants to access a secret, all it has to do is use `ISecretProvider` which will give you access to all the registered secret providers.
 
 ## Using secret store within Azure Functions
-See  how the secret store can be used within Azure Functions.
+See [this page](./azure-functions.md) how the secret store can be used within Azure Functions.
 
 ## Secret store configuration
 The secret store as additional configuration that controls the behavior of the store.

@@ -27,7 +27,7 @@ The Arcus secret store has some advantages over using the Azure SDK or configura
 
 **✔ Design for security** 
 * While using configuration for storing secrets can be good for development it is not a safe approach. With the secret store, we provide a single place to retrieve secrets instead of scattering the integration across the application. 
-* Seperating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
+* Separating configuration data and sensitive secrets is key in developing secure projects. Vulnerabilities gets introduced when secrets are seen as data and are included in logs, for example. Or when expired secrets doesn't get transient handling upon retrieval.
 
 **✔ Extensibility**
 * Arcus secret store is highly extensible and can be extended with you own custom secret providers, in-memory secret providers for testing...
