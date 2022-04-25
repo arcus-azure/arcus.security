@@ -51,7 +51,7 @@ If you require an additional secret providers that aren't available here, please
 ## Additional features
 Lists all the additional functions of the secret store.
 
-* [Custom secret provider](./create-new-secret-provider.md)
+* [Create a custom secret provider](./create-new-secret-provider.md)
 * [Retrieve a specific secret provider](./named-secret-providers.md)
 
 ## Installation
