@@ -51,11 +51,10 @@ var cachedSecretProvider = new CachedSecretProvider(secretProvider, cacheConfigu
 Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
 
-## Forcing a secret refresh
-In some scenarios you'd like to skip the cache and do a hard refresh by looking it up in the provider.
+## Bypassing cached secrets
+In some scenarios you'd like to skip the cache and retrieve the secret by looking it up in the secret-store, instead of retrieving it from the cache.
 
 This is important because in certain scenarios your secrets can be rolled and thus you will be revoked access.
-After a hard refresh you can use the latest secret again and proceed your work.
 
 ```csharp
 Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey", ignoreCache: true);
@@ -64,7 +63,7 @@ Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey", i
 ## Invalidates a secret from the cache
 In some scenarios you'd like to remove a cache entry so that the secret will be retrieved from the provider when a new lookup will be done.
 
-This is useful for scenario's where the secret is updated and you need to tell the cache somehow.
+After a hard refresh you can use the latest secret again and proceed your work. This is useful for scenario's where the secret is updated and you need to tell the cache somehow.
 
 ```csharp
 await cachedSecretProvider.InvalidateSecretAsync("EventGrid-AuthKey");
