@@ -118,11 +118,11 @@ stages:
             parameters:
               repositoryName: 'arcus-azure/arcus.security'
               releaseNotes: |
-                Install the Arcus.Security packages that you need via NuGet, for instance [$(Project).Providers.AzureKeyVault](https://www.nuget.org/packages/$(Project).Providers.AzureKeyVault/$(Build.BuildNumber)):
+                Install the $(Project) packages that you need via NuGet, for instance [$(Project).Providers.AzureKeyVault](https://www.nuget.org/packages/$(Project).Providers.AzureKeyVault/$(Build.BuildNumber)):
                 ```shell
                 PM > Install-Package $(Project).Providers.AzureKeyVault --Version $(Build.BuildNumber)
                 ```
-                For a complete list of all Arcus.Security packages see the [documentation](https://security.arcus-azure.net/).
+                For a complete list of all $(Project) packages see the [documentation](https://security.arcus-azure.net/).
                 ## What's new?
                 ### Features
                 * Provide the capability to do something (#123)
