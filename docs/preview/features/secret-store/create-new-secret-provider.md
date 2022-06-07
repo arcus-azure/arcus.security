@@ -1,5 +1,5 @@
 ---
-title: "Create a new secret provider"
+title: "Create custom secret provider"
 layout: default
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "Secret store integration"
+title: "What is it?"
 layout: default
 slug: /features/secret-store
 sidebar_position: 1

@@ -1,5 +1,5 @@
 ---
-title: "Named secret providers"
+title: "Get secret provider by name"
 layout: default
 ---
 
