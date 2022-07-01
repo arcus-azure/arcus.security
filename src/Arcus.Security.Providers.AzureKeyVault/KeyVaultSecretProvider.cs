@@ -28,6 +28,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
         /// </summary>
+        [Obsolete("Uses the specific " + nameof(ILoggerExtensions.LogAzureKeyVaultDependency) + " extension instead of the general dependency tracking extension so there's no need for a dependency name constant anymore")]
         protected const string DependencyName = "Azure key vault";
 
         /// <summary>
@@ -195,7 +196,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 {
                     if (_options.TrackDependency)
                     {
-                        Logger.LogDependency(DependencyName, secretName, VaultUri, isSuccessful, measurement); 
+                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement); 
                     }
                 }
             }
