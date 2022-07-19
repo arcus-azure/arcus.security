@@ -14,6 +14,9 @@ Additionally, Arcus Security makes sure that retrieved secrets are cached for a 
 
 ![Arcus secret store integration example](/img/secret-arcus-keyvault.png)
 
+# Guidance
+* [Add Arcus secret store with Azure Key vault integration](02-Guides/add-secret-store-with-keyvault-integration.md)
+
 # Installation
 
 We provide a NuGet package per provider and area.
