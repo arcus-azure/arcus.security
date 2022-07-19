@@ -103,7 +103,7 @@ public class Program
 ### 3. Inject the Arcus secret store in application
 Now that the Arcus secret store is added and configured to the application, the application can use it to retrieve it secrets. The Arcus secret store is accessible throughout the application via the `ISecretProvider` interface - combining all the configured secret providers.
 
-In the `OrderController`, inject this interface to retrieve the Azure Service Bus connection string.
+In the `OrderController`, inject the `ISecretProvider` interface via the constructor.  The `ISecretProvider` will allow you to retrieve the Azure Service Bus connection string from the secret store.
 ```csharp
 using Arcus.Security.Core;
 
