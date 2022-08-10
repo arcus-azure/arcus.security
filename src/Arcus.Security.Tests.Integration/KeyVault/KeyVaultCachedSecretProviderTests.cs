@@ -5,7 +5,9 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
+using Azure.Core;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
@@ -40,22 +42,31 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
             using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
             {
+                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential());
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                    tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential()),
+                    tokenCredential: tokenCredential,
                     vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
                 var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider);
 
-                // Act
-                Secret secret = await cachedSecretProvider.StoreSecretAsync(secretName, secretValue);
+                try
+                {
+                    // Act
+                    Secret secret = await cachedSecretProvider.StoreSecretAsync(secretName, secretValue);
 
-                // Assert
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
-                Secret fetchedSecret = await cachedSecretProvider.GetSecretAsync(secretName);
-                Assert.Equal(secretValue, fetchedSecret.Value);
-                Assert.Equal(secret.Version, fetchedSecret.Version);
-                Assert.Equal(secret.Expires, fetchedSecret.Expires);
+                    // Assert
+                    Assert.NotNull(secret);
+                    Assert.NotNull(secret.Value);
+                    Assert.NotNull(secret.Version);
+                    Secret fetchedSecret = await cachedSecretProvider.GetSecretAsync(secretName);
+                    Assert.Equal(secretValue, fetchedSecret.Value);
+                    Assert.Equal(secret.Version, fetchedSecret.Version);
+                    Assert.Equal(secret.Expires, fetchedSecret.Expires);
+                }
+                finally
+                {
+                     var client = new SecretClient(new Uri(keyVaultUri), tokenCredential);
+                    await client.StartDeleteSecretAsync(secretName);
+                }
             }
         }
     }

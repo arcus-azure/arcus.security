@@ -6,6 +6,7 @@ using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
@@ -256,26 +257,40 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
+            string tenantId = Configuration.GetTenantId();
+            string clientId = Configuration.GetServicePrincipalClientId();
+            string clientKey = Configuration.GetServicePrincipalClientSecret();
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ManagedServiceIdentityAuthentication(),
-                vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
-
-            using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
+            
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
             {
-                // Act
-                Secret secret = await keyVaultSecretProvider.StoreSecretAsync(secretName, secretValue);
+                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential());
+                var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                    tokenCredential: tokenCredential,
+                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
 
-                // Assert
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
-                Secret fetchedSecret = await keyVaultSecretProvider.GetSecretAsync(secretName);
-                Assert.Equal(secretValue, fetchedSecret.Value);
-                Assert.Equal(secret.Version, fetchedSecret.Version);
-                Assert.Equal(secret.Expires, fetchedSecret.Expires);
+                try
+                {
+                    // Act
+                    Secret secret = await keyVaultSecretProvider.StoreSecretAsync(secretName, secretValue);
+
+                    // Assert
+                    Assert.NotNull(secret);
+                    Assert.NotNull(secret.Value);
+                    Assert.NotNull(secret.Version);
+                    Secret fetchedSecret = await keyVaultSecretProvider.GetSecretAsync(secretName);
+                    Assert.Equal(secretValue, fetchedSecret.Value);
+                    Assert.Equal(secret.Version, fetchedSecret.Version);
+                    Assert.Equal(secret.Expires, fetchedSecret.Expires);
+                }
+                finally
+                {
+                    var client = new SecretClient(new Uri(keyVaultUri), tokenCredential);
+                    await client.StartDeleteSecretAsync(secretName);
+                }
             }
         }
     }
