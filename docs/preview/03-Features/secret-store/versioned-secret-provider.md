@@ -1,4 +1,4 @@
----
+﻿---
 title: "Secret versions"
 layout: default
 ---
@@ -64,6 +64,6 @@ public class OrderController : ControllerBase
 }
 ```
 
-> Note that since we only allowed 2 secret versions in the registration, the Azure Key Vault will only return two secrets. 
+> Note that since we only allowed 2 secret versions in the registration, the Azure Key Vault will only return two secrets. If there more registered versions allowed than available on Azure Key Vault, then the maximum amount available will return
 
-> Note that ff there are more registered versions allowed than available on Azure Key Vault, then the maximum amount available will return
+> 💡 Note that versioned secrets can be combined with caching. The set of secrets will be cached, just like a single secret.

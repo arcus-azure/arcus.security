@@ -1,4 +1,4 @@
----
+﻿---
 title: "Create custom secret provider"
 layout: default
 ---
@@ -203,6 +203,8 @@ public class RegistrySecretProvider : IVersionedSecretProvider
 
 The `amountOfVersions` can be configured via the secret provider options (`.AddVersionedSecret`).
 Each secret provider registration has the ability to register a amount of secret versions for secret name, that amount is passed to your implementation. For more information, see [this dedicated page](./versioned-secret-provider.md).
+
+> 💡 Note that versioned secrets can be combined with caching. The set of secrets will be cached, just like a single secret.
 
 ### Adding secret name mutation before looking up secret
 When you want secret names 'changed' or 'mutated' before they go through your secret provider (ex. changing `Arcus.Secret` to `ARCUS_SECRET`);
