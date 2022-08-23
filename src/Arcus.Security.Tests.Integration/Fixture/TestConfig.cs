@@ -109,7 +109,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
             return vaultFile;
         }
 
-        private string GetRequiredValue(string key)
+        public string GetRequiredValue(string key)
         {
             string value = _configuration[key];
             if (string.IsNullOrWhiteSpace(value))

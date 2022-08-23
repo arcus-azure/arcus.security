@@ -77,6 +77,11 @@ namespace Arcus.Security.Core
                 CachedSecretProvider = cachedSecretProvider;
             }
 
+            if (secretProvider is IVersionedSecretProvider secretVersionProvider)
+            {
+                VersionedSecretProvider = secretVersionProvider;
+            }
+
             Options = options ?? new SecretProviderOptions();
         }
 
@@ -104,7 +109,16 @@ namespace Arcus.Security.Core
         }
 
         /// <summary>
-        /// Gets the cached provider for this secret store, if the <see cref="SecretProvider"/> is a <see cref="ICachedSecretProvider"/> implementation.
+        /// Gets the versioned provider for this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="IVersionedSecretProvider"/> implementation.
+        /// </summary>
+        /// <remarks>
+        ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
+        ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="IVersionedSecretProvider"/>.
+        /// </remarks>
+        public IVersionedSecretProvider VersionedSecretProvider { get; private set; }
+
+        /// <summary>
+        /// Gets the cached provider for this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="ICachedSecretProvider"/> implementation.
         /// </summary>
         /// <remarks>
         ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
@@ -146,6 +160,11 @@ namespace Arcus.Security.Core
                 if (secretProvider is ICachedSecretProvider cachedSecretProvider)
                 {
                     CachedSecretProvider = cachedSecretProvider;
+                }
+
+                if (secretProvider is IVersionedSecretProvider secretVersionProvider)
+                {
+                    VersionedSecretProvider = secretVersionProvider;
                 }
             }
         }

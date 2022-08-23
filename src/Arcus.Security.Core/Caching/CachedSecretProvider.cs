@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
@@ -10,7 +12,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A <see cref="ISecretProvider"/> that will cache secrets in memory, to improve performance.
     /// </summary>
-    public class CachedSecretProvider : ICachedSecretProvider
+    public class CachedSecretProvider : ICachedSecretProvider, IVersionedSecretProvider
     {
         private readonly ISecretProvider _secretProvider;
         private readonly ICacheConfiguration _cacheConfiguration;
@@ -141,16 +143,61 @@ namespace Arcus.Security.Core.Caching
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
             
-            if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret cachedSecret))
+            if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret[] cachedSecret))
             {
-                return cachedSecret;
+                return cachedSecret.First();
             }
 
             Task<Secret> getSecret = _secretProvider.GetSecretAsync(secretName);
             Secret secret = getSecret == null ? null : await getSecret;
 
-            MemoryCache.Set(secretName, secret, CacheEntry);
+            MemoryCache.Set(secretName, new[] { secret }, CacheEntry);
             return secret;
+        }
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret value, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
+        {
+            IEnumerable<Secret> secrets = await GetSecretsAsync(secretName, amountOfVersions);
+            return secrets?.Select(secret => secret?.Value).ToArray();
+        }
+
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        public async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
+        {
+            if (_secretProvider is IVersionedSecretProvider versionProvider)
+            {
+                if (MemoryCache.TryGetValue(secretName, out Secret[] cachedSecrets) 
+                    && cachedSecrets.Length >= amountOfVersions)
+                {
+                    return cachedSecrets.Take(amountOfVersions);
+                }
+
+                Task<IEnumerable<Secret>> getSecretsAsync = versionProvider.GetSecretsAsync(secretName, amountOfVersions);
+                IEnumerable<Secret> secrets = getSecretsAsync is null ? null : await getSecretsAsync;
+                Secret[] secretsArray = secrets.ToArray();
+                
+                MemoryCache.Set(secretName, secretsArray, CacheEntry);
+                return secretsArray;
+            }
+
+            Secret secret = await GetSecretAsync(secretName);
+            return new[] { secret };
         }
 
         /// <summary>

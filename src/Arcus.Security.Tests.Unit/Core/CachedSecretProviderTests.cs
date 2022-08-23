@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Bogus;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
@@ -11,6 +14,8 @@ namespace Arcus.Security.Tests.Unit.Core
 {
     public class CachedSecretProviderTests
     {
+        private static readonly Faker BogusGenerator = new Faker();
+
         [Fact]
         public void CachedSecretProvider_CreateWithoutSecretProvider_ShouldFailWithArgumentNullException()
         {
@@ -276,6 +281,162 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.Equal(expectedFirstSecret, actualFirst.Value);
             Assert.Equal(expectedSecondSecret, actualSecond.Value);
             Assert.Equal(2, testProviderStub.CallsMadeSinceCreation);
+        }
+
+        [Fact]
+        public async Task GetSecrets_WithoutVersionedSecrets_ReturnsSingle()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            var stub = new InMemorySecretProvider((secretName, secretValue));
+
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+
+            // Act
+            IEnumerable<Secret> secrets = await cached.GetSecretsAsync(secretName, amountOfVersions: 3);
+
+            // Assert
+            Assert.Equal(secretValue, Assert.Single(secrets).Value);
+        }
+
+        [Fact]
+        public async Task GetRawSecrets_WithoutVersionedSecrets_ReturnsSingle()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            var stub = new InMemorySecretProvider((secretName, secretValue));
+
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+
+            // Act
+            IEnumerable<string> secrets = await cached.GetRawSecretsAsync(secretName, amountOfVersions: 3);
+
+            // Assert
+            Assert.Equal(secretValue, Assert.Single(secrets));
+        }
+
+        [Fact]
+        public async Task GetRawSecrets_AfterGetRawSecret_ReturnsCached()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            int amountOfVersions = 1;
+            var stub = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+            string secretValue1 = await cached.GetRawSecretAsync(secretName);
+            Assert.Equal(secretValue, secretValue1);
+
+            // Act
+            IEnumerable<string> secretValues2 = await cached.GetRawSecretsAsync(secretName, amountOfVersions);
+
+            // Assert
+            Assert.Equal(secretValue, Assert.Single(secretValues2));
+            Assert.Equal(1, stub.CallsSinceCreation);
+        }
+
+        [Fact]
+        public async Task GetRawSecret_AfterGetRawSecrets_ReturnsCached()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            int amountOfVersions = 1;
+            var stub = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+            IEnumerable<string> secretValues1 = await cached.GetRawSecretsAsync(secretName, amountOfVersions);
+            Assert.Equal(secretValue, Assert.Single(secretValues1));
+
+            // Act
+            string secretValue2 = await cached.GetRawSecretAsync(secretName);
+
+            // Assert
+            Assert.Equal(secretValue, secretValue2);
+            Assert.Equal(1, stub.CallsSinceCreation);
+        }
+
+        [Fact]
+        public async Task GetRawSecrets_AfterGetSecret_ReturnsCached()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            int amountOfVersions = 1;
+            var stub = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+            Secret secret1 = await cached.GetSecretAsync(secretName);
+            Assert.Equal(secretValue, secret1.Value);
+
+            // Act
+            IEnumerable<string> secretValues2 = await cached.GetRawSecretsAsync(secretName, amountOfVersions);
+
+            // Assert
+            Assert.Equal(secretValue, Assert.Single(secretValues2));
+            Assert.Equal(1, stub.CallsSinceCreation);
+        }
+
+        [Fact]
+        public async Task GetSecret_AfterGetRawSecrets_ReturnsCached()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            int amountOfVersions = 1;
+            var stub = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+            IEnumerable<string> secretValues1 = await cached.GetRawSecretsAsync(secretName, amountOfVersions);
+            Assert.Equal(secretValue, Assert.Single(secretValues1));
+
+            // Act
+            Secret secret2 = await cached.GetSecretAsync(secretName);
+
+            // Assert
+            Assert.Equal(secretValue, secret2.Value);
+            Assert.Equal(1, stub.CallsSinceCreation);
+        }
+
+        [Fact]
+        public async Task GetSecrets_WithHigherRequestedVersionsThanAvailable_IgnoresCache()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            int amountOfVersions = 5;
+            var stub = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+
+            IEnumerable<string> secretValues1 = await cached.GetRawSecretsAsync(secretName, amountOfVersions);
+            Assert.Equal(amountOfVersions, secretValues1.Count());
+
+            // Act
+            IEnumerable<string> secretValues2 = await cached.GetRawSecretsAsync(secretName, 10);
+
+            // Assert
+            Assert.Equal(amountOfVersions, secretValues2.Count());
+            Assert.Equal(2, stub.CallsSinceCreation);
+        }
+
+        [Fact]
+        public async Task GetSecrets_WithLowerRequestedVersionsThanAvailable_UsesCache()
+        {
+            // Arrange
+            string secretName = BogusGenerator.Lorem.Word();
+            string secretValue = BogusGenerator.Lorem.Word();
+            int amountOfVersions = 5;
+            var stub = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
+            var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
+
+            IEnumerable<string> secretValues1 = await cached.GetRawSecretsAsync(secretName, amountOfVersions);
+            Assert.Equal(amountOfVersions, secretValues1.Count());
+
+            // Act
+            IEnumerable<string> secretValues2 = await cached.GetRawSecretsAsync(secretName, 3);
+
+            // Assert
+            Assert.Equal(3, secretValues2.Count());
+            Assert.Equal(1, stub.CallsSinceCreation);
         }
     }
 }

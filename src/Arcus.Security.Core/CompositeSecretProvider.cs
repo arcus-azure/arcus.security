@@ -15,7 +15,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation representing a series of <see cref="ISecretProvider"/> implementations.
     /// </summary>
-    internal class CompositeSecretProvider : ICachedSecretProvider, ISecretStore
+    internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISecretStore
     {
         private readonly IEnumerable<SecretStoreSource> _secretProviders;
         private readonly IEnumerable<CriticalExceptionFilter> _criticalExceptionFilters;
@@ -30,8 +30,8 @@ namespace Arcus.Security.Core
         /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
         /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
         /// <param name="logger">The logger instance to write diagnostic messages during the retrieval of secrets via the registered <paramref name="secretProviderSources"/>.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> of the <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/>, or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
         public CompositeSecretProvider(
             IEnumerable<SecretStoreSource> secretProviderSources, 
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
@@ -41,8 +41,8 @@ namespace Arcus.Security.Core
             Guard.NotNull(secretProviderSources, nameof(secretProviderSources), "Requires a series of registered secret provider registrations to retrieve secrets");
             Guard.NotNull(criticalExceptionFilters, nameof(criticalExceptionFilters), "Requires a series of registered critical exception filters to determine if a thrown exception is critical");
             Guard.NotNull(auditingOptions, nameof(auditingOptions), "Requires a set of options to configure the auditing of the secret store");
-            Guard.For<ArgumentException>(() => secretProviderSources.Any(source => source is null), "Requires all registered secret provider registrations to be not 'null'");
-            Guard.For<ArgumentException>(() => criticalExceptionFilters.Any(filter => filter is null), "Requires all registered critical exception filters to be not 'null'");
+            Guard.For(() => secretProviderSources.Any(source => source is null), new ArgumentException("Requires all registered secret provider registrations to be not 'null'", nameof(secretProviderSources)));
+            Guard.For(() => criticalExceptionFilters.Any(filter => filter is null), new ArgumentException("Requires all registered critical exception filters to be not 'null'", nameof(criticalExceptionFilters)));
 
             _secretProviders = secretProviderSources;
             _criticalExceptionFilters = criticalExceptionFilters;
@@ -59,8 +59,8 @@ namespace Arcus.Security.Core
         /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
         /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
         /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> of the <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/>, <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
         public CompositeSecretProvider(
             IEnumerable<SecretStoreSource> secretProviderSources, 
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
@@ -209,6 +209,114 @@ namespace Arcus.Security.Core
 
             throw new KeyNotFoundException(
                 $"Could not retrieve the named {nameof(ISecretProvider)} because no secret provider was registered with the name '{name}'");
+        }
+
+        /// <summary>
+        /// Retrieves all the allowed versions of a secret value, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        internal async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            IEnumerable<Secret> secretValues = 
+                await WithSecretStoreAsync(secretName, async source =>
+                {
+                    if (source.Options.TryGetAllowedSecretVersions(secretName, out int allowedVersions))
+                    {
+                        if (source.VersionedSecretProvider != null)
+                        {
+                            IEnumerable<Secret> secrets = await source.VersionedSecretProvider.GetSecretsAsync(secretName, allowedVersions);
+                            return secrets.ToArray();
+                        }
+
+                        _logger.LogTrace("Cannot get all the allowed versions of secret '{SecretName}' because the registered secret provider '{SecretProviderName}' does not implement '{SecretVersionsProviderName}'", secretName, source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(IVersionedSecretProvider));
+                    }
+
+                    Secret secret = await source.SecretProvider.GetSecretAsync(secretName);
+                    return new[] { secret };
+                });
+
+            return secretValues.ToArray();
+        }
+
+        /// <summary>
+        /// Retrieves all the allowed versions of a secret value, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        internal async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            IEnumerable<string> secretValues = 
+                await WithSecretStoreAsync(secretName, async source =>
+                {
+                    if (source.Options.TryGetAllowedSecretVersions(secretName, out int allowedVersions))
+                    {
+                        if (source.VersionedSecretProvider != null)
+                        {
+                            IEnumerable<string> secretValues = await source.VersionedSecretProvider.GetRawSecretsAsync(secretName, allowedVersions);
+                            return secretValues.ToArray();
+                        }
+
+                        _logger.LogTrace("Cannot get all the allowed versions of secret '{SecretName}' because the registered secret provider '{SecretProviderName}' does not implement '{SecretVersionsProviderName}'", secretName, source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(IVersionedSecretProvider));
+                    }
+
+                    string secretValue = await source.SecretProvider.GetRawSecretAsync(secretName);
+                    return new[] { secretValue };
+                });
+
+            return secretValues.ToArray();
+        }
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret value, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to retrieve the secret in the secret store");
+
+            IEnumerable<Secret> secrets = await GetSecretsAsync(secretName);
+            return secrets.Select(secret => secret?.Value).ToArray();
+        }
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        public async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to retrieve the secret in the secret store");
+
+            IEnumerable<Secret> secretValues = 
+                await WithSecretStoreAsync(secretName, async source =>
+                {
+                    if (source.VersionedSecretProvider != null)
+                    {
+                        IEnumerable<Secret> secrets = await source.VersionedSecretProvider.GetSecretsAsync(secretName, amountOfVersions);
+                        return secrets.ToArray();
+                    }
+
+                    Secret secret = await source.SecretProvider.GetSecretAsync(secretName);
+                    return new[] { secret };
+                });
+
+            return secretValues.ToArray();
         }
 
         /// <summary>

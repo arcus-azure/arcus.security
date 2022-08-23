@@ -211,6 +211,17 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="InvalidOperationException">Thrown when one or more <see cref="ISecretProvider"/> was registered with the same name.</exception>
         internal void RegisterSecretStore()
         {
+            AddSecretStoreSources();
+            AddCriticalExceptionFilters();
+            AddAuditingOptions();
+
+            Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
+            Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
+            Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+        }
+
+        private void AddSecretStoreSources()
+        {
             foreach (SecretStoreSource source in SecretStoreSources)
             {
                 if (source is null)
@@ -224,7 +235,10 @@ namespace Microsoft.Extensions.Hosting
                     return source;
                 });
             }
+        }
 
+        private void AddCriticalExceptionFilters()
+        {
             foreach (CriticalExceptionFilter filter in CriticalExceptionFilters)
             {
                 if (filter is null)
@@ -234,17 +248,16 @@ namespace Microsoft.Extensions.Hosting
 
                 Services.AddSingleton(filter);
             }
+        }
 
+        private void AddAuditingOptions()
+        {
             foreach (Action<SecretStoreAuditingOptions> configureAuditingOptions in _configureAuditingOptions)
             {
                 configureAuditingOptions(AuditingOptions);
             }
 
             Services.TryAddSingleton(AuditingOptions);
-
-            Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
-            Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
-            Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
         }
 
         private static SecretStoreSource CreateMutatedSecretSource(
