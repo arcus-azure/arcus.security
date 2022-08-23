@@ -169,7 +169,6 @@ namespace Arcus.Security.Core.Caching
             return secrets?.Select(secret => secret?.Value).ToArray();
         }
 
-
         /// <summary>
         /// Retrieves all the <paramref name="amountOfVersions"/> of a secret, based on the <paramref name="secretName"/>.
         /// </summary>
