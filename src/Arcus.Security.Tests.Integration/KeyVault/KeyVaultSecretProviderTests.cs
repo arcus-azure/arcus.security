@@ -258,7 +258,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 }
                 finally
                 {
-                   
                     var client = new SecretClient(new Uri(VaultUri), tokenCredential);
                     await client.StartDeleteSecretAsync(secretName);
                 }
