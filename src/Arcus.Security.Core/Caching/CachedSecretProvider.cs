@@ -165,6 +165,9 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the versioned secrets");
+            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to look up the versioned secrets");
+
             IEnumerable<Secret> secrets = await GetSecretsAsync(secretName, amountOfVersions);
             return secrets?.Select(secret => secret?.Value).ToArray();
         }
@@ -179,6 +182,9 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the versioned secrets");
+            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to look up the versioned secrets");
+
             if (_secretProvider is IVersionedSecretProvider versionProvider)
             {
                 if (MemoryCache.TryGetValue(secretName, out Secret[] cachedSecrets) 
