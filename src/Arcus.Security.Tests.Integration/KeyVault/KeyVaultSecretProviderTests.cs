@@ -230,17 +230,20 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_StoreSecret_Succeeds()
         {
             // Arrange
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
-            var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                authentication: new ManagedServiceIdentityAuthentication(),
-                vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
-            using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
+                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential());
                 try
                 {
+                    var keyVaultSecretProvider = new KeyVaultSecretProvider(
+                        tokenCredential: tokenCredential,
+                        vaultConfiguration: new KeyVaultConfiguration(VaultUri));
+
                     // Act
                     Secret secret = await keyVaultSecretProvider.StoreSecretAsync(secretName, secretValue);
 
@@ -255,7 +258,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 }
                 finally
                 {
-                    var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential());
+                   
                     var client = new SecretClient(new Uri(VaultUri), tokenCredential);
                     await client.StartDeleteSecretAsync(secretName);
                 }
