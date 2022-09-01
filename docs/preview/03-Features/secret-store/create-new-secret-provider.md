@@ -167,7 +167,7 @@ namespace Application.Controllers
 
 ### Adding secret versions to your secret provider
 When your secret storage location supports secret versions, you could consider adapting your secret provider to support these secret versions.
-For more information on how you can use many secret versions in your application, see [this dedicated page](./versioned-secret-provider.md).
+For more information on how you can use multiple versions of a secret in your application, see [this dedicated page](./versioned-secret-provider.md).
 
 Implement from `IVersionedSecretProvider` instead of `ISecretProvider` to allow the secret store to pick that your secret provider supports secret versions.
 The following example shows how the registry secret provider only supports two versions of a secret:
