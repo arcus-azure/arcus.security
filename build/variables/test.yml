@@ -1,3 +1,5 @@
 variables:
+  Arcus.KeyVault.TestKeyName: "ArcusTestSecret"
+  Arcus.KeyVault.TestKeyVersion: "8bde7a16366849e28b7abe26732e12e3"
   HashiCorp.Vault.Version: 1.5.0
   Arcus.AzureFunctions.HttpPort: "5000"

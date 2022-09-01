@@ -1,22 +1,14 @@
----
+﻿---
 title: "Create custom secret provider"
 layout: default
 ---
 
 # Create a new secret provider
-
-- [Create a new secret provider](#create-a-new-secret-provider)
-  - [Prerequisites](#prerequisites)
-  - [Developing a secret provider](#developing-a-secret-provider)
-    - [Adding dependency services to your secret provider](#adding-dependency-services-to-your-secret-provider)
-    - [Adding caching to your secret provider](#adding-caching-to-your-secret-provider)
-    - [Adding secret name mutation before looking up secret](#adding-secret-name-mutation-before-looking-up-secret)
-    - [Adding critical exceptions](#adding-critical-exceptions)
-  - [Contribute your secret provider](#contribute-your-secret-provider)
+The Arcus secret store allows custom secret provider implementations if you want to retrieve secrets from a location that is not built-in.
+This section describes how you develop, configure and finally register your custom secret provider implementation into the Arcus secret store.
 
 ## Prerequisites
-
-The secret providers are configured during the initial application build-up in the `Program.cs`:
+The secret providers are configured during the initial application build-up:
 
 ```csharp
 using Microsoft.Extensions.Hosting;
@@ -43,12 +35,11 @@ public class Program
 This section describes how a new secret store source can be added to the pipeline.
 
 ## Developing a secret provider
-
 1. Install the NuGet package `Arcus.Security.Core`.
 2. Implement your own implementation of the `ISecretProvider` 
-   ex:
    ```csharp
    using Arcus.Security.Core;
+   using Microsoft.Win32;
 
    namespace Application.Security.CustomProviders
    {
@@ -69,7 +60,6 @@ This section describes how a new secret store source can be added to the pipelin
    }
    ```
 3. Optionally, you can provide an extension for a consumer-friendly way to add the provider.
-   ex:
    ```csharp
     namespace Microsoft.Extensions.Hosting
     {
@@ -100,7 +90,6 @@ This section describes how a new secret store source can be added to the pipelin
    })
    ```
 4. Now, the secret source is available in the resulting `ISecretProvider` registered in the dependency injection container.
-   ex:
    ```csharp
    using Arcus.Security.Core;
 
@@ -117,11 +106,9 @@ This section describes how a new secret store source can be added to the pipelin
    ```
 
 ### Adding dependency services to your secret provider
-
 When your secret provider requires additional services, configured in the dependency container, you can choose to pick an method overload that provides access to the `IServiceProvider`:
 
 The example below shows how an `ILogger` instance is passed to the secret provider.
-
 ```csharp
 using System;
 using Microsoft.Extensions.Logging;
@@ -143,9 +130,7 @@ namespace Microsoft.Extensions.Hosting
 ```
 
 ### Adding caching to your secret provider
-
 When your secret provider requires caching, you can wrap the provider in a `CachedSecretProvider` at registration:
-
 ```csharp
 using Arcus.Security.Core.Caching;
 
@@ -165,7 +150,6 @@ namespace Microsoft.Extensions.Hosting
 ```
 
 When accessing the provider in the application, you can use the `ICachedSecretProvider` to have access to the cache-specific methods.
-ex:
 ```csharp
 using Arcus.Security.Core.Caching;
 
@@ -181,8 +165,48 @@ namespace Application.Controllers
 }
 ```
 
-### Adding secret name mutation before looking up secret
+### Adding secret versions to your secret provider
+When your secret storage location supports versioned secrets, you could consider adapting your secret provider to support these.
+For more information on how you can use multiple versions of a secret in your application, see [this dedicated page](./versioned-secret-provider.md).
 
+Implement from `IVersionedSecretProvider` instead of `ISecretProvider` to allow the secret store to pick that your secret provider supports secret versions.
+The following example shows how the registry secret provider only supports two versions of a secret:
+```csharp
+using Arcus.Security.Core;
+using Microsoft.Win32;
+
+public class RegistrySecretProvider : IVersionedSecretProvider
+{
+    // Also implement the general `ISecretProvider` methods...
+
+     public Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
+     {
+         if (amountOfVersions >= 2)
+         {
+             object valueV1 = Registry.LocalMachine.GetValue("v1\\" + secretName);
+             object valueV2 = Registry.LocalMachine.GetValue("v2\\" + secretName);
+
+             return Task.FromResult(new[] { valueV1, valueV2 });
+         }
+
+         object valueV1 = Registry.LocalMachine.GetValue("v1\\" + secretName);
+         return Task.FromResult(new[] { valueV1 });
+     }
+
+     public async Task<IEnumerable<Secret>> GetSecretAsync(string secretName, int amountOfVersions)
+     {
+         string secretValue = await GetRawSecretAsync(secretName);
+         return new Secret(secretValue);
+     }
+}
+```
+
+The `amountOfVersions` can be configured via the secret provider options (`.AddVersionedSecret`).
+Each secret provider registration has the ability to register a amount of secret versions for secret name, that amount is passed to your implementation. For more information, see [this dedicated page](./versioned-secret-provider.md).
+
+> 💡 Note that versioned secrets can be combined with caching. The set of secrets will be cached, just like a single secret.
+
+### Adding secret name mutation before looking up secret
 When you want secret names 'changed' or 'mutated' before they go through your secret provider (ex. changing `Arcus.Secret` to `ARCUS_SECRET`);
 you can pass along a custom mutation function during the registration:
 
@@ -230,7 +254,6 @@ So they can provide a custom mutation:
 ```
 
 ### Adding critical exceptions
-
 When implementing your own `ISecretProvider`, you may come across situations where you want to throw an critical exception (for example: authentication, authorization failures...)
 and that this critical exception is eventually thrown by the secret store when you're looking up secrets.
 
@@ -269,5 +292,4 @@ namespace Microsoft.Extensions.Hosting
 > In the other case the single critical exception is being thrown.
 
 ## Contribute your secret provider
-
 We are open for contributions and are more than happy to receive pull requests with new secret providers!
