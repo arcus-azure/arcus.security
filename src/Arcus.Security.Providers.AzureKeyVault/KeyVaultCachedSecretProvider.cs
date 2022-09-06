@@ -84,7 +84,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
 
             Secret secret = await _secretProvider.StoreSecretAsync(secretName, secretValue);
-            MemoryCache.Set(secretName, secret, CacheEntry);
+            MemoryCache.Set(secretName, new [] { secret }, CacheEntry);
 
             return secret;
         }

@@ -12,8 +12,6 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
     /// </summary>
     public class InMemorySecretProvider : ISecretProvider
     {
-        private readonly IDictionary<string, string> _secretValueByName;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemorySecretProvider"/> class.
         /// </summary>
@@ -22,7 +20,7 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         {
             Guard.NotNull(secretValueByName, "Secret name/value combinations cannot be 'null'");
 
-            _secretValueByName = secretValueByName.ToDictionary(t => t.name, t => t.value);
+            SecretValueByName = secretValueByName.ToDictionary(t => t.name, t => t.value);
         }
 
         /// <summary>
@@ -33,8 +31,13 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         {
             Guard.NotNull(secretValueByName, "Secret name/value combinations cannot be 'null'");
 
-            _secretValueByName = secretValueByName;
+            SecretValueByName = secretValueByName;
         }
+
+        /// <summary>
+        /// Gets the available stored secrets.
+        /// </summary>
+        protected IDictionary<string, string> SecretValueByName { get; }
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
@@ -44,11 +47,11 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public Task<Secret> GetSecretAsync(string secretName)
+        public virtual Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNull(secretName, "Secret name cannot be 'null'");
 
-            if (_secretValueByName.TryGetValue(secretName, out string secretValue))
+            if (SecretValueByName.TryGetValue(secretName, out string secretValue))
             {
                 var secret = new Secret(secretValue, version: $"v-{Guid.NewGuid()}");
                 return Task.FromResult(secret);
@@ -65,16 +68,12 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public Task<string> GetRawSecretAsync(string secretName)
+        public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
             Guard.NotNull(secretName, "Secret name cannot be 'null'");
 
-            if (_secretValueByName.TryGetValue(secretName, out string secretValue))
-            {
-                return Task.FromResult(secretValue);
-            }
-
-            return Task.FromResult<string>(null);
+            Secret secret = await GetSecretAsync(secretName);
+            return secret?.Value;
         }
     }
 }

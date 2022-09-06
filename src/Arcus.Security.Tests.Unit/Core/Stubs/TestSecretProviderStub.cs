@@ -39,7 +39,7 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            ++CallsMadeSinceCreation;            
+            ++CallsMadeSinceCreation;
             return Task.FromResult(new Secret(SecretValue, version: Guid.NewGuid().ToString()));
         }
     }

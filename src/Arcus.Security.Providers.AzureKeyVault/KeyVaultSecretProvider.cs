@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -12,18 +15,23 @@ using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
 using GuardNet;
 using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.KeyVault.Core;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Rest.Azure;
 using Polly;
 using Polly.Retry;
+using SecretProperties = Azure.Security.KeyVault.Secrets.SecretProperties;
+using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 
 namespace Arcus.Security.Providers.AzureKeyVault
 {
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
-    public class KeyVaultSecretProvider : ISecretProvider
+    public class KeyVaultSecretProvider : IVersionedSecretProvider
     {
         /// <summary>
         /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
@@ -178,46 +186,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
 
-            var isSuccessful = false;
-#if NET6_0
-            using (DurationMeasurement measurement = DurationMeasurement.Start())
-#else
-            using (DependencyMeasurement measurement = DependencyMeasurement.Start()) 
-#endif
-            {
-                try
-                {
-                    Secret secret = await GetSecretCoreAsync(secretName);
-                    isSuccessful = true;
-                    
-                    return secret;
-                }
-                finally
-                {
-                    if (_options.TrackDependency)
-                    {
-                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement); 
-                    }
-                }
-            }
-        }
-
-        private async Task<Secret> GetSecretCoreAsync(string secretName)
-        {
-            Task<Secret> getSecretTask;
-            if (_isUsingAzureSdk)
-            {
-                getSecretTask = GetSecretUsingSecretClientAsync(secretName);
-            }
-            else
-            {
-                getSecretTask = GetSecretUsingKeyVaultClientAsync(secretName);
-            }
-
             Logger.LogTrace("Getting a secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
-            var secret = await getSecretTask;
+            Secret secret = await InteractWithKeyVaultAsync(
+                secretName, 
+                client => client.GetSecretAsync(VaultUri, secretName), 
+                client => client.GetSecretAsync(secretName));
             Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", VaultUri);
-
+            
             return secret;
         }
 
@@ -238,108 +213,171 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
             Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
 
-            Task<Secret> storeSecretTask;
-            if (_isUsingAzureSdk)
-            {
-                storeSecretTask = StoreSecretUsingSecretClientAsync(secretName, secretValue);
-            }
-            else
-            {
-                storeSecretTask = StoreSecretUsingKeyVaultClientAsync(secretName, secretValue);
-            }
-
             Logger.LogTrace("Storing secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
-            var secret = await storeSecretTask;
+            Secret secret = await InteractWithKeyVaultAsync(
+                secretName, 
+                client => client.SetSecretAsync(VaultUri, secretName, secretValue), 
+                client => client.SetSecretAsync(secretName, secretValue));
             Logger.LogTrace("Got secret {SecretName} (version: {SecretVersion}) from Azure Key Vault {VaultUri}", secretName, secret.Version, VaultUri);
-
+           
             return secret;
         }
 
-        private async Task<Secret> GetSecretUsingKeyVaultClientAsync(string secretName)
+        private async Task<Secret> InteractWithKeyVaultAsync(
+            string secretName,
+            Func<IKeyVaultClient, Task<SecretBundle>> interactWithOldClient,
+            Func<SecretClient, Task<Response<KeyVaultSecret>>> interactWithNewClient)
         {
-            return await InteractWithVaultUsingKeyVaultClientAsync(secretName, 
-                async keyVaultClient => await keyVaultClient.GetSecretAsync(VaultUri, secretName));
-        }
-
-        private async Task<Secret> StoreSecretUsingKeyVaultClientAsync(string secretName, string secretValue)
-        {
-            return await InteractWithVaultUsingKeyVaultClientAsync(secretName,
-                async keyVaultClient => await keyVaultClient.SetSecretAsync(VaultUri, secretName, secretValue));
-        }
-
-        private async Task<Secret> GetSecretUsingSecretClientAsync(string secretName)
-        {
-            return await InteractWithVaultUsingSecretClientAsync(secretName,
-                async keyVaultClient => await keyVaultClient.GetSecretAsync(secretName));
-        }
-
-        private async Task<Secret> StoreSecretUsingSecretClientAsync(string secretName, string secretValue)
-        {
-            var secret = new KeyVaultSecret(secretName, secretValue);
-
-            return await InteractWithVaultUsingSecretClientAsync(secretName,
-                async keyVaultClient => await keyVaultClient.SetSecretAsync(secret));
-        }
-
-        private async Task<Secret> InteractWithVaultUsingKeyVaultClientAsync(string secretName, Func<IKeyVaultClient, Task<SecretBundle>> operation)
-        {
-            IKeyVaultClient keyVaultClient = await GetClientAsync();
-
-            try
-            {
-                SecretBundle secretBundle = await ThrottleTooManyRequestsAsync(async () => await operation(keyVaultClient));
-
-                if (secretBundle is null)
+            return await InteractWithKeyVaultAsync(
+                secretName,
+                async client =>
                 {
-                    return null;
+                    SecretBundle secretBundle = await interactWithOldClient(client);
+                    if (secretBundle is null)
+                    {
+                        return null;
+                    }
+
+                    return new Secret(
+                        secretBundle.Value,
+                        secretBundle.SecretIdentifier?.Version,
+                        secretBundle.Attributes.Expires);
+                },
+                async client =>
+                {
+                    KeyVaultSecret sdkSecret = await interactWithNewClient(client);
+                    if (sdkSecret is null)
+                    {
+                        return null;
+                    }
+
+                    return new Secret(
+                        sdkSecret.Value,
+                        sdkSecret.Properties.Version,
+                        sdkSecret.Properties.ExpiresOn);
+                });
+        }
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret value, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        public virtual async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+
+            IEnumerable<Secret> secrets = await GetSecretsAsync(secretName, amountOfVersions);
+            return secrets.Select(secret => secret.Value);
+        }
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        public virtual async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+
+            string[] versions = await DetermineVersionsAsync(secretName, amountOfVersions);
+            var secrets = new Collection<Secret>();
+            
+            foreach (string version in versions)
+            {
+                if (secrets.Count == amountOfVersions)
+                {
+                    break;
                 }
 
-                return new Secret(
-                    secretBundle.Value,
-                    secretBundle.SecretIdentifier?.Version,
-                    secretBundle.Attributes.Expires);
+                Secret secret = await InteractWithKeyVaultAsync(
+                    secretName, 
+                    client => client.GetSecretAsync(VaultUri, secretName, version),
+                    client => client.GetSecretAsync(secretName, version));
+
+                secrets.Add(new Secret(secret.Value, secret.Version, secret.Expires));
             }
-            catch (KeyVaultErrorException keyVaultErrorException)
-            {
-                if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    throw new SecretNotFoundException(secretName, keyVaultErrorException);
-                }
-                else
-                {
-                    Logger.LogError(keyVaultErrorException,
-                        "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}",
-                        VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
-                }
 
-                throw;
-            }
+            return secrets;
         }
 
-        private async Task<Secret> InteractWithVaultUsingSecretClientAsync(string secretName, Func<SecretClient, Task<Response<KeyVaultSecret>>> operation)
+        private async Task<string[]> DetermineVersionsAsync(string secretName, int amountOfVersions)
         {
-            try
-            {
-                KeyVaultSecret secret = await ThrottleTooManyRequestsAsync(async () => await operation(_secretClient));
-
-                if (secret is null)
+            return await InteractWithKeyVaultAsync(
+                secretName, 
+                async client =>
                 {
-                    return null;
-                }
-
-                return new Secret(
-                    secret.Value,
-                    secret.Properties.Version,
-                    secret.Properties.ExpiresOn);
-            }
-            catch (RequestFailedException requestFailedException)
-            {
-                if (requestFailedException.Status == 404)
+                    IPage<SecretItem> versions = await client.GetSecretVersionsAsync(VaultUri, secretName, amountOfVersions);
+                    return versions.Where(version => version.Attributes.Enabled is true)
+                                   .OrderByDescending(version => version.Attributes.Created)
+                                   .Select(version => version.Identifier.Version)
+                                   .ToArray();
+                },
+                async client =>
                 {
-                    throw new SecretNotFoundException(secretName, requestFailedException);
-                }
+                    AsyncPageable<SecretProperties> properties = client.GetPropertiesOfSecretVersionsAsync(secretName);
+                    
+                    var versions = new Collection<SecretProperties>();
+                    await foreach (SecretProperties property in properties)
+                    {
+                        if (property.Enabled is true)
+                        {
+                            versions.Add(property); 
+                        }
+                    }
 
-                throw;
+                    return versions.OrderByDescending(version => version.CreatedOn)
+                                   .Select(version => version.Version)
+                                   .ToArray();
+                });
+        }
+
+        private async Task<TResponse> InteractWithKeyVaultAsync<TResponse>(
+            string secretName,
+            Func<IKeyVaultClient, Task<TResponse>> interactWithOldClient,
+            Func<SecretClient, Task<TResponse>> interactWithNewClient)
+        {
+            var isSuccessful = false;
+#if NET6_0
+            using (DurationMeasurement measurement = DurationMeasurement.Start())
+#else
+            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
+#endif
+            { 
+                try
+                {
+                    TResponse response = await ThrottleTooManyRequestsAsync(secretName, async () =>
+                    {
+                        if (_isUsingAzureSdk)
+                        {
+                            SecretClient client = GetSecretClient();
+                            return await interactWithNewClient(client);
+                        }
+                        else
+                        {
+                            IKeyVaultClient client = await GetClientAsync();
+                            return await interactWithOldClient(client);
+                        }
+                    });
+
+                    isSuccessful = true;
+                    return response;
+                }
+                finally
+                {
+                    if (_options.TrackDependency)
+                    {
+                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement); 
+                    }
+                }
             }
         }
 
@@ -418,6 +456,41 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
             return GetExponentialBackOffRetryPolicy((RequestFailedException ex) => ex.Status == 429)
                     .ExecuteAsync(secretOperation);
+        }
+
+        private async Task<TResponse> ThrottleTooManyRequestsAsync<TResponse>(string secretName, Func<Task<TResponse>> secretOperation)
+        {
+            try
+            {
+                TResponse response = await GetExponentialBackOffRetryPolicy<Exception>(exception =>
+                {
+                    bool isOldClientOverloaded = exception is KeyVaultErrorException oldClientException && (int)oldClientException.Response.StatusCode == 429;
+                    bool isNewClientOverloaded = exception is RequestFailedException newClientException && newClientException.Status == 429;
+
+                    return isOldClientOverloaded || isNewClientOverloaded;
+                }).ExecuteAsync(() => secretOperation());
+
+                return response;
+            }
+            catch (KeyVaultErrorException keyVaultErrorException)
+            {
+                if (keyVaultErrorException.Response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    throw new SecretNotFoundException(secretName, keyVaultErrorException);
+                }
+
+                Logger.LogError(keyVaultErrorException, "Failure during retrieving a secret from the Azure Key Vault '{VaultUri}' resulted in {StatusCode} {ReasonPhrase}", VaultUri, keyVaultErrorException.Response.StatusCode, keyVaultErrorException.Response.ReasonPhrase);
+                throw;
+            }
+            catch (RequestFailedException requestFailedException)
+            {
+                if (requestFailedException.Status == 404)
+                {
+                    throw new SecretNotFoundException(secretName, requestFailedException);
+                }
+
+                throw;
+            }
         }
 
         private static AsyncRetryPolicy GetExponentialBackOffRetryPolicy<TException>(Func<TException, bool> exceptionPredicate) 
