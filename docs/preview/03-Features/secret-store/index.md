@@ -14,6 +14,8 @@ Once register, you can fetch all secrets by using `ISecretProvider` which will g
 
 > :bulb: See [this section](./azure-functions.md) if you want to use the secret store functionality within Azure Functions.
 
+![Arcus secret store integration example](/img/arcus-secret-store-diagram.png)
+
 ## Why would I use it?
 Why would you use our Arcus secret store instead of just using the Azure SDK directly to access Azure Key Vault secrets?
 

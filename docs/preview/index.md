@@ -12,7 +12,7 @@ Arcus Security allows you to work easily with secrets. Instead of retrieving sen
 
 Additionally, Arcus Security makes sure that retrieved secrets are cached for a while so to avoid multiple calls to the backing secret provider, which prevents throttling.
 
-![Arcus secret store integration example](/img/secret-arcus-keyvault.png)
+![Arcus secret store integration example](/img/arcus-secret-store-diagram.png)
 
 # Guidance
 * [Add Arcus secret store with Azure Key vault integration](02-Guides/add-secret-store-with-keyvault-integration.md)
