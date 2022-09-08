@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Extensions;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.DependencyInjection;
