@@ -36,9 +36,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AuthenticateWithInvalidUserPassPasswordKeyValue_GetSecret_Fails(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AuthenticateWithInvalidUserPassPasswordKeyValue_GetSecret_Fails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             string secretPath = "mysecret";
@@ -78,18 +78,20 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-                    var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
-                    Assert.Equal(HttpStatusCode.BadRequest, exception.HttpStatusCode);
+                    var exceptionFromSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetSecretAsync(secretName));
+                    var exceptionFromRawSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
+                    Assert.Equal(HttpStatusCode.BadRequest, exceptionFromSecret.HttpStatusCode);
+                    Assert.Equal(HttpStatusCode.BadRequest, exceptionFromRawSecret.HttpStatusCode);
                 }
 
-                AssertTrackedHashiCorpVaultDependency(trackDependency);
+                AssertTrackedHashiCorpVaultDependency(expectedTrackedDependencies);
             }
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AuthenticateWithUnauthorizedUserPassUserKeyValue_GetSecret_Fails(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AuthenticateWithUnauthorizedUserPassUserKeyValue_GetSecret_Fails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             string secretPath = "mysecret";
@@ -134,15 +136,13 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     Assert.Equal(HttpStatusCode.Forbidden, exceptionFromRawSecret.HttpStatusCode);
                 }
 
-                AssertTrackedHashiCorpVaultDependency(trackDependency);
+                AssertTrackedHashiCorpVaultDependency(expectedTrackedDependencies);
             }
         }
 
-        private void AssertTrackedHashiCorpVaultDependency(bool trackDependency)
+        private void AssertTrackedHashiCorpVaultDependency(int expectedTrackedDependencyCount)
         {
-            var expectedTrackedDependencyCount = trackDependency ? 2 : 0;
             int actualTrackedDependencyCount = InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
-            
             Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);
         }
     }
