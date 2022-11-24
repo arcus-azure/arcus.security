@@ -23,6 +23,7 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public static string GetRawSecret(this ISecretProvider secretProvider, string secretName)
         {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
             if (secretProvider is ISyncSecretProvider composite)
@@ -45,6 +46,7 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public static Secret GetSecret(this ISecretProvider secretProvider, string secretName)
         {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
 
             if (secretProvider is ISyncSecretProvider composite)

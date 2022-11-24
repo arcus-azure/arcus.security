@@ -580,7 +580,7 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, Task<T>> callRegisteredProvider,
             string eventName) where T : class
         {
-            LogSecurityEvent(secretName, source, eventName);
+            LogSecurityEvent(source, secretName, eventName);
 
             Task<T> resultAsync = callRegisteredProvider(source);
             if (resultAsync is null)
@@ -598,13 +598,13 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, T> callRegisteredProvider,
             string eventName)
         {
-            LogSecurityEvent(secretName, source, eventName);
+            LogSecurityEvent(source, secretName, eventName);
 
             T result = callRegisteredProvider(source);
             return result;
         }
 
-        private void LogSecurityEvent(string secretName, SecretStoreSource source, string eventName)
+        private void LogSecurityEvent(SecretStoreSource source, string secretName, string eventName)
         {
             if (_auditingOptions.EmitSecurityEvents)
             {

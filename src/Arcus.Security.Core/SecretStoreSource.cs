@@ -70,23 +70,7 @@ namespace Arcus.Security.Core
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to register it in the secret store");
 
-            _secretProvider = secretProvider;
-
-            if (secretProvider is ICachedSecretProvider cachedSecretProvider)
-            {
-                CachedSecretProvider = cachedSecretProvider;
-            }
-
-            if (secretProvider is IVersionedSecretProvider secretVersionProvider)
-            {
-                VersionedSecretProvider = secretVersionProvider;
-            }
-
-            if (secretProvider is ISyncSecretProvider syncSecretProvider)
-            {
-                SyncSecretProvider = syncSecretProvider;
-            }
-
+            AssignSecretProvider(secretProvider);
             Options = options ?? new SecretProviderOptions();
         }
 
@@ -169,22 +153,27 @@ namespace Arcus.Security.Core
                         + "Please check if the secret providers are correctly registered in the secret store");
                 }
 
-                _secretProvider = secretProvider;
+                AssignSecretProvider(secretProvider);
+            }
+        }
 
-                if (secretProvider is ICachedSecretProvider cachedSecretProvider)
-                {
-                    CachedSecretProvider = cachedSecretProvider;
-                }
+        private void AssignSecretProvider(ISecretProvider secretProvider)
+        {
+            _secretProvider = secretProvider;
 
-                if (secretProvider is IVersionedSecretProvider secretVersionProvider)
-                {
-                    VersionedSecretProvider = secretVersionProvider;
-                }
+            if (secretProvider is ICachedSecretProvider cachedSecretProvider)
+            {
+                CachedSecretProvider = cachedSecretProvider;
+            }
 
-                if (secretProvider is ISyncSecretProvider syncSecretProvider)
-                {
-                    SyncSecretProvider = syncSecretProvider;
-                }
+            if (secretProvider is IVersionedSecretProvider secretVersionProvider)
+            {
+                VersionedSecretProvider = secretVersionProvider;
+            }
+
+            if (secretProvider is ISyncSecretProvider syncSecretProvider)
+            {
+                SyncSecretProvider = syncSecretProvider;
             }
         }
 
