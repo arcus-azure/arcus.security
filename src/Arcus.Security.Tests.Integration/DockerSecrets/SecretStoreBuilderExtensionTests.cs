@@ -54,9 +54,9 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
             // Assert
             var secretName = "MyNonExistingSecret";
             Assert.Null(provider.GetRawSecret(secretName));
-            Assert.Null(provider.GetSecret(secretName).Value);
+            Assert.Null(provider.GetSecret(secretName));
             Assert.Null(await provider.GetRawSecretAsync(secretName));
-            Assert.Null((await provider.GetSecretAsync(secretName)).Value);
+            Assert.Null((await provider.GetSecretAsync(secretName)));
         }
 
         [Fact]

@@ -43,8 +43,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
             // Act / Assert
-            AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
-            AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
             AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
             AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
         }
@@ -110,8 +108,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
             // Act / Assert
-            AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
-            AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
             AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
             AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
         }
@@ -188,8 +184,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
             {
                 // Act / Assert
-                AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
-                AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
                 AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
                 AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
             }
