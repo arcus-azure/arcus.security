@@ -29,8 +29,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string actual = await provider.GetRawSecretAsync(secretKey);
-                Assert.Equal(expected, actual);
+                Assert.Equal(expected, provider.GetRawSecret(secretKey));
+                Assert.Equal(expected, provider.GetSecret(secretKey).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(secretKey));
+                Assert.Equal(expected, (await provider.GetSecretAsync(secretKey)).Value);
             }
         }
 
@@ -55,8 +57,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string actual = await provider.GetRawSecretAsync(secretKey);
-                Assert.Equal(expected, actual);
+                Assert.Equal(expected, provider.GetRawSecret(secretKey));
+                Assert.Equal(expected, provider.GetSecret(secretKey).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(secretKey));
+                Assert.Equal(expected, (await provider.GetSecretAsync(secretKey)).Value);
             }
         }
 
@@ -80,8 +84,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
                 string nonPrefixedSecret = secretKey.Substring(prefix.Length);
-                string actual = await provider.GetRawSecretAsync(nonPrefixedSecret);
-                Assert.Equal(expected, actual);
+                Assert.Equal(expected, provider.GetRawSecret(nonPrefixedSecret));
+                Assert.Equal(expected, provider.GetSecret(nonPrefixedSecret).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(nonPrefixedSecret));
+                Assert.Equal(expected, (await provider.GetSecretAsync(nonPrefixedSecret)).Value);
             }
         }
 
@@ -105,8 +111,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
                 string nonPrefixedSecret = secretKey.Substring(prefix.Length);
-                string actual = await provider.GetRawSecretAsync(nonPrefixedSecret);
-                Assert.Equal(expected, actual);
+                Assert.Equal(expected, provider.GetRawSecret(nonPrefixedSecret));
+                Assert.Equal(expected, provider.GetSecret(nonPrefixedSecret).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(nonPrefixedSecret));
+                Assert.Equal(expected, (await provider.GetSecretAsync(nonPrefixedSecret)).Value);
             }
         }
 
@@ -176,8 +184,11 @@ namespace Arcus.Security.Tests.Unit.Core
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string actual = await provider.GetRawSecretAsync("Arcus.Environment.Secret");
-                Assert.Equal(expected, actual);
+                string secretName = "Arcus.Environment.Secret";
+                Assert.Equal(expected, provider.GetRawSecret(secretName));
+                Assert.Equal(expected, provider.GetSecret(secretName).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(secretName));
+                Assert.Equal(expected, (await provider.GetSecretAsync(secretName)).Value);
             }
         }
 
@@ -200,8 +211,11 @@ namespace Arcus.Security.Tests.Unit.Core
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string actual = await provider.GetRawSecretAsync("Arcus.Environment.Secret");
-                Assert.Equal(expected, actual);
+                string secretName = "Arcus.Environment.Secret";
+                Assert.Equal(expected, provider.GetRawSecret(secretName));
+                Assert.Equal(expected, provider.GetSecret(secretName).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(secretName));
+                Assert.Equal(expected, (await provider.GetSecretAsync(secretName)).Value);
             }
         }
 
@@ -211,7 +225,8 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             var builder = new HostBuilder();
 
-            using (TemporaryEnvironmentVariable.Create("ARCUS_ENVIRONMENT_SECRET", Guid.NewGuid().ToString()))
+            var secretName = "ARCUS_ENVIRONMENT_SECRET";
+            using (TemporaryEnvironmentVariable.Create(secretName, Guid.NewGuid().ToString()))
             {
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
@@ -223,7 +238,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync("ARCUS_ENVIRONMENT_SECRET"));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(secretName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(secretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(secretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretName));
             }
         }
 
@@ -233,7 +251,8 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             var builder = new HostBuilder();
 
-            using (TemporaryEnvironmentVariable.Create("ARCUS_ENVIRONMENT_SECRET", Guid.NewGuid().ToString()))
+            var secretName = "ARCUS_ENVIRONMENT_SECRET";
+            using (TemporaryEnvironmentVariable.Create(secretName, Guid.NewGuid().ToString()))
             {
                 // Act
                 builder.ConfigureSecretStore((config, stores) =>
@@ -245,7 +264,10 @@ namespace Arcus.Security.Tests.Unit.Core
                 IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync("ARCUS_ENVIRONMENT_SECRET"));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(secretName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(secretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(secretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretName));
             }
         }
 
@@ -295,10 +317,8 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("  ")]
-        public async Task GetSecret_WithoutSecretName_Throws(string secretName)
+        [ClassData(typeof(Blanks))]
+        public async Task GetSecretAsnc_WithoutSecretName_Throws(string secretName)
         {
             // Arrange
             var provider = new EnvironmentVariableSecretProvider();
@@ -308,16 +328,36 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("  ")]
-        public async Task GetRawSecret_WithoutSecretName_Throws(string secretName)
+        [ClassData(typeof(Blanks))]
+        public async Task GetRawSecretAsync_WithoutSecretName_Throws(string secretName)
         {
             // Arrange
             var provider = new EnvironmentVariableSecretProvider();
 
             // Act / Assert
             await Assert.ThrowsAnyAsync<ArgumentException>(() => provider.GetRawSecretAsync(secretName));
+        }
+
+        [Theory]
+        [ClassData(typeof(Blanks))]
+        public void GetSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            var provider = new EnvironmentVariableSecretProvider();
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(() => provider.GetSecret(secretName));
+        }
+
+        [Theory]
+        [ClassData(typeof(Blanks))]
+        public void GetRawSecret_WithoutSecretName_Throws(string secretName)
+        {
+            // Arrange
+            var provider = new EnvironmentVariableSecretProvider();
+
+            // Act / Assert
+            Assert.ThrowsAny<ArgumentException>(() => provider.GetRawSecret(secretName));
         }
         
         [Fact]

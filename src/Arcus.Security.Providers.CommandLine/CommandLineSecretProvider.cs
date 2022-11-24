@@ -10,7 +10,7 @@ namespace Arcus.Security.Providers.CommandLine
     /// <summary>
     /// Represents an <see cref="ISecretProvider"/> implementation that provides the command line arguments as secrets to the secret store.
     /// </summary>
-    public class CommandLineSecretProvider : ISecretProvider
+    public class CommandLineSecretProvider : ISyncSecretProvider
     {
         private readonly CommandLineConfigurationProvider _configurationProvider;
         
@@ -31,11 +31,40 @@ namespace Arcus.Security.Providers.CommandLine
         /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
-        public async Task<Secret> GetSecretAsync(string secretName)
+        public Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the command line argument secret");
             
-            string secretValue = await GetRawSecretAsync(secretName);
+            Secret secret = GetSecret(secretName);
+            return Task.FromResult(secret);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        public Task<string> GetRawSecretAsync(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the command line argument secret");
+
+            string rawSecret = GetRawSecret(secretName);
+            return Task.FromResult(rawSecret);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the command line argument secret");
+
+            string secretValue = GetRawSecret(secretName);
             if (secretValue is null)
             {
                 return null;
@@ -50,16 +79,17 @@ namespace Arcus.Security.Providers.CommandLine
         /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
-        public Task<string> GetRawSecretAsync(string secretName)
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the command line argument secret");
-            
+
             if (_configurationProvider.TryGet(secretName, out string secretValue))
             {
-                return Task.FromResult(secretValue);
+                return secretValue;
             }
 
-            return Task.FromResult<string>(null);
+            return null;
         }
     }
 }

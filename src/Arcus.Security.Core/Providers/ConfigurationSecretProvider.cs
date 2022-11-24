@@ -8,7 +8,7 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the <see cref="IConfiguration"/>. It is recommended to only use this for development purposes.
     /// </summary>
-    public class ConfigurationSecretProvider : ISecretProvider
+    public class ConfigurationSecretProvider : ISyncSecretProvider
     {
         private readonly IConfiguration _configuration;
 
@@ -30,17 +30,12 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<Secret> GetSecretAsync(string secretName)
+        public Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
 
-            string secretValue = await GetRawSecretAsync(secretName);
-            if (secretValue is null)
-            {
-                return null;
-            }
-
-            return new Secret(secretValue);
+            Secret secret = GetSecret(secretName);
+            return Task.FromResult(secret);
         }
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
@@ -53,8 +48,43 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
 
-            string secretValue = _configuration[secretName];
+            string secretValue = GetRawSecret(secretName);
             return Task.FromResult(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+
+            string secretValue = GetRawSecret(secretName);
+            if (secretValue is null)
+            {
+                return null;
+            }
+            
+            return new Secret(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            
+            string secretValue = _configuration[secretName];
+            return secretValue;
         }
     }
 }

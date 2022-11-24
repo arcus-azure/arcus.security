@@ -42,13 +42,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 authentication: new ServicePrincipalAuthentication(ClientId, ClientSecret), 
                 vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
-            // Act
-            Secret secret = await keyVaultSecretProvider.GetSecretAsync(TestSecretName);
-
-            // Assert
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            // Act / Assert
+            AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
+            AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
+            AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
@@ -59,13 +57,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 tokenCredential: new ClientSecretCredential(TenantId, ClientId, ClientSecret), 
                 vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
-            // Act
-            Secret secret = await keyVaultSecretProvider.GetSecretAsync(TestSecretName);
-
-            // Assert
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            // Act / Assert
+            AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
+            AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
+            AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
@@ -113,13 +109,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 authentication: new ManagedServiceIdentityAuthentication(connectionString: connectionString),
                 vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
-            // Act
-            Secret secret = await keyVaultSecretProvider.GetSecretAsync(TestSecretName);
-
-            // Assert
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            // Act / Assert
+            AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
+            AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
+            AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
@@ -134,13 +128,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                         tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential()),
                         vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
-                // Act
-                Secret secret = await keyVaultSecretProvider.GetSecretAsync(TestSecretName);
-
-                // Assert
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version); 
+                // Act / Assert
+                AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
+                AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
+                AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
             }
         }
 
@@ -195,13 +187,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             using (TemporaryEnvironmentVariable.Create(KeyVaultConnectionStringEnvironmentVariable, connectionString))
             {
-                // Act
-                Secret secret = await keyVaultSecretProvider.GetSecretAsync(TestSecretName);
-
-                // Assert
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                // Act / Assert
+                AssertNotNullSecret(keyVaultSecretProvider.GetSecret(TestSecretName));
+                AssertNotNullSecret(keyVaultSecretProvider.GetRawSecret(TestSecretName));
+                AssertNotNullSecret(await keyVaultSecretProvider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await keyVaultSecretProvider.GetRawSecretAsync(TestSecretName));
             }
         }
 
@@ -248,9 +238,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                     Secret secret = await keyVaultSecretProvider.StoreSecretAsync(secretName, secretValue);
 
                     // Assert
-                    Assert.NotNull(secret);
-                    Assert.NotNull(secret.Value);
-                    Assert.NotNull(secret.Version);
+                    AssertNotNullSecret(secretValue);
                     Secret fetchedSecret = await keyVaultSecretProvider.GetSecretAsync(secretName);
                     Assert.Equal(secretValue, fetchedSecret.Value);
                     Assert.Equal(secret.Version, fetchedSecret.Version);
@@ -326,6 +314,18 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Assert
             Assert.Equal(2, secrets.Count());
             Assert.Equal(TestSecretVersion, secrets.ElementAt(0).Version);
+        }
+
+        private void AssertNotNullSecret(Secret secret)
+        {
+            Assert.NotNull(secret);
+            AssertNotNullSecret(secret.Value);
+            Assert.NotNull(secret.Version);
+        }
+
+        private void AssertNotNullSecret(string secretValue)
+        {
+            Assert.NotNull(secretValue);
         }
     }
 }

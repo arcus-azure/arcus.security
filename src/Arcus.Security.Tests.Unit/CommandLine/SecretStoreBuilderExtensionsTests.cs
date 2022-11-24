@@ -24,9 +24,11 @@ namespace Arcus.Security.Tests.Unit.CommandLine
             using (IHost host = builder.Build())
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
-                string actual = await provider.GetRawSecretAsync(secretName);
-                
-                Assert.Equal(expected, actual);
+
+                Assert.Equal(expected, provider.GetRawSecret(secretName));
+                Assert.Equal(expected, provider.GetSecret(secretName).Value);
+                Assert.Equal(expected, await provider.GetRawSecretAsync(secretName));
+                Assert.Equal(expected, (await provider.GetSecretAsync(secretName)).Value);
             }
         }
         

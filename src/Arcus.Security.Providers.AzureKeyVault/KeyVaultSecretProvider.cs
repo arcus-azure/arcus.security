@@ -31,7 +31,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
-    public class KeyVaultSecretProvider : IVersionedSecretProvider
+    public class KeyVaultSecretProvider : IVersionedSecretProvider, ISyncSecretProvider
     {
         /// <summary>
         /// Gets the name of the dependency that can be used to track the Azure Key Vault resource in Application Insights.
@@ -159,6 +159,36 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+
+            Secret secret = GetSecret(secretName);
+            return secret?.Value;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+
+            Secret secret = InteractWithKeyVault(secretName, client => client.GetSecret(secretName));
+            return secret;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
         /// <param name="secretName">The name of the secret</param>
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
@@ -246,6 +276,27 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 async client =>
                 {
                     KeyVaultSecret sdkSecret = await interactWithNewClient(client);
+                    if (sdkSecret is null)
+                    {
+                        return null;
+                    }
+
+                    return new Secret(
+                        sdkSecret.Value,
+                        sdkSecret.Properties.Version,
+                        sdkSecret.Properties.ExpiresOn);
+                });
+        }
+
+        private Secret InteractWithKeyVault(
+            string secretName,
+            Func<SecretClient, Response<KeyVaultSecret>> interactWithNewClient)
+        {
+            return InteractWithKeyVault(
+                secretName,
+                client =>
+                {
+                    KeyVaultSecret sdkSecret = interactWithNewClient(client);
                     if (sdkSecret is null)
                     {
                         return null;
@@ -375,7 +426,45 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 {
                     if (_options.TrackDependency)
                     {
-                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement); 
+                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement);
+                    }
+                }
+            }
+        }
+
+        private TResponse InteractWithKeyVault<TResponse>(
+            string secretName,
+            Func<SecretClient, TResponse> interactWithNewClient)
+        {
+            var isSuccessful = false;
+#if NET6_0
+            using (DurationMeasurement measurement = DurationMeasurement.Start())
+#else
+            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
+#endif
+            { 
+                try
+                {
+                    TResponse response = ThrottleTooManyRequests(secretName, () =>
+                    {
+                        if (_isUsingAzureSdk)
+                        {
+                            SecretClient client = GetSecretClient();
+                            return interactWithNewClient(client);
+                        }
+
+                        throw new InvalidOperationException(
+                            "Old Azure Key Vault client does not support asynchronous operations, please use the new Azure Key Vault secret provider overloads that uses the new Azure SDK");
+                    });
+
+                    isSuccessful = true;
+                    return response;
+                }
+                finally
+                {
+                    if (_options.TrackDependency)
+                    {
+                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement);
                     }
                 }
             }
@@ -440,7 +529,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         protected static Task<SecretBundle> ThrottleTooManyRequestsAsync(Func<Task<SecretBundle>> secretOperation)
         {
             Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
-            return GetExponentialBackOffRetryPolicy((KeyVaultErrorException ex) => (int) ex.Response.StatusCode == 429)
+            return GetExponentialBackOffRetryAsyncPolicy((KeyVaultErrorException ex) => (int) ex.Response.StatusCode == 429)
                          .ExecuteAsync(secretOperation);
         }
 
@@ -454,7 +543,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         protected static Task<Response<KeyVaultSecret>> ThrottleTooManyRequestsAsync(Func<Task<Response<KeyVaultSecret>>> secretOperation)
         {
             Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
-            return GetExponentialBackOffRetryPolicy((RequestFailedException ex) => ex.Status == 429)
+            return GetExponentialBackOffRetryAsyncPolicy((RequestFailedException ex) => ex.Status == 429)
                     .ExecuteAsync(secretOperation);
         }
 
@@ -462,13 +551,13 @@ namespace Arcus.Security.Providers.AzureKeyVault
         {
             try
             {
-                TResponse response = await GetExponentialBackOffRetryPolicy<Exception>(exception =>
+                TResponse response = await GetExponentialBackOffRetryAsyncPolicy<Exception>(exception =>
                 {
-                    bool isOldClientOverloaded = exception is KeyVaultErrorException oldClientException && (int)oldClientException.Response.StatusCode == 429;
+                    bool isOldClientOverloaded = exception is KeyVaultErrorException oldClientException && (int) oldClientException.Response.StatusCode == 429;
                     bool isNewClientOverloaded = exception is RequestFailedException newClientException && newClientException.Status == 429;
 
                     return isOldClientOverloaded || isNewClientOverloaded;
-                }).ExecuteAsync(() => secretOperation());
+                }).ExecuteAsync(secretOperation);
 
                 return response;
             }
@@ -493,7 +582,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
         }
 
-        private static AsyncRetryPolicy GetExponentialBackOffRetryPolicy<TException>(Func<TException, bool> exceptionPredicate) 
+        private static AsyncRetryPolicy GetExponentialBackOffRetryAsyncPolicy<TException>(Func<TException, bool> exceptionPredicate) 
             where TException : Exception
         {
             /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
@@ -505,6 +594,57 @@ namespace Arcus.Security.Providers.AzureKeyVault
 
             return Policy.Handle(exceptionPredicate)
                          .WaitAndRetryAsync(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)));
+        }
+
+        /// <summary>
+        /// Client-side throttling when the Key Vault service limit exceeds.
+        /// </summary>
+        /// <param name="secretOperation">The operation to retry.</param>
+        /// <returns>
+        ///     The resulting secret bundle of the <paramref name="secretOperation"/>.
+        /// </returns>
+        protected static Response<KeyVaultSecret> ThrottleTooManyRequests(Func<Response<KeyVaultSecret>> secretOperation)
+        {
+            Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
+            return GetExponentialBackOffRetrySyncPolicy((RequestFailedException ex) => ex.Status == 429)
+                .Execute(secretOperation);
+        }
+
+        private static TResponse ThrottleTooManyRequests<TResponse>(string secretName, Func<TResponse> secretOperation)
+        {
+            try
+            {
+                RetryPolicy retryPolicy = GetExponentialBackOffRetrySyncPolicy<Exception>(exception =>
+                {
+                    return exception is RequestFailedException newClientException && newClientException.Status == 429;
+                });
+
+                TResponse response = retryPolicy.Execute(secretOperation);
+                return response;
+            }
+            catch (RequestFailedException requestFailedException)
+            {
+                if (requestFailedException.Status == 404)
+                {
+                    throw new SecretNotFoundException(secretName, requestFailedException);
+                }
+
+                throw;
+            }
+        }
+
+        private static RetryPolicy GetExponentialBackOffRetrySyncPolicy<TException>(Func<TException, bool> exceptionPredicate) 
+            where TException : Exception
+        {
+            /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
+             * 1. Wait 1 second, retry request
+             * 2. If still throttled wait 2 seconds, retry request
+             * 3. If still throttled wait 4 seconds, retry request
+             * 4. If still throttled wait 8 seconds, retry request
+             * 5. If still throttled wait 16 seconds, retry request */
+
+            return Policy.Handle(exceptionPredicate)
+                         .WaitAndRetry(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)));
         }
     }
 }

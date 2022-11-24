@@ -52,8 +52,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretKey));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretKey).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretKey)).Value);
         }
 
         [Fact]
@@ -73,8 +75,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretKey));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretKey).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretKey)).Value);
         }
 
         [Fact]
@@ -95,8 +99,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -120,8 +126,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -144,8 +152,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, secretProvider.GetSecret("My.Dummy.Setting").Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync("My.Dummy.Setting")).Value);
         }
 
         [Fact]
@@ -168,8 +178,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, secretProvider.GetSecret("My.Dummy.Setting").Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync("My.Dummy.Setting")).Value);
         }
 
         [Fact]
@@ -192,8 +204,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -216,8 +230,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -238,8 +254,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretKey));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretKey).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretKey)).Value);
         }
 
         [Fact]
@@ -278,8 +296,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -303,8 +323,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, secretProvider.GetSecret("My.Dummy.Setting").Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync("My.Dummy.Setting")).Value);
         }
 
         [Fact]
@@ -328,8 +350,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, secretProvider.GetSecret("My.Dummy.Setting").Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync("My.Dummy.Setting")).Value);
         }
 
         [Fact]
@@ -353,8 +377,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -374,8 +400,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretKey));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretKey).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretKey)).Value);
         }
 
         [Fact]
@@ -398,8 +426,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretKey));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretKey).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretKey)).Value);
         }
 
         [Fact]
@@ -436,8 +466,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -460,8 +492,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, secretProvider.GetSecret("My.Dummy.Setting").Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync("My.Dummy.Setting")).Value);
         }
 
         [Fact]
@@ -484,8 +518,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("My.Dummy.Setting");
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, secretProvider.GetSecret("My.Dummy.Setting").Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync("My.Dummy.Setting"));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync("My.Dummy.Setting")).Value);
         }
 
         [Fact]
@@ -508,8 +544,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         [Fact]
@@ -532,8 +570,10 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
         }
 
         private void SetSecret(string id, string key, string value)

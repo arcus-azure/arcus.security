@@ -877,5 +877,64 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
                 Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
             }
         }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithoutSyncSecretProvider_FailsWhenSynchronouslyRetrievingSecret()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            string secretValue = Guid.NewGuid().ToString();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(new AsyncStaticSecretProvider(secretValue));
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var asyncProvider = host.Services.GetRequiredService<ISecretProvider>();
+                var syncProvider = host.Services.GetRequiredService<ISyncSecretProvider>();
+
+                Assert.Throws<SecretNotFoundException>(() => syncProvider.GetSecret("Some.Secret"));
+                Assert.Throws<SecretNotFoundException>(() => asyncProvider.GetSecret("Some.Secret"));
+                Assert.Equal(secretValue, await asyncProvider.GetRawSecretAsync("Some.Secret"));
+            }
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStore_WithSyncSecretProvider_OnlyUsesSyncProviderWhenSynchronouslyRetrievingSecret()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+            string secretValueAsync = Guid.NewGuid().ToString();
+            string secretValueSync = Guid.NewGuid().ToString();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(new AsyncStaticSecretProvider(secretValueAsync))
+                      .AddEnvironmentVariables()
+                      .AddProvider(new SyncStaticSecretProvider(secretValueSync));
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var asyncProvider = host.Services.GetRequiredService<ISecretProvider>();
+                var syncProvider = host.Services.GetRequiredService<ISyncSecretProvider>();
+
+                Assert.Equal(secretValueSync, syncProvider.GetRawSecret("Some.Secret"));
+                Assert.Equal(secretValueSync, syncProvider.GetSecret("Some.Secret").Value);
+                Assert.Equal(secretValueSync, asyncProvider.GetRawSecret("Some.Secret"));
+                Assert.Equal(secretValueSync, asyncProvider.GetSecret("Some.Secret").Value);
+
+                Assert.Equal(secretValueAsync, await asyncProvider.GetRawSecretAsync("Some.Secret"));
+                Assert.Equal(secretValueAsync, (await asyncProvider.GetSecretAsync("Some.Secret")).Value);
+                Assert.Equal(secretValueAsync, await syncProvider.GetRawSecretAsync("Some.Secret"));
+                Assert.Equal(secretValueAsync, (await syncProvider.GetSecretAsync("Some.Secret")).Value);
+            }
+        }
     }
 }

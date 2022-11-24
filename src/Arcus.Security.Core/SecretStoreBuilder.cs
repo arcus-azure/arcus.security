@@ -218,6 +218,7 @@ namespace Microsoft.Extensions.Hosting
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+            Services.TryAddSingleton<ISyncSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
         }
 
         private void AddSecretStoreSources()

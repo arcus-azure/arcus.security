@@ -15,7 +15,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation representing a series of <see cref="ISecretProvider"/> implementations.
     /// </summary>
-    internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISecretStore
+    internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISecretStore, ISyncSecretProvider
     {
         private readonly IEnumerable<SecretStoreSource> _secretProviders;
         private readonly IEnumerable<CriticalExceptionFilter> _criticalExceptionFilters;
@@ -209,6 +209,54 @@ namespace Arcus.Security.Core
 
             throw new KeyNotFoundException(
                 $"Could not retrieve the named {nameof(ISecretProvider)} because no secret provider was registered with the name '{name}'");
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            return WithSecretStore(secretName, source =>
+            {
+                if (source.SyncSecretProvider != null)
+                {
+                    string secretValue = source.SyncSecretProvider.GetRawSecret(secretName);
+                    return secretValue;
+                }
+
+                _logger.LogTrace("Cannot get secret '{SecretName}' via synchronous '{MethodName}' because the registered secret provider '{SecretProviderName}' does not implement '{Interface}'", secretName, nameof(GetSecret), source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(ISyncSecretProvider));
+                return null;
+            });
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            return WithSecretStore(secretName, source =>
+            {
+                if (source.SyncSecretProvider != null)
+                {
+                    Secret secret = source.SyncSecretProvider.GetSecret(secretName);
+                    return secret;
+                }
+
+                _logger.LogTrace("Cannot get secret '{SecretName}' via synchronous '{MethodName}' because the registered secret provider '{SecretProviderName}' does not implement '{Interface}'", secretName, nameof(GetSecret), source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(ISyncSecretProvider));
+                return null;
+            });
         }
 
         /// <summary>
@@ -478,6 +526,41 @@ namespace Arcus.Security.Core
             throw DetermineSecretStoreException(secretName, criticalExceptions);
         }
 
+        private T WithSecretStore<T>(
+            string secretName,
+            Func<SecretStoreSource, T> callRegisteredProvider,
+            string eventName = "Get Secret") where T : class
+        {
+            EnsureAnySecretProvidersConfigured(secretName);
+
+            var criticalExceptions = new Collection<Exception>();
+            foreach (SecretStoreSource source in _secretProviders)
+            {
+                try
+                {
+                    T result = GetSecretFromProvider(secretName, source, callRegisteredProvider, eventName);
+                    if (result is null)
+                    {
+                        continue;
+                    }
+
+                    LogPossibleCriticalExceptions(secretName, criticalExceptions);
+                    return result;
+                }
+                catch (Exception exception) when (IsCriticalException(exception))
+                {
+                    _logger.LogError(exception, "Exception of type '{ExceptionType}' is considered an critical exception", exception.GetType().Name);
+                    criticalExceptions.Add(exception);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.SecretProvider.GetType(), secretName);
+                }
+            }
+
+            throw DetermineSecretStoreException(secretName, criticalExceptions);
+        }
+
         private void EnsureAnySecretProvidersConfigured(string secretName)
         {
             if (!_secretProviders.Any())
@@ -497,14 +580,7 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, Task<T>> callRegisteredProvider,
             string eventName) where T : class
         {
-            if (_auditingOptions.EmitSecurityEvents)
-            {
-                _logger.LogSecurityEvent(eventName, new Dictionary<string, object>
-                {
-                    ["SecretName"] = secretName,
-                    ["SecretProvider"] = source.Options?.Name ?? source.SecretProvider.GetType().Name
-                });
-            }
+            LogSecurityEvent(secretName, source, eventName);
 
             Task<T> resultAsync = callRegisteredProvider(source);
             if (resultAsync is null)
@@ -514,6 +590,30 @@ namespace Arcus.Security.Core
 
             T result = await resultAsync;
             return result;
+        }
+
+        private T GetSecretFromProvider<T>(
+            string secretName,
+            SecretStoreSource source,
+            Func<SecretStoreSource, T> callRegisteredProvider,
+            string eventName)
+        {
+            LogSecurityEvent(secretName, source, eventName);
+
+            T result = callRegisteredProvider(source);
+            return result;
+        }
+
+        private void LogSecurityEvent(string secretName, SecretStoreSource source, string eventName)
+        {
+            if (_auditingOptions.EmitSecurityEvents)
+            {
+                _logger.LogSecurityEvent(eventName, new Dictionary<string, object>
+                {
+                    ["SecretName"] = secretName,
+                    ["SecretProvider"] = source.Options?.Name ?? source.SecretProvider.GetType().Name
+                });
+            }
         }
 
         private void LogPossibleCriticalExceptions(string secretName, IEnumerable<Exception> criticalExceptions)

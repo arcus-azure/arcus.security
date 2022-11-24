@@ -11,7 +11,7 @@ namespace Arcus.Security.Providers.DockerSecrets
     /// <summary>
     /// Represents an <see cref="ISecretProvider" /> that provides access to the Docker secrets mounted into the Docker container as files.
     /// </summary>
-    public class DockerSecretsSecretProvider : ISecretProvider
+    public class DockerSecretsSecretProvider : ISyncSecretProvider
     {
         private readonly KeyPerFileConfigurationProvider _provider;
 
@@ -52,17 +52,12 @@ namespace Arcus.Security.Providers.DockerSecrets
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<Secret> GetSecretAsync(string secretName)
+        public Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a Docker secret");
 
-            string secretValue = await GetRawSecretAsync(secretName);
-            if (secretValue == null)
-            {
-                return null;
-            }
-
-            return new Secret(secretValue);
+            Secret secret = GetSecret(secretName);
+            return Task.FromResult(secret);
         }
 
         /// <summary>
@@ -77,12 +72,47 @@ namespace Arcus.Security.Providers.DockerSecrets
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a Docker secret");
 
-            if (_provider.TryGet(secretName, out string value))
+            string secretValue = GetRawSecret(secretName);
+            return Task.FromResult(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a Docker secret");
+
+            string secretValue = GetRawSecret(secretName);
+            if (secretValue is null)
             {
-                return Task.FromResult(value);
+                return null;
             }
 
-            return Task.FromResult<string>(null);
+            return new Secret(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a Docker secret");
+
+            if (_provider.TryGet(secretName, out string value))
+            {
+                return value;
+            }
+
+            return null;
         }
     }
 }

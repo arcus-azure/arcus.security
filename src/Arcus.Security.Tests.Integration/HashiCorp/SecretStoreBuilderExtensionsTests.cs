@@ -127,8 +127,11 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-                    var exception = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
-                    Assert.Equal(HttpStatusCode.Forbidden, exception.HttpStatusCode);
+                    
+                    var exceptionFromSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetSecretAsync(secretName));
+                    var exceptionFromRawSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
+                    Assert.Equal(HttpStatusCode.Forbidden, exceptionFromSecret.HttpStatusCode);
+                    Assert.Equal(HttpStatusCode.Forbidden, exceptionFromRawSecret.HttpStatusCode);
                 }
 
                 AssertTrackedHashiCorpVaultDependency(trackDependency);

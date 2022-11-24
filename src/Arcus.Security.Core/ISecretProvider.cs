@@ -8,7 +8,6 @@ namespace Arcus.Security.Core
     /// </summary>
     public interface ISecretProvider
     {
-
         /// <summary>
         /// Retrieves the secret value, based on the given name
         /// </summary>
