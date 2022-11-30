@@ -88,7 +88,7 @@ html[data-theme='dark'] .footer--dark {
 .navbar__brand img {
   width: 110px;
   height: auto;
-  margin-right: 8px;
+  margin-right: 10px;
   margin-bottom: 5px;
 }
 
@@ -122,8 +122,9 @@ strong,
 }
 
 .navbar__title {
-  font-size: 1.45rem;
+  font-size: 1rem;
   align-self: baseline;
+  margin-top: 8px;
 }
 
 nav.menu {

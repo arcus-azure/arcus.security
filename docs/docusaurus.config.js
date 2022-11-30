@@ -8,12 +8,11 @@ module.exports = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/arcus.png',
+  favicon: 'img/favicon.ico',
   organizationName: 'arcus-azure', // Usually your GitHub org/user name.
   projectName: 'Arcus - Security', // Usually your repo name.
   themeConfig: {
     image: 'img/arcus.jpg',
-    favicon: 'img/favicon.ico',
     navbar: {
       title: 'Security',
       logo: {
