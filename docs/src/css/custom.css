@@ -83,6 +83,7 @@ html[data-theme='dark'] {
 
 html[data-theme='dark'] .footer--dark {
   background-color: var(--ifm-color-gray-800);
+  border-top: 1px solid var(--ifm-color-primary);
 }
 
 .navbar__brand img {
