@@ -32,8 +32,8 @@ namespace Arcus.Security.Core
                 return secretValue;
             }
 
-            throw new SecretNotFoundException(secretName, new InvalidOperationException(
-                $"Cannot retrieve secret '{secretName}' because the '{nameof(GetRawSecret)}' method is called on a '{nameof(ISecretProvider)}' that does not implement the '{nameof(ISyncSecretProvider)}'"));
+            throw new NotSupportedException(
+                $"Cannot retrieve secret '{secretName}' because the '{nameof(GetRawSecret)}' method is called on the '{secretProvider.GetType().Name}' implementation that does not implement the '{nameof(ISyncSecretProvider)}'");
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Arcus.Security.Core
                 return secret;
             }
 
-            throw new SecretNotFoundException(secretName, new InvalidOperationException(
-                $"Cannot retrieve secret '{secretName}' because the '{nameof(GetRawSecret)}' method is called on a '{nameof(ISecretProvider)}' that does not implement the '{nameof(ISyncSecretProvider)}'"));
+            throw new NotSupportedException(
+                $"Cannot retrieve secret '{secretName}' because the '{nameof(GetRawSecret)}' method is called on a '{secretProvider.GetType().Name}' that does not implement the '{nameof(ISyncSecretProvider)}'");
         }
 
         /// <summary>

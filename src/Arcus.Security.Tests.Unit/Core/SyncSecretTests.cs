@@ -1,6 +1,11 @@
 ﻿using System;
 using Arcus.Security.Core;
+using Arcus.Security.Providers.HashiCorp.Extensions;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Microsoft.Extensions.DependencyInjection;
+using VaultSharp;
+using VaultSharp.V1.AuthMethods.Custom;
+using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -43,7 +48,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var provider = new AsyncStaticSecretProvider(Guid.NewGuid().ToString());
 
             // Act / Assert
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret("Some.Secret"));
+            Assert.Throws<NotSupportedException>(() => provider.GetSecret("Some.Secret"));
         }
 
         [Fact]
@@ -53,7 +58,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var provider = new AsyncStaticSecretProvider(Guid.NewGuid().ToString());
 
             // Act / Assert
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret("Some.Secret"));
+            Assert.Throws<NotSupportedException>(() => provider.GetRawSecret("Some.Secret"));
         }
     }
 }

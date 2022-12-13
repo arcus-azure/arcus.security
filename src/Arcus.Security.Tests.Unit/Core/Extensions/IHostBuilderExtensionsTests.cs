@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
+using Arcus.Security.Providers.HashiCorp.Extensions;
 using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Arcus.Testing.Logging;
@@ -14,6 +15,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
+using VaultSharp.V1.AuthMethods.UserPass;
+using VaultSharp;
 using Xunit;
 using Xunit.Sdk;
 
@@ -897,8 +900,8 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
                 var asyncProvider = host.Services.GetRequiredService<ISecretProvider>();
                 var syncProvider = host.Services.GetRequiredService<ISyncSecretProvider>();
 
-                Assert.Throws<SecretNotFoundException>(() => syncProvider.GetSecret("Some.Secret"));
-                Assert.Throws<SecretNotFoundException>(() => asyncProvider.GetSecret("Some.Secret"));
+                Assert.Throws<NotSupportedException>(() => syncProvider.GetSecret("Some.Secret"));
+                Assert.Throws<NotSupportedException>(() => asyncProvider.GetSecret("Some.Secret"));
                 Assert.Equal(secretValue, await asyncProvider.GetRawSecretAsync("Some.Secret"));
             }
         }
@@ -935,6 +938,84 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
                 Assert.Equal(secretValueAsync, await syncProvider.GetRawSecretAsync("Some.Secret"));
                 Assert.Equal(secretValueAsync, (await syncProvider.GetSecretAsync("Some.Secret")).Value);
             }
+        }
+
+        [Fact]
+        public void GetRawSecret_FromOneSyncSecretProvider_Succeeds()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+
+            // Act
+            services.AddSecretStore(stores =>
+            {
+                stores.AddProvider(new AsyncStaticSecretProvider(Guid.NewGuid().ToString()))
+                      .AddProvider(new SyncStaticSecretProvider(Guid.NewGuid().ToString()))
+                      .AddHashiCorpVault(new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("user", "pass")), "/path");
+            });
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            Assert.NotNull(secretProvider.GetRawSecret("Some.Secret"));
+        }
+
+        [Fact]
+        public void GeSecret_FromOneSyncSecretProvider_Succeeds()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+
+            // Act
+            services.AddSecretStore(stores =>
+            {
+                stores.AddHashiCorpVault(new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("user", "pass")), "/path")
+                      .AddProvider(new SyncStaticSecretProvider(Guid.NewGuid().ToString()))
+                      .AddProvider(new AsyncStaticSecretProvider(Guid.NewGuid().ToString()));
+            });
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            Assert.NotNull(secretProvider.GetSecret("Some.Secret"));
+        }
+
+        [Fact]
+        public void GetRawSecret_FromOnlyAsyncSecretProviders_Fails()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+
+            // Act
+            services.AddSecretStore(stores =>
+            {
+                stores.AddHashiCorpVault(new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("user", "pass")), "/path")
+                      .AddProvider(new AsyncStaticSecretProvider(Guid.NewGuid().ToString()));
+            });
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            Assert.Throws<NotSupportedException>(() => secretProvider.GetRawSecret("Some.Secret"));
+        }
+
+        [Fact]
+        public void GetSecret_FromOnlyAsyncSecretProviders_Fails()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+
+            // Act
+            services.AddSecretStore(stores =>
+            {
+                stores.AddProvider(new AsyncStaticSecretProvider(Guid.NewGuid().ToString()))
+                      .AddHashiCorpVault(new VaultClientSettings("https://vault.server:245", new UserPassAuthMethodInfo("user", "pass")), "/path");
+            });
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            Assert.Throws<NotSupportedException>(() => secretProvider.GetSecret("Some.Secret"));
         }
     }
 }

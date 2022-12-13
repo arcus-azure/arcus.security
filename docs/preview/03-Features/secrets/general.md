@@ -49,7 +49,7 @@ services.AddSingleton(serviceProvider =>
 });
 ```
 
-⚠ Make sure that you only call the `GetSecret` and `GetRawSecret` extension on `ISecretProvider` implementations that also implement the `ISyncSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can use this extension on any injected `ISecretProvider` but when no secret provider is registered that supports synchronous secret retrieval, an `SecretNotFoundException` will be thrown nonetheless.
+⚠ Make sure that you only call the `GetSecret` and `GetRawSecret` extension on `ISecretProvider` implementations that also implement the `ISyncSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can use this extension on any injected `ISecretProvider` but when no secret provider is registered that supports synchronous secret retrieval, an `NotSupportedException` will be thrown nonetheless.
 
 # Caching Secrets
 Some secret providers recommend to cache secrets for a while to avoid hitting the service limitations.
@@ -68,6 +68,8 @@ var cachedSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vault
                                     .WithCaching();
 Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
+
+⚠ Make sure that your only call the cache-specific `GetSecret("<secret-name>", ignoreCache: bool)` and others on `ISecretProvider` implementations that also implement the `ICachedSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can inject the `ICachedSecretProvider` but when no secret provider is registered that supported caching, an `NotSupportedException` will be thrown nonethless.
 
 ## Configuring the cache
 By default, retrieved secrets are cached for **5 minutes**, but you can configure this yourself.

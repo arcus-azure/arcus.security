@@ -51,6 +51,7 @@ namespace Arcus.Security.Core
 
             _groupedSecretStores = CreateGroupedSecretProviders(secretProviderSources, criticalExceptionFilters, auditingOptions, logger);
             HasCachedSecretProviders = _secretProviders.Any(provider => provider.CachedSecretProvider != null);
+            HasSyncSecretProviders = _secretProviders.Any(provider => provider.SyncSecretProvider != null);
         }
 
         /// <summary>
@@ -73,6 +74,11 @@ namespace Arcus.Security.Core
         /// Gets the flag indicating whether or not this secret store has any <see cref="ICachedSecretProvider"/> registrations.
         /// </summary>
         private bool HasCachedSecretProviders { get; }
+
+        /// <summary>
+        /// Gets the flag indicating whether or not this secret store has any <see cref="ISyncSecretProvider"/> registrations.
+        /// </summary>
+        private bool HasSyncSecretProviders { get; }
 
         /// <summary>
         /// Gets the cache-configuration for this instance.
@@ -531,7 +537,9 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, T> callRegisteredProvider,
             string eventName = "Get Secret") where T : class
         {
-            EnsureAnySecretProvidersConfigured(secretName);
+            Guard.For<NotSupportedException>(
+                () => !HasSyncSecretProviders, 
+                $"Cannot use synchronous secret store operation because none of the secret providers in the secret store were registered as synchronous secret providers ({nameof(ISyncSecretProvider)})");
 
             var criticalExceptions = new Collection<Exception>();
             foreach (SecretStoreSource source in _secretProviders)
