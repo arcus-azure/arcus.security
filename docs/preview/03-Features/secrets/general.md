@@ -69,7 +69,7 @@ var cachedSecretProvider = new KeyVaultSecretProvider(vaultAuthentication, vault
 Secret secret = await cachedSecretProvider.GetSecretAsync("EventGrid-AuthKey");
 ```
 
-⚠ Make sure that your only call the cache-specific `GetSecret("<secret-name>", ignoreCache: bool)` and others on `ISecretProvider` implementations that also implement the `ICachedSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can inject the `ICachedSecretProvider` but when no secret provider is registered that supported caching, an `NotSupportedException` will be thrown nonethless.
+⚠ Make sure that your only call the cache-specific `GetSecret("<secret-name>", ignoreCache: bool)` and others on `ISecretProvider` implementations that also implement the `ICachedSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can inject the `ICachedSecretProvider` but when no secret provider is registered that supported caching, a `NotSupportedException` will be thrown nonethless.
 
 ## Configuring the cache
 By default, retrieved secrets are cached for **5 minutes**, but you can configure this yourself.
