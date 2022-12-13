@@ -14,6 +14,52 @@ namespace Arcus.Security.Core
     public static class ISecretProviderExtensions
     {
         /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretProvider">The injected secret provider instance.</param>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public static string GetRawSecret(this ISecretProvider secretProvider, string secretName)
+        {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            if (secretProvider is ISyncSecretProvider composite)
+            {
+                string secretValue = composite.GetRawSecret(secretName);
+                return secretValue;
+            }
+
+            throw new NotSupportedException(
+                $"Cannot retrieve secret '{secretName}' because the '{nameof(GetRawSecret)}' method is called on the '{secretProvider.GetType().Name}' implementation that does not implement the '{nameof(ISyncSecretProvider)}'");
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretProvider">The injected secret provider instance.</param>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public static Secret GetSecret(this ISecretProvider secretProvider, string secretName)
+        {
+            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            if (secretProvider is ISyncSecretProvider composite)
+            {
+                Secret secret = composite.GetSecret(secretName);
+                return secret;
+            }
+
+            throw new NotSupportedException(
+                $"Cannot retrieve secret '{secretName}' because the '{nameof(GetRawSecret)}' method is called on a '{secretProvider.GetType().Name}' that does not implement the '{nameof(ISyncSecretProvider)}'");
+        }
+
+        /// <summary>
         /// Retrieves all the allowed versions of a secret value, based on the given <paramref name="secretName"/>.
         /// </summary>
         /// <remarks>

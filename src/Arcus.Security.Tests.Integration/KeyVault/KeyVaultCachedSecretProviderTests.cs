@@ -17,8 +17,6 @@ namespace Arcus.Security.Tests.Integration.KeyVault
     [Trait(name: "Category", value: "Integration")]
     public class KeyVaultCachedSecretProviderTests : IntegrationTest
     {
-        private const string KeyVaultConnectionStringEnvironmentVariable = "AzureServicesAuthConnectionString";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyVaultCachedSecretProviderTests"/> class.
         /// </summary>
@@ -57,10 +55,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                     Assert.NotNull(secret);
                     Assert.NotNull(secret.Value);
                     Assert.NotNull(secret.Version);
-                    Secret fetchedSecret = await cachedSecretProvider.GetSecretAsync(secretName);
-                    Assert.Equal(secretValue, fetchedSecret.Value);
-                    Assert.Equal(secret.Version, fetchedSecret.Version);
-                    Assert.Equal(secret.Expires, fetchedSecret.Expires);
+                    AssertEqualSecret(secret, cachedSecretProvider.GetSecret(secretName));
+                    AssertEqualSecret(secret, cachedSecretProvider.GetRawSecret(secretName));
+                    AssertEqualSecret(secret, await cachedSecretProvider.GetSecretAsync(secretName));
+                    AssertEqualSecret(secret, await cachedSecretProvider.GetRawSecretAsync(secretName));
                 }
                 finally
                 {
@@ -68,6 +66,18 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                     await client.StartDeleteSecretAsync(secretName);
                 }
             }
+        }
+
+        private static void AssertEqualSecret(Secret expected, string secretValue)
+        {
+            Assert.Equal(expected.Value, secretValue);
+        }
+
+        private static void AssertEqualSecret(Secret expected, Secret actual)
+        {
+            Assert.Equal(expected.Value, actual.Value);
+            Assert.Equal(expected.Version, actual.Version);
+            Assert.Equal(expected.Expires, actual.Expires);
         }
     }
 }

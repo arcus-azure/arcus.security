@@ -70,18 +70,7 @@ namespace Arcus.Security.Core
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to register it in the secret store");
 
-            _secretProvider = secretProvider;
-
-            if (secretProvider is ICachedSecretProvider cachedSecretProvider)
-            {
-                CachedSecretProvider = cachedSecretProvider;
-            }
-
-            if (secretProvider is IVersionedSecretProvider secretVersionProvider)
-            {
-                VersionedSecretProvider = secretVersionProvider;
-            }
-
+            AssignSecretProvider(secretProvider);
             Options = options ?? new SecretProviderOptions();
         }
 
@@ -116,6 +105,15 @@ namespace Arcus.Security.Core
         ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="IVersionedSecretProvider"/>.
         /// </remarks>
         public IVersionedSecretProvider VersionedSecretProvider { get; private set; }
+
+        /// <summary>
+        /// Gets the synchronous variant of this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="ISyncSecretProvider"/> implementation.
+        /// </summary>
+        /// <remarks>
+        ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
+        ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="ISyncSecretProvider"/>.
+        /// </remarks>
+        public ISyncSecretProvider SyncSecretProvider { get; private set; }
 
         /// <summary>
         /// Gets the cached provider for this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="ICachedSecretProvider"/> implementation.
@@ -155,17 +153,27 @@ namespace Arcus.Security.Core
                         + "Please check if the secret providers are correctly registered in the secret store");
                 }
 
-                _secretProvider = secretProvider;
+                AssignSecretProvider(secretProvider);
+            }
+        }
 
-                if (secretProvider is ICachedSecretProvider cachedSecretProvider)
-                {
-                    CachedSecretProvider = cachedSecretProvider;
-                }
+        private void AssignSecretProvider(ISecretProvider secretProvider)
+        {
+            _secretProvider = secretProvider;
 
-                if (secretProvider is IVersionedSecretProvider secretVersionProvider)
-                {
-                    VersionedSecretProvider = secretVersionProvider;
-                }
+            if (secretProvider is ICachedSecretProvider cachedSecretProvider)
+            {
+                CachedSecretProvider = cachedSecretProvider;
+            }
+
+            if (secretProvider is IVersionedSecretProvider secretVersionProvider)
+            {
+                VersionedSecretProvider = secretVersionProvider;
+            }
+
+            if (secretProvider is ISyncSecretProvider syncSecretProvider)
+            {
+                SyncSecretProvider = syncSecretProvider;
             }
         }
 

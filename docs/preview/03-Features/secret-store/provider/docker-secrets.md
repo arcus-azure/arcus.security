@@ -9,6 +9,8 @@ The Docker secrets secret provider provides access to those secrets via the secr
 
 This secret provider offers functionality which is equivalent to the _KeyPerFile_ Configuration Provider, but instead of adding the secrets to the Configuration, this secret provider allows access to the Docker Secrets via the _ISecretProvider_ interface.
 
+⚡ Supports [synchronous secret retrieval](../../secrets/general.md).
+
 ## Installation
 Adding secrets from the User Secrets manager into the secret store requires following package:
 

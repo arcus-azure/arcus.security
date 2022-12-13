@@ -6,6 +6,8 @@ layout: default
 # HashiCorp Vault secret provider
 HashiCorp Vault secret provider brings secrets from the KeyValue secret engine to your application.
 
+⛔ Does not support [synchronous secret retrieval](../../secrets/general.md).
+
 ## Installation
 Adding secrets from HashiCorp Vault into the secret store requires following package:
 
