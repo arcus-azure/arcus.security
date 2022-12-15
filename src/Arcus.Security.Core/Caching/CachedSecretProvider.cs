@@ -12,7 +12,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A <see cref="ISecretProvider"/> that will cache secrets in memory, to improve performance.
     /// </summary>
-    public class CachedSecretProvider : ICachedSecretProvider, IVersionedSecretProvider
+    public class CachedSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISyncSecretProvider
     {
         private readonly ISecretProvider _secretProvider;
         private readonly ICacheConfiguration _cacheConfiguration;
@@ -142,8 +142,8 @@ namespace Arcus.Security.Core.Caching
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
-            
-            if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret[] cachedSecret))
+
+            if (TryGetValueFromCache(secretName, ignoreCache, out Secret[] cachedSecret))
             {
                 return cachedSecret.First();
             }
@@ -153,6 +153,18 @@ namespace Arcus.Security.Core.Caching
 
             MemoryCache.Set(secretName, new[] { secret }, CacheEntry);
             return secret;
+        }
+
+        private bool TryGetValueFromCache(string secretName, bool ignoreCache, out Secret[] values)
+        {
+            if (ignoreCache == false && MemoryCache.TryGetValue(secretName, out Secret[] cachedSecrets))
+            {
+                values = cachedSecrets;
+                return true;
+            }
+
+            values = null;
+            return false;
         }
 
         /// <summary>
@@ -216,6 +228,43 @@ namespace Arcus.Security.Core.Caching
 
             MemoryCache.Remove(secretName);
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            Secret secret = GetSecret(secretName);
+            return secret?.Value;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+
+            if (TryGetValueFromCache(secretName, ignoreCache: false, out Secret[] cachedSecrets))
+            {
+                return cachedSecrets.First();
+            }
+
+            Secret secret = _secretProvider.GetSecret(secretName);
+            MemoryCache.Set(secretName, new[] { secret }, CacheEntry);
+
+            return secret;
         }
     }
 }

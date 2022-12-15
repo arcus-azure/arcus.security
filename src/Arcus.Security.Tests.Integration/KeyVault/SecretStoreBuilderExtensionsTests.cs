@@ -49,17 +49,27 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             }
         }
 
+        private void AssertNotNullSecret(Secret secret)
+        {
+            Assert.NotNull(secret);
+            AssertNotNullSecret(secret.Value);
+            Assert.NotNull(secret.Version);
+        }
+
+        private void AssertNotNullSecret(string secretValue)
+        {
+            Assert.NotNull(secretValue);
+        }
+
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
@@ -82,13 +92,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             }
             
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -111,13 +119,16 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
@@ -140,10 +151,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
             
             Assert.NotEmpty(InMemoryLogSink.LogEvents);
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -168,10 +180,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
 
         [Fact]
@@ -195,8 +206,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -220,10 +233,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -246,7 +257,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -271,10 +285,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
 
         [Fact]
@@ -298,8 +311,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -319,16 +334,14 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithOptions_WithManagedServiceIdentity_GetSecretSucceeds(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithOptions_WithManagedServiceIdentity_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -347,13 +360,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             }
             
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -377,6 +388,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -400,10 +412,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
 
         [Fact]
@@ -427,8 +438,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -452,10 +465,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             Assert.True(cacheConfiguration.IsCalled);
         }
 
@@ -480,8 +491,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -506,10 +519,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
             Assert.True(cacheConfiguration.IsCalled);
         }
 
@@ -535,7 +547,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -557,8 +572,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
            using  IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exception = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal("unauthorized_client", exception.ErrorCode);
+            var exceptionFromSecretAsync = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetSecretAsync(keyName));
+            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetRawSecretAsync(keyName));
+            var errorCode = "unauthorized_client";
+            Assert.Equal(errorCode, exceptionFromSecretAsync.ErrorCode);
+            Assert.Equal(errorCode, exceptionFromRawSecretAsync.ErrorCode);
         }
 
         [Fact]
@@ -582,8 +600,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exception = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal(HttpStatusCode.Forbidden, exception.Response.StatusCode);
+            var exceptionFromSecretAsync = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetSecretAsync(keyName));
+            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Equal(HttpStatusCode.Forbidden, exceptionFromSecretAsync.Response.StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, exceptionFromRawSecretAsync.Response.StatusCode);
         }
         
         [Fact]
@@ -608,10 +628,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            AssertNotNullSecret(provider.GetSecret(keyName));
+            AssertNotNullSecret(provider.GetRawSecret(keyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -644,16 +664,17 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(prefix + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(provider.GetSecret(appendedKeyName));
+            AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             string tenantId = Configuration.GetTenantId();
@@ -677,13 +698,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version); 
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             }
 
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -708,13 +727,16 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             string tenantId = Configuration.GetTenantId();
@@ -738,9 +760,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
             
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -769,10 +792,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(provider.GetSecret(appendedKeyName));
+            AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
 
         [Fact]
@@ -801,8 +825,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
         }
 
         [Fact]
@@ -827,10 +853,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync(keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            AssertNotNullSecret(provider.GetSecret(keyName));
+            AssertNotNullSecret(provider.GetRawSecret(keyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -855,7 +881,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -884,10 +913,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-            Assert.NotNull(secret);
-            Assert.NotNull(secret.Value);
-            Assert.NotNull(secret.Version);
+            string appendedKeyName = "Test-" + keyName;
+            AssertNotNullSecret(provider.GetSecret(appendedKeyName));
+            AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
 
         [Fact]
@@ -916,8 +946,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<SecretNotFoundException>(
-                () => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -943,10 +975,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version); 
+                AssertNotNullSecret(provider.GetSecret(keyName));
+                AssertNotNullSecret(provider.GetRawSecret(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             }
         }
 
@@ -982,17 +1014,18 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(prefix + keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version); 
+                string appendedKeyName = "Test-" + keyName;
+                AssertNotNullSecret(provider.GetSecret(appendedKeyName));
+                AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
             }
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentity_GetSecretSucceeds(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentity_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -1018,13 +1051,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
             }
 
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -1057,10 +1088,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version); 
+                string appendedKeyName = "Test-" + keyName;
+                AssertNotNullSecret(provider.GetSecret(appendedKeyName));
+                AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
             }
         }
 
@@ -1094,15 +1126,17 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                await Assert.ThrowsAsync<SecretNotFoundException>(
-                    () => provider.GetSecretAsync(keyName)); 
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
         }
 
         [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentityWrongMutation_GetsSecretFails(bool trackDependency)
+        [InlineData(false, 0)]
+        [InlineData(true, 2)]
+        public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentityWrongMutation_GetsSecretFails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
             var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
@@ -1132,12 +1166,12 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-                    await Assert.ThrowsAsync<SecretNotFoundException>(
-                        () => provider.GetSecretAsync(keyName)); 
+                    await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+                    await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
                 }
             }
 
-            AssertTrackedAzureKeyVaultDependency(trackDependency);
+            AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
         [Fact]
@@ -1167,10 +1201,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync(keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                AssertNotNullSecret(provider.GetSecret(keyName));
+                AssertNotNullSecret(provider.GetRawSecret(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
                 Assert.True(cacheConfiguration.IsCalled); 
             }
         }
@@ -1202,8 +1236,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                await Assert.ThrowsAsync<SecretNotFoundException>(
-                    () => provider.GetSecretAsync(keyName)); 
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
         }
 
@@ -1238,10 +1274,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Secret secret = await provider.GetSecretAsync("Test-" + keyName);
-                Assert.NotNull(secret);
-                Assert.NotNull(secret.Value);
-                Assert.NotNull(secret.Version);
+                string appendedKeyName = "Test-" + keyName;
+                AssertNotNullSecret(provider.GetSecret(appendedKeyName));
+                AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
                 Assert.True(cacheConfiguration.IsCalled); 
             }
         }
@@ -1277,7 +1314,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName)); 
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
         }
 
@@ -1301,7 +1341,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            Assert.Throws<AuthenticationFailedException>(() => provider.GetSecret(keyName));
+            Assert.Throws<AuthenticationFailedException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(keyName));
+            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetRawSecretAsync(keyName));
         }
 
         [Fact]
@@ -1327,13 +1370,18 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exception = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
-            Assert.Equal((int) HttpStatusCode.Forbidden, exception.Status);
+            var exceptionFromSecretSync = Assert.Throws<RequestFailedException>(() => provider.GetSecret(keyName));
+            var exceptionFromRawSecretSync = Assert.Throws<RequestFailedException>(() => provider.GetRawSecret(keyName));
+            var exceptionFromSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
+            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromSecretSync.Status);
+            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromRawSecretSync.Status);
+            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromSecretAsync.Status);
+            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromRawSecretAsync.Status);
         }
 
-        private void AssertTrackedAzureKeyVaultDependency(bool trackDependency)
+        private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
         {
-            var expectedTrackedDependencyCount = Convert.ToInt16(trackDependency);
             int actualTrackedDependencyCount = InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
 
             Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);

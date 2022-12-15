@@ -9,7 +9,7 @@ namespace Arcus.Security.Providers.UserSecrets
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that provides user secrets.
     /// </summary>
-    public class UserSecretsSecretProvider : ISecretProvider
+    public class UserSecretsSecretProvider : ISyncSecretProvider
     {
         private readonly JsonConfigurationProvider _jsonProvider;
 
@@ -32,17 +32,12 @@ namespace Arcus.Security.Providers.UserSecrets
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<Secret> GetSecretAsync(string secretName)
+        public Task<Secret> GetSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
 
-            string secretValue = await GetRawSecretAsync(secretName);
-            if (secretValue is null)
-            {
-                return null;
-            }
-
-            return new Secret(secretValue);
+            Secret secret = GetSecret(secretName);
+            return Task.FromResult(secret);
         }
 
         /// <summary>
@@ -57,12 +52,47 @@ namespace Arcus.Security.Providers.UserSecrets
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
 
-            if (_jsonProvider.TryGet(secretName, out string value))
+            string secretValue = GetRawSecret(secretName);
+            return Task.FromResult(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
+
+            string secretValue = GetRawSecret(secretName);
+            if (secretValue is null)
             {
-                return Task.FromResult(value);
+                return null;
             }
 
-            return Task.FromResult<string>(null);
+            return new Secret(secretValue);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
+
+            if (_jsonProvider.TryGet(secretName, out string value))
+            {
+                return value;
+            }
+
+            return null;
         }
     }
 }

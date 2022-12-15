@@ -6,7 +6,9 @@ layout: default
 # Configuration secret provider
 Configuration secret provider brings you all registered configuration providers of .NET Core by using `IConfiguration` to your application.
 
-> :warning: When using configuration secret provider, it will look for secrets in all configuration sources which is not secure. This provider should only be used for development.
+⚡ Supports [synchronous secret retrieval](../../secrets/general.md).
+
+> ⚠ When using configuration secret provider, it will look for secrets in all configuration sources which is not secure. This provider should only be used for development.
 
 ## Installation
 The configuration secret provider is built-in as part of the package [Arcus.Security.Core](https://www.nuget.org/packages/Arcus.Security.Core).
