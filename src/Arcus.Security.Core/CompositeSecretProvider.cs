@@ -290,6 +290,11 @@ namespace Arcus.Security.Core
                     }
 
                     Secret secret = await source.SecretProvider.GetSecretAsync(secretName);
+                    if (secret is null)
+                    {
+                        return null;
+                    }
+
                     return new[] { secret };
                 });
 
@@ -321,6 +326,11 @@ namespace Arcus.Security.Core
                     }
 
                     string secretValue = await source.SecretProvider.GetRawSecretAsync(secretName);
+                    if (secretValue is null)
+                    {
+                        return null;
+                    }
+
                     return new[] { secretValue };
                 });
 
@@ -340,8 +350,25 @@ namespace Arcus.Security.Core
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
             Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to retrieve the secret in the secret store");
 
-            IEnumerable<Secret> secrets = await GetSecretsAsync(secretName);
-            return secrets.Select(secret => secret?.Value).ToArray();
+            IEnumerable<string> secretValues = 
+                await WithSecretStoreAsync(secretName, async source =>
+                {
+                    if (source.VersionedSecretProvider != null)
+                    {
+                        IEnumerable<string> secretValues = await source.VersionedSecretProvider.GetRawSecretsAsync(secretName, amountOfVersions);
+                        return secretValues.ToArray();
+                    }
+
+                    string secretValue = await source.SecretProvider.GetRawSecretAsync(secretName);
+                    if (secretValue is null)
+                    {
+                        return null;
+                    }
+
+                    return new[] { secretValue };
+                });
+
+            return secretValues.ToArray();
         }
 
         /// <summary>
@@ -367,6 +394,11 @@ namespace Arcus.Security.Core
                     }
 
                     Secret secret = await source.SecretProvider.GetSecretAsync(secretName);
+                    if (secret is null)
+                    {
+                        return null;
+                    }
+
                     return new[] { secret };
                 });
 
