@@ -165,46 +165,47 @@ namespace Application.Controllers
 }
 ```
 
-### Adding secret versions to your secret provider
-When your secret storage location supports versioned secrets, you could consider adapting your secret provider to support these.
-For more information on how you can use multiple versions of a secret in your application, see [this dedicated page](./versioned-secret-provider.md).
+For more information on consuming cached secrets, see [this dedicated page on consuming secrets](../secrets/general.md).
 
-Implement from `IVersionedSecretProvider` instead of `ISecretProvider` to allow the secret store to pick that your secret provider supports secret versions.
-The following example shows how the registry secret provider only supports two versions of a secret:
+### Adding synchronous secret retrieval to your secret provider
+When you want to use your secret provider in synchronous environments, you can implement the `ISyncSecretProvider` instead (implement also `ISecretProvider`).
+In our example, we can interact with the Registry synchronously, so we can benefit from synchronous secret retrieval.
 ```csharp
 using Arcus.Security.Core;
 using Microsoft.Win32;
 
-public class RegistrySecretProvider : IVersionedSecretProvider
+namespace Application.Security.CustomProviders
 {
-    // Also implement the general `ISecretProvider` methods...
+    public class RegistrySecretProvider : ISyncSecretProvider
+    {
+        public Task<string> GetRawSecretAsync(string secretName)
+        {
+            string secretValue = GetRawSecret(secretName);
+            return Task.FromResult(secretValue);
+        }
 
-     public Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
-     {
-         if (amountOfVersions >= 2)
-         {
-             object valueV1 = Registry.LocalMachine.GetValue("v1\\" + secretName);
-             object valueV2 = Registry.LocalMachine.GetValue("v2\\" + secretName);
+        public Task<Secret> GetSecretAsync(string secretName)
+        {
+            string secretValue = GetRawSecret(secretName);
+            return Task.FromResult(new Secret(secretValue));
+        }
 
-             return Task.FromResult(new[] { valueV1, valueV2 });
-         }
+        public Secret GetSecret(string secretName)
+        {
+            string secretValue = GetRawSecret(secretName);
+            return new Secret(secretValue);
+        }
 
-         object valueV1 = Registry.LocalMachine.GetValue("v1\\" + secretName);
-         return Task.FromResult(new[] { valueV1 });
-     }
-
-     public async Task<IEnumerable<Secret>> GetSecretAsync(string secretName, int amountOfVersions)
-     {
-         string secretValue = await GetRawSecretAsync(secretName);
-         return new Secret(secretValue);
-     }
+        public string GetRawSecret(string secretName)
+        {
+            object value = Registry.LocalMachine.GetValue(secretName);
+            return value?.ToString();
+        }
+    }
 }
 ```
 
-The `amountOfVersions` can be configured via the secret provider options (`.AddVersionedSecret`).
-Each secret provider registration has the ability to register a amount of secret versions for secret name, that amount is passed to your implementation. For more information, see [this dedicated page](./versioned-secret-provider.md).
-
-> 💡 Note that versioned secrets can be combined with caching. The set of secrets will be cached, just like a single secret.
+Note that that your application does not have to change, each asynchronous call can still be made with this secret provider. Only when you especially need a synchronous call, you can make use of this change. Synchronous secret retrieval can be useful in lots of scenarios where you do not have an asynchronous context, like dependent services. For more information on synchronous secret retrieval, see [this dedicated page on consuming secrets](../secrets/general.md).
 
 ### Adding secret name mutation before looking up secret
 When you want secret names 'changed' or 'mutated' before they go through your secret provider (ex. changing `Arcus.Secret` to `ARCUS_SECRET`);
@@ -290,6 +291,47 @@ namespace Microsoft.Extensions.Hosting
 
 > Note that when multiple secret providers in the secret store are throwing critical exceptions upon retrieving a secret, then these critical exceptions will be wrapped inside a `AggregateException`.
 > In the other case the single critical exception is being thrown.
+
+### Adding secret versions to your secret provider
+When your secret storage location supports versioned secrets, you could consider adapting your secret provider to support these.
+For more information on how you can use multiple versions of a secret in your application, see [this dedicated page](./versioned-secret-provider.md).
+
+Implement from `IVersionedSecretProvider` instead of `ISecretProvider` to allow the secret store to pick that your secret provider supports secret versions.
+The following example shows how the registry secret provider only supports two versions of a secret:
+```csharp
+using Arcus.Security.Core;
+using Microsoft.Win32;
+
+public class RegistrySecretProvider : IVersionedSecretProvider
+{
+    // Also implement the general `ISecretProvider` methods...
+
+     public Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
+     {
+         if (amountOfVersions >= 2)
+         {
+             object valueV1 = Registry.LocalMachine.GetValue("v1\\" + secretName);
+             object valueV2 = Registry.LocalMachine.GetValue("v2\\" + secretName);
+
+             return Task.FromResult(new[] { valueV1, valueV2 });
+         }
+
+         object valueV1 = Registry.LocalMachine.GetValue("v1\\" + secretName);
+         return Task.FromResult(new[] { valueV1 });
+     }
+
+     public async Task<IEnumerable<Secret>> GetSecretAsync(string secretName, int amountOfVersions)
+     {
+         string secretValue = await GetRawSecretAsync(secretName);
+         return new Secret(secretValue);
+     }
+}
+```
+
+The `amountOfVersions` can be configured via the secret provider options (`.AddVersionedSecret`).
+Each secret provider registration has the ability to register a amount of secret versions for secret name, that amount is passed to your implementation. For more information, see [this dedicated page](./versioned-secret-provider.md).
+
+> 💡 Note that versioned secrets can be combined with caching. The set of secrets will be cached, just like a single secret.
 
 ## Contribute your secret provider
 We are open for contributions and are more than happy to receive pull requests with new secret providers!

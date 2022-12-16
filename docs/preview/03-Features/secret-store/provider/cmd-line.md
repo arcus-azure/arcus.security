@@ -6,6 +6,8 @@ layout: default
 # Command line secret provider
 The command line secret provider transforms all your command line arguments in application secrets.
 
+⚡ Supports [synchronous secret retrieval](../../secrets/general.md). 
+
 ## Installation
 Adding command line arguments into the secret store requires following package:
 

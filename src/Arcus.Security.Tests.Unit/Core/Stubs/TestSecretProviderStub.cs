@@ -4,7 +4,7 @@ using Arcus.Security.Core;
 
 namespace Arcus.Security.Tests.Unit.Core.Stubs
 {
-    public class TestSecretProviderStub : ISecretProvider
+    public class TestSecretProviderStub : ISyncSecretProvider
     {
         public string SecretValue { get; set; }
 
@@ -23,10 +23,9 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="System.ArgumentException">The name must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public async Task<string> GetRawSecretAsync(string secretName)
+        public Task<string> GetRawSecretAsync(string secretName)
         {
-            Secret secret = await GetSecretAsync(secretName);
-            return secret?.Value;
+            return Task.FromResult(GetRawSecret(secretName));
         }
 
         /// <summary>
@@ -39,8 +38,32 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
+            return Task.FromResult(GetSecret(secretName));
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public string GetRawSecret(string secretName)
+        {
+            return GetSecret(secretName).Value;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        public Secret GetSecret(string secretName)
+        {
             ++CallsMadeSinceCreation;
-            return Task.FromResult(new Secret(SecretValue, version: Guid.NewGuid().ToString()));
+            return new Secret(SecretValue, version: Guid.NewGuid().ToString());
         }
     }
 }

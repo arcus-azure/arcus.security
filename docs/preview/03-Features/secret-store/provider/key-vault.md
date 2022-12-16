@@ -6,6 +6,8 @@ layout: default
 # Azure Key Vault secret provider
 Azure Key Vault secret provider brings secrets from Azure Key Vault to your application.
 
+⚡ Supports [synchronous secret retrieval](../../secrets/general.md).
+
 ## Installation
 Adding secrets from Azure Key Vault into the secret store requires following package:
 

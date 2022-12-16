@@ -36,19 +36,27 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync(secretKey);
-            Assert.Equal(expectedValue, actualValue);
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretKey));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretKey).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretKey));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretKey)).Value);
         }
 
         [Fact]
         public async Task DockerSecretsProvider_ReturnsNull_WhenSecretNotFound()
         {
+            // Arrange
             var provider = new DockerSecretsSecretProvider(_secretLocation);
+            
+            // Act
             await SetSecretAsync("MyExistingSecret", "foo");
 
-            var secret = await provider.GetRawSecretAsync("MyNonExistingSecret");
-
-            Assert.Null(secret);
+            // Assert
+            var secretName = "MyNonExistingSecret";
+            Assert.Null(provider.GetRawSecret(secretName));
+            Assert.Null(provider.GetSecret(secretName));
+            Assert.Null(await provider.GetRawSecretAsync(secretName));
+            Assert.Null((await provider.GetSecretAsync(secretName)));
         }
 
         [Fact]
@@ -68,8 +76,11 @@ namespace Arcus.Security.Tests.Integration.DockerSecrets
             IHost host = hostBuilder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string actualValue = await secretProvider.GetRawSecretAsync("ConnectionStrings:PersonDb");
-            Assert.Equal(expectedValue, actualValue);
+            var secretName = "ConnectionStrings:PersonDb";
+            Assert.Equal(expectedValue, secretProvider.GetRawSecret(secretName));
+            Assert.Equal(expectedValue, secretProvider.GetSecret(secretName).Value);
+            Assert.Equal(expectedValue, await secretProvider.GetRawSecretAsync(secretName));
+            Assert.Equal(expectedValue, (await secretProvider.GetSecretAsync(secretName)).Value);
         }
 
         [Fact]

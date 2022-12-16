@@ -6,7 +6,9 @@ layout: default
 # User Secrets manager secret provider
 User Secrets secret provider brings local secrets during development to your application.
 
-> :warning: When using User Secrets secret provider, it will look for secrets on the local disk which is not secure. This provider should only be used for development.
+⚡ Supports [synchronous secret retrieval](../../secrets/general.md).
+
+> ⚠ When using User Secrets secret provider, it will look for secrets on the local disk which is not secure. This provider should only be used for development.
 
 ## Installation
 Adding secrets from the User Secrets manager into the secret store requires following package:
