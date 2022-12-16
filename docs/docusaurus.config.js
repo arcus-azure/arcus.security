@@ -1,5 +1,5 @@
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const lightCodeTheme = require('./src/prism/light');
+const darkCodeTheme = require('./src/prism/dark');
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
@@ -8,7 +8,7 @@ module.exports = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/arcus.png',
+  favicon: 'img/favicon.ico',
   organizationName: 'arcus-azure', // Usually your GitHub org/user name.
   projectName: 'Arcus - Security', // Usually your repo name.
   themeConfig: {
@@ -18,7 +18,7 @@ module.exports = {
       logo: {
         alt: 'Arcus',
         src: 'img/arcus.png',
-        srcDark: 'img/arcus.png'
+        srcDark: 'img/arcus_for_dark.png',
       },
       items: [
         {
@@ -74,24 +74,20 @@ module.exports = {
           path: 'preview',
           sidebarCollapsible: false,
           // Please change this to your repo.
-          editUrl:
-            'https://github.com/arcus-azure/arcus.security/edit/master/docs',
+          editUrl: 'https://github.com/arcus-azure/arcus.security/edit/master/docs',
           includeCurrentVersion: process.env.CONTEXT !== 'production',
-          sidebarItemsGenerator: async function ({
-                                                   defaultSidebarItemsGenerator,
-                                                   ...args
-                                                 }) {
+          sidebarItemsGenerator: async function ({ defaultSidebarItemsGenerator, ...args }) {
             const sidebarItems = await defaultSidebarItemsGenerator(args);
             const capitalizeLabels = (items) => {
-              return items?.map(item => ({
+              return items?.map((item) => ({
                 ...item,
                 label: item.label?.charAt(0).toUpperCase() + item.label?.slice(1),
-                items: item.items ? capitalizeLabels(item.items) : null
+                items: item.items ? capitalizeLabels(item.items) : null,
               }));
-            }
+            };
 
-            return capitalizeLabels(sidebarItems)
-          }
+            return capitalizeLabels(sidebarItems);
+          },
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -99,5 +95,7 @@ module.exports = {
       },
     ],
   ],
-
+  stylesheets: [
+    'https://fonts.googleapis.com/css2?family=Bitter:wght@700&family=Inter:wght@400;500&display=swap',
+  ],
 };
