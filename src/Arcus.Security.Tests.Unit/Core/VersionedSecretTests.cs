@@ -165,5 +165,55 @@ namespace Arcus.Security.Tests.Unit.Core
             Assert.Equal(amountOfVersions, secretValues2.Count());
             Assert.Equal(2, inMemory.CallsSinceCreation);
         }
+
+        [Fact]
+        public async Task GetRawSecretsAsync_WithNonVersionedSecretProviders_RunsThroughAllProviders()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var secretName = "MySecret";
+            var secretValue = Guid.NewGuid().ToString();
+
+            var secretProvider1 = new InMemorySecretProvider();
+            var secretProvider2 = new InMemorySecretProvider((secretName, secretValue));
+            
+            // Act
+            services.AddSecretStore(stores =>
+            {
+                stores.AddProvider(secretProvider1)
+                      .AddProvider(secretProvider2);
+            });
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            IEnumerable<string> rawSecrets = await secretProvider.GetRawSecretsAsync(secretName);
+            Assert.Equal(new[] { secretValue }, rawSecrets);
+        }
+
+        [Fact]
+        public async Task GetSecretsAsync_WithNonVersionedSecretProviders_RunsThroughAllProviders()
+        {
+            // Arrange
+            var services = new ServiceCollection();
+            var secretName = "MySecret";
+            var secretValue = Guid.NewGuid().ToString();
+
+            var secretProvider1 = new InMemorySecretProvider();
+            var secretProvider2 = new InMemorySecretProvider((secretName, secretValue));
+            
+            // Act
+            services.AddSecretStore(stores =>
+            {
+                stores.AddProvider(secretProvider1)
+                      .AddProvider(secretProvider2);
+            });
+
+            // Assert
+            IServiceProvider serviceProvider = services.BuildServiceProvider();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            IEnumerable<Secret> secrets = await secretProvider.GetSecretsAsync(secretName);
+            Assert.Equal(secretValue, Assert.Single(secrets.Select(secret => secret.Value)));
+        }
     }
 }
