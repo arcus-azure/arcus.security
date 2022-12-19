@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure.Core;
-using Microsoft.Azure.KeyVault.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
@@ -23,10 +20,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            
+            var certificate = new X509Certificate2(Array.Empty<byte>());
+
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "client-id", new X509Certificate2()));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "client-id", certificate));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -38,10 +36,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            
+            var certificate = new X509Certificate2(Array.Empty<byte>());
+
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(vaultUri, "client-id", new X509Certificate2()));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(vaultUri, "client-id", certificate));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -54,10 +53,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "client-id", new X509Certificate2(), cacheConfiguration: cacheConfiguration));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "client-id", certificate, cacheConfiguration: cacheConfiguration));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -70,10 +70,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(vaultUri, "client-id", new X509Certificate2(), cacheConfiguration: cacheConfiguration));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(vaultUri, "client-id", certificate, cacheConfiguration: cacheConfiguration));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -85,7 +86,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            var certificate = new X509Certificate2();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
             
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "tenant-id", "client-id", certificate));
@@ -100,7 +101,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            var certificate = new X509Certificate2();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
             
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "tenant-id", "client-id", certificate, cacheConfiguration: new CacheConfiguration()));
@@ -115,10 +116,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), clientId, new X509Certificate2()));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), clientId, certificate));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -130,10 +132,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(GenerateVaultUri(), clientId, new X509Certificate2()));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(GenerateVaultUri(), clientId, certificate));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -146,10 +149,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), clientId, new X509Certificate2(), cacheConfiguration));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), clientId, certificate, cacheConfiguration));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -162,10 +166,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(GenerateVaultUri(), clientId, new X509Certificate2(), cacheConfiguration));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificateWithOptions(GenerateVaultUri(), clientId, certificate, cacheConfiguration));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -177,7 +182,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            var certificate = new X509Certificate2();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
             
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), clientId, "tenant-id", certificate));
@@ -192,7 +197,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            var certificate = new X509Certificate2();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
             
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), clientId, "tenant-id", certificate, cacheConfiguration: new CacheConfiguration()));
@@ -265,7 +270,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            var certificate = new X509Certificate2();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
             
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), tenantId, "client-id", certificate));
@@ -280,7 +285,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            var certificate = new X509Certificate2();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
             
             // Act
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), tenantId, "client-id", certificate, cacheConfiguration: new CacheConfiguration()));
@@ -295,10 +300,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
-            
+            var certificate = new X509Certificate2(Array.Empty<byte>());
+
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "tenant-id", "client-id", new X509Certificate2(), configureOptions: null, name: null, mutateSecretName: null));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "tenant-id", "client-id", certificate, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -311,10 +317,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "tenant-id", "client-id", new X509Certificate2(), cacheConfiguration: cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(vaultUri, "tenant-id", "client-id", certificate, cacheConfiguration: cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -326,10 +333,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), "tenant-id", clientId, new X509Certificate2(), configureOptions: null, name: null, mutateSecretName: null));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), "tenant-id", clientId, certificate, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -342,10 +350,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), "tenant-id", clientId, new X509Certificate2(), cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), "tenant-id", clientId, certificate, cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -413,10 +422,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), tenantId, "client-id", new X509Certificate2(), cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), tenantId, "client-id", certificate, cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -429,10 +439,11 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = Mock.Of<ICacheConfiguration>();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore(
-                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), tenantId, "client-id", new X509Certificate2(), cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
+                (config, stores) => stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(), tenantId, "client-id", certificate, cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null));
 
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
@@ -443,6 +454,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
         {
             // Arrange
             var builder = new HostBuilder();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -450,7 +462,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
                 stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(),
                     "tenant-id",
                     "client-id",
-                    new X509Certificate2(),
+                    certificate,
                     configureOptions: options => options.TrackDependency = true,
                     name: "Azure Key Vault",
                     mutateSecretName: name => name.Replace(":", "."),
@@ -470,6 +482,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
             // Arrange
             var builder = new HostBuilder();
             var cacheConfiguration = new CacheConfiguration();
+            var certificate = new X509Certificate2(Array.Empty<byte>());
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -477,7 +490,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Extensions
                 stores.AddAzureKeyVaultWithCertificate(GenerateVaultUri(),
                     "tenant-id",
                     "client-id",
-                    new X509Certificate2(),
+                    certificate,
                     cacheConfiguration,
                     configureOptions: options => options.TrackDependency = true,
                     name: "Azure Key Vault",
