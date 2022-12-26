@@ -137,4 +137,4 @@ stages:
                 None.
           - template: nuget/publish-official-package.yml@templates
             parameters:
-              packagesToPush: "**/${{ parameters['Package.Name'] }}.${{ parameters['Package.Version'] }}.nupkg"
+              packagesToPush: "**/$(Package.Name).$(Package.Version).nupkg"
