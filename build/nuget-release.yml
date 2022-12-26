@@ -6,6 +6,9 @@ pr: none
 parameters:
   - name: 'Package.Version'
     type: 'string'
+  - name: 'Package.Name'
+    type: 'string'
+    default: '*'
 
 resources:
   repositories:
@@ -133,3 +136,5 @@ stages:
                 ### Removal
                 None.
           - template: nuget/publish-official-package.yml@templates
+            parameters:
+              packagesToPush: "**/${{ parameters['Package.Name'] }}.${{ parameters['Package.Version'] }}.nupkg"
