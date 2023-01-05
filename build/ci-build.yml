@@ -3,7 +3,7 @@ name: $(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-    - master
+    - main
   paths:
     include:
     - src/*
