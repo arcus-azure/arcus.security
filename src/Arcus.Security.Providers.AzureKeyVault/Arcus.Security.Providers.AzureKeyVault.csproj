@@ -5,21 +5,22 @@
     <Authors>Arcus</Authors>
     <Description>Provides support for Azure Key Vault</Description>
     <Copyright>Copyright (c) Arcus</Copyright>
-    <PackageLicenseUrl>https://github.com/arcus-azure/arcus.security/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://security.arcus-azure.net/</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/arcus-azure/arcus/master/media/arcus.png</PackageIconUrl>
     <RepositoryUrl>https://github.com/arcus-azure/arcus.security</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>icon.png</PackageIcon>
     <RepositoryType>Git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Azure;Key Vault;Security</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <NoWarn>NU5125;NU5048</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="..\..\docs\static\img\icon.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
