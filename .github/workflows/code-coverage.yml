@@ -1,0 +1,32 @@
+name: "Code Coverage"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Coverlet coverage test
+      uses: b3b00/coverlet-action@1.2.4
+      with:
+        testProject: 'src/Arcus.Security.Tests.Unit/Arcus.Security.Tests.Unit.csproj'
+        output: 'lcov.info'
+        outputFormat: 'lcov'
