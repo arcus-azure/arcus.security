@@ -35,7 +35,7 @@ jobs:
     - name: ReportGenerator
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.13
       with:
-        reports: '*/lcov.info'
+        reports: 'src/Arcus.Security.Tests.Unit/lcov.info'
         targetdir: 'coveragereport'
 
     - name: Upload coverage report artifact
