@@ -154,7 +154,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
             
-            Assert.NotEmpty(InMemoryLogSink.LogEvents);
+            Assert.NotEmpty(InMemoryLogSink.CurrentLogEmits);
             AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
         }
 
@@ -1382,7 +1382,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
         private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
         {
-            int actualTrackedDependencyCount = InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
+            int actualTrackedDependencyCount = InMemoryLogSink.CurrentLogEmits.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
 
             Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);
         }

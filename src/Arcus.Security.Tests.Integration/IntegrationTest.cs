@@ -1,6 +1,7 @@
 ﻿using System;
-using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Integration.Fixture;
+using Arcus.Testing.Logging.Extensions;
+using Arcus.Testing.Logging;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Serilog.Configuration;
@@ -24,7 +25,7 @@ namespace Arcus.Security.Tests.Integration
             InMemoryLogSink = new InMemoryLogSink();
             
             var configuration = new LoggerConfiguration()
-                .WriteTo.Sink(new XunitTestLogSink(testOutput))
+                .WriteTo.XunitTestLogging(testOutput)
                 .WriteTo.Sink(InMemoryLogSink)
                 .WriteTo.AzureApplicationInsights(Configuration.GetValue<string>("Arcus:ApplicationInsights:InstrumentationKey"));
 

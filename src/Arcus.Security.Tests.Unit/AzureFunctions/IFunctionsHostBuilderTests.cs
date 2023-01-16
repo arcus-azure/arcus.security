@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Tests.Unit.AzureFunctions.Stubs;
-using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.AzureFunctions
@@ -51,7 +49,7 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
         {
             // Arrange
             const string secretKey = "MySecret";
-            var stubProvider = new InMemorySecretProvider((secretKey, $"secret-{Guid.NewGuid()}"));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey] = $"secret-{Guid.NewGuid()}" });
 
             var builder = new StubFunctionsHostBuilder();
 
@@ -70,7 +68,7 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
             // Arrange
             const string secretKey = "MySecret";
             string secretValue = $"secret-{Guid.NewGuid()}";
-            var stubProvider = new InMemorySecretProvider((secretKey, secretValue));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey] = secretValue });
 
             var builder = new StubFunctionsHostBuilder();
 
@@ -90,15 +88,15 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
             // Arrange
             string secretKey1 = "MySecret1";
             string secretValue1 = $"secret-{Guid.NewGuid()}";
-            var stubProvider1 = new InMemorySecretProvider((secretKey1, secretValue1));
+            var stubProvider1 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey1] = secretValue1 });
 
             string secretKey2 = "MySecret2";
             string secretValue2 = $"secret-{Guid.NewGuid()}";
-            var stubProvider2 = new InMemorySecretProvider((secretKey2, secretValue2));
+            var stubProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey2] = secretValue2 });
 
             string secretKey3 = "MySecret3";
             string secretValue3 = $"secret-{Guid.NewGuid()}";
-            var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
+            var stubProvider3 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey3] = secretValue3 });
 
             var builder = new StubFunctionsHostBuilder();
 
@@ -132,10 +130,10 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
             // Act
             builder.ConfigureSecretStore(stores =>
             {
-                stores.AddProvider(new InMemorySecretProvider((secretName1, secretValue1)), options => options.Name = name)
-                      .AddProvider(new InMemorySecretProvider((secretName3, secretValue3)), options => options.Name = "some other name")
-                      .AddProvider(new InMemoryCachedSecretProvider((secretName2, secretValue2)), options => options.Name = name)
-                      .AddProvider(new InMemorySecretProvider((secretName4, secretValue4)));
+                stores.AddProvider(new InMemorySecretProvider(new Dictionary<string, string> { [secretName1] = secretValue1 }), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider( new Dictionary<string, string> { [secretName3] = secretValue3 }), options => options.Name = "some other name")
+                      .AddProvider(new InMemoryCachedSecretProvider(new Dictionary<string, string> { [secretName2] = secretValue2 }), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider(new Dictionary<string, string> { [secretName4] = secretValue4 }));
             });
 
             // Assert

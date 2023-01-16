@@ -7,6 +7,7 @@ using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 using Bogus;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
@@ -498,7 +499,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             string secretName = BogusGenerator.Lorem.Word();
             string secretValue = BogusGenerator.Lorem.Word();
-            var stub = new InMemorySecretProvider((secretName, secretValue));
+            var stub = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = secretValue });
 
             var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
 
@@ -515,7 +516,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Arrange
             string secretName = BogusGenerator.Lorem.Word();
             string secretValue = BogusGenerator.Lorem.Word();
-            var stub = new InMemorySecretProvider((secretName, secretValue));
+            var stub = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = secretValue });
 
             var cached = new CachedSecretProvider(stub, CacheConfiguration.Default);
 
