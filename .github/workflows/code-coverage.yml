@@ -35,12 +35,14 @@ jobs:
 
     - name: ReportGenerator
       uses: danielpalme/ReportGenerator-GitHub-Action@5.1.13
+      if: always()
       with:
         reports: 'src/Arcus.Security.Tests.Unit/lcov.info'
         targetdir: 'coveragereport'
 
     - name: Upload coverage report artifact
       uses: actions/upload-artifact@v2.2.3
+      if: always()
       with:
         name: CoverageReport
         path: coveragereport
