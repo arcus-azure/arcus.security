@@ -2,7 +2,6 @@
 using GuardNet;
 using Microsoft.Extensions.Configuration.KeyPerFile;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileProviders;
