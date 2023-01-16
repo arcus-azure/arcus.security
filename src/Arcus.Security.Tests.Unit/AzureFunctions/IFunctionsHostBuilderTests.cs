@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
@@ -8,11 +6,11 @@ using Arcus.Security.Tests.Unit.AzureFunctions.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.AzureFunctions
 {
+    // ReSharper disable once InconsistentNaming
     public class IFunctionsHostBuilderTests
     {
         [Fact]
@@ -31,6 +29,21 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
         }
 
         [Fact]
+        public async Task ConfigureSecretStoreWithConfig_WithoutSecretProviders_ThrowsException()
+        {
+            // Arrange
+            var builder = new StubFunctionsHostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((context, config, stores) => { });
+
+            // Assert
+            IServiceProvider serviceProvider = builder.Build();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync("ignored-key"));
+        }
+
+        [Fact]
         public async Task ConfigureSecretStore_WithoutFoundSecretProvider_ThrowsException()
         {
             // Arrange
@@ -39,6 +52,22 @@ namespace Arcus.Security.Tests.Unit.AzureFunctions
 
             // Act
             builder.ConfigureSecretStore(stores => stores.AddProvider(emptyProvider));
+
+            // Assert
+            IServiceProvider serviceProvider = builder.Build();
+            var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync("ignored-key"));
+        }
+
+        [Fact]
+        public async Task ConfigureSecretStoreWithConfig_WithoutFoundSecretProvider_ThrowsException()
+        {
+            // Arrange
+            var builder = new StubFunctionsHostBuilder();
+            var emptyProvider = new InMemorySecretProvider();
+
+            // Act
+            builder.ConfigureSecretStore((context, config, stores) => stores.AddProvider(emptyProvider));
 
             // Assert
             IServiceProvider serviceProvider = builder.Build();
