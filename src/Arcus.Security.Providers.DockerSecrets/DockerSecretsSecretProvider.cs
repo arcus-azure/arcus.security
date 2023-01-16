@@ -12,7 +12,6 @@ namespace Arcus.Security.Providers.DockerSecrets
     /// <summary>
     /// Represents an <see cref="ISecretProvider" /> that provides access to the Docker secrets mounted into the Docker container as files.
     /// </summary>
-    [ExcludeFromCodeCoverage]
     public class DockerSecretsSecretProvider : ISyncSecretProvider
     {
         private readonly KeyPerFileConfigurationProvider _provider;

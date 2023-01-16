@@ -10,7 +10,6 @@ namespace Arcus.Security.Providers.UserSecrets
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that provides user secrets.
     /// </summary>
-    [ExcludeFromCodeCoverage]
     public class UserSecretsSecretProvider : ISyncSecretProvider
     {
         private readonly JsonConfigurationProvider _jsonProvider;

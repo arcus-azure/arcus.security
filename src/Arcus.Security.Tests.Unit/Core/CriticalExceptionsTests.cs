@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Unit.Core.Stubs;
@@ -29,7 +26,10 @@ namespace Arcus.Security.Tests.Unit.Core
             // Assert
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            Assert.Throws<IOException>(() => secretProvider.GetSecret("Some.Secret"));
+            Assert.Throws<IOException>(() => secretProvider.GetRawSecret("Some.Secret"));
             await Assert.ThrowsAsync<IOException>(() => secretProvider.GetSecretAsync("Some.Secret"));
+            await Assert.ThrowsAsync<IOException>(() => secretProvider.GetRawSecretAsync("Some.Secret"));
         }
 
         [Fact]
@@ -48,7 +48,10 @@ namespace Arcus.Security.Tests.Unit.Core
             // Assert
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret("Some.Secret"));
+            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret("Some.Secret"));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync("Some.Secret"));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync("Some.Secret"));
         }
     }
 }

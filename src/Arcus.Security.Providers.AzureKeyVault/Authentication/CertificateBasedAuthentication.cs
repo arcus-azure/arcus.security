@@ -16,7 +16,6 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     ///     Azure Key Vault <see cref="IKeyVaultAuthentication"/> by using client ID and certificate to authenticate the <see cref="IKeyVaultClient"/>.
     /// </summary>
     [Obsolete("Azure Key Vault authentication is moved to Azure Identity approach where the certificate authentication becomes: " + nameof(ClientCertificateCredential))]
-    [ExcludeFromCodeCoverage]
     public class CertificateBasedAuthentication : IKeyVaultAuthentication
     {
         private readonly string _clientId;

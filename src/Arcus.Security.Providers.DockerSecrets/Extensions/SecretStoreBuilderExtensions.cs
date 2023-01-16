@@ -12,7 +12,6 @@ namespace Microsoft.Extensions.Hosting
     /// <summary>
     /// Extensions on the <see cref="SecretStoreBuilder" /> to easily provide access to Docker secrets in the secret store.
     /// </summary>
-    [ExcludeFromCodeCoverage]
     public static class SecretStoreBuilderExtensions
     {
         /// <summary>
