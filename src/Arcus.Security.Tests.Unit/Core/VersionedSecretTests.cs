@@ -23,7 +23,8 @@ namespace Arcus.Security.Tests.Unit.Core
             var services = new ServiceCollection();
             var secretName = "MySecret";
             var amountOfVersions = 2;
-            var inMemory = new InMemorySecretVersionProvider(secretName, "secretValue", amountOfVersions);
+            var secretValue = "secretValue";
+            var inMemory = new InMemorySecretVersionProvider(secretName, secretValue, amountOfVersions);
             services.AddSecretStore(stores =>
             {
                 stores.AddProvider(inMemory, options => options.AddVersionedSecret(secretName, amountOfVersions));
@@ -31,9 +32,17 @@ namespace Arcus.Security.Tests.Unit.Core
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
+            var versionedProvider = (IVersionedSecretProvider) secretProvider;
 
-            IEnumerable<string> secretValues = await secretProvider.GetRawSecretsAsync(secretName);
-            Assert.Equal(amountOfVersions, secretValues.Count());
+            AssertCollectionCount(await secretProvider.GetSecretsAsync(secretName), amountOfVersions, secret => Assert.Equal(secretValue, secret.Value));
+            AssertCollectionCount(await secretProvider.GetRawSecretsAsync(secretName), amountOfVersions, value => Assert.Equal(secretValue, value));
+            AssertCollectionCount(await versionedProvider.GetSecretsAsync(secretName, amountOfVersions), amountOfVersions, secret => Assert.Equal(secretValue, secret.Value));
+            AssertCollectionCount(await versionedProvider.GetRawSecretsAsync(secretName, amountOfVersions), amountOfVersions, value => Assert.Equal(secretValue, value));
+        }
+
+        private static void AssertCollectionCount<T>(IEnumerable<T> sequence, int assertionLength, Action<T> assertion)
+        {
+            Assert.Collection(sequence, Enumerable.Repeat(assertion, assertionLength).ToArray());
         }
 
         [Fact]

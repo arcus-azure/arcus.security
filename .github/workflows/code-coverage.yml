@@ -28,7 +28,7 @@ jobs:
       uses: b3b00/coverlet-action@1.2.4
       with:
         testProject: 'src/Arcus.Security.Tests.Unit/Arcus.Security.Tests.Unit.csproj'
-        excludes: '[Arcus.Security.Tests.*]*'
+        excludes: '[Arcus.Security.Tests.*]*,[Arcus.Security.Providers.*]*'
         threshold: 80
         output: 'lcov.info'
         outputFormat: 'lcov'

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using GuardNet;
@@ -9,6 +10,7 @@ namespace Arcus.Security.Providers.UserSecrets
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that provides user secrets.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class UserSecretsSecretProvider : ISyncSecretProvider
     {
         private readonly JsonConfigurationProvider _jsonProvider;

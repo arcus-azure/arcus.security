@@ -94,7 +94,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             // Arrange
             string expected = $"secret-value-{Guid.NewGuid()}";
             string secretName = $"secret-name-{Guid.NewGuid()}";
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected);
+            KeyVaultSecretProvider provider = CreateOldSecretProviderWithTooManyRequestSimulation(expected);
 
             // Act
             string actual = await provider.GetRawSecretAsync(secretName);
@@ -110,19 +110,19 @@ namespace Arcus.Security.Tests.Unit.KeyVault
             string expected = $"secret-value-{Guid.NewGuid()}";
             string secretName = $"secret-name-{Guid.NewGuid()}";
             DateTime expirationDate = DateTime.UtcNow;
-            KeyVaultSecretProvider provider = CreateSecretProviderWithTooManyRequestSimulation(expected, expirationDate);
 
             // Act
-            Secret actual = await provider.GetSecretAsync(secretName);
+            KeyVaultSecretProvider provider = CreateOldSecretProviderWithTooManyRequestSimulation(expected, expirationDate);
 
             // Assert
-            Assert.NotNull(actual);
-            Assert.Equal(expected, actual.Value);
-            Assert.NotNull(actual.Version);
-            Assert.Equal(expirationDate, actual.Expires);
+            Secret actualFromAsync = await provider.GetSecretAsync(secretName);
+            Assert.NotNull(actualFromAsync);
+            Assert.Equal(expected, actualFromAsync.Value);
+            Assert.NotNull(actualFromAsync.Version);
+            Assert.Equal(expirationDate, actualFromAsync.Expires);
         }
 
-        private static KeyVaultSecretProvider CreateSecretProviderWithTooManyRequestSimulation(string expected, DateTime? expirationDate = null)
+        private static KeyVaultSecretProvider CreateOldSecretProviderWithTooManyRequestSimulation(string expected, DateTime? expirationDate = null)
         {
             // Arrange
             var keyVaultClient = new SimulatedKeyVaultClient(

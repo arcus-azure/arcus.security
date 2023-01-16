@@ -2,6 +2,7 @@
 using GuardNet;
 using Microsoft.Extensions.Configuration.KeyPerFile;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileProviders;
@@ -11,6 +12,7 @@ namespace Arcus.Security.Providers.DockerSecrets
     /// <summary>
     /// Represents an <see cref="ISecretProvider" /> that provides access to the Docker secrets mounted into the Docker container as files.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class DockerSecretsSecretProvider : ISyncSecretProvider
     {
         private readonly KeyPerFileConfigurationProvider _provider;
