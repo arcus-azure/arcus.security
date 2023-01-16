@@ -73,6 +73,52 @@ namespace Arcus.Security.Tests.Unit.CommandLine
             // Assert
             Assert.ThrowsAny<ArgumentException>(() => builder.Build());
         }
+
+        [Fact]
+        public void AddCommandLine_WithMutateSecretWithArguments_Fails()
+        {
+            // Arrange
+            string secretName = "MySecret", expected = "P@ssw0rd";
+            var arguments = new[] {$"--{secretName}={expected}"};
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCommandLine(arguments, mutateSecretName: name => name);
+            });
+            
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+                Assert.Equal(expected, secretProvider.GetSecret(secretName).Value);
+                Assert.Equal(expected, secretProvider.GetRawSecret(secretName));
+            }
+        }
+
+        [Fact]
+        public void AddCommandLine_WithMutateSecretWithArgumentsWithUnknownSecretName_Fails()
+        {
+            // Arrange
+            string secretName = "MySecret", expected = "P@ssw0rd";
+            var arguments = new[] {$"--{secretName}={expected}"};
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddCommandLine(arguments, mutateSecretName: name => name);
+            });
+            
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
+                Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret("NotExisting"));
+                Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret("NotExisting"));
+            }
+        }
         
         [Fact]
         public void AddCommandLine_WithNameWithMutateSecretWithoutArguments_Fails()

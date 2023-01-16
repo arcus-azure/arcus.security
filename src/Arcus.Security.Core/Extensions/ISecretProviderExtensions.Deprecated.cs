@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using GuardNet;
@@ -10,6 +11,7 @@ namespace Arcus.Security.Core.Extensions
     /// Extensions on the <see cref="ISecretProvider"/> to retrieve several secret values based on configured allowed versions.
     /// </summary>
     // ReSharper disable once InconsistentNaming
+    [ExcludeFromCodeCoverage]
     public static class ISecretProviderExtensions
     {
         /// <summary>

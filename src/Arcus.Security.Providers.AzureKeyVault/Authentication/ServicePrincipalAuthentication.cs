@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Azure.Identity;
@@ -13,6 +14,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     /// Representation of an <see cref="IKeyVaultAuthentication"/> that will generate a <see cref="IKeyVaultClient"/> implementation using a service principle.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     [Obsolete("Azure Key Vault authentication is moved to Azure Identity approach where the service principal authentication becomes: " + nameof(ClientSecretCredential))]
     public class ServicePrincipalAuthentication : IKeyVaultAuthentication
     {

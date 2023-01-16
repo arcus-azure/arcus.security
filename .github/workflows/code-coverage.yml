@@ -29,6 +29,7 @@ jobs:
       with:
         testProject: 'src/Arcus.Security.Tests.Unit/Arcus.Security.Tests.Unit.csproj'
         excludes: '[Arcus.Security.Tests.*]*'
+        threshold: 80
         output: 'lcov.info'
         outputFormat: 'lcov'
 

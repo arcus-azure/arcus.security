@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Azure.Identity;
 using Microsoft.Azure.KeyVault;
@@ -11,6 +12,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Authentication
     /// <summary>
     ///     Azure Key Vault authentication by using Azure Managed Service Identity
     /// </summary>
+    [ExcludeFromCodeCoverage]
     [Obsolete("Azure Key Vault authentication is moved to Azure Identity approach where the managed service identity authentication becomes: " + nameof(ManagedIdentityCredential))]
     public class ManagedServiceIdentityAuthentication : IKeyVaultAuthentication
     {
