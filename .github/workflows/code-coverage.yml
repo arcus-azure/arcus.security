@@ -34,4 +34,4 @@ jobs:
         outputFormat: 'opencover'
 
     - name: Codecov
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v3.1.1
