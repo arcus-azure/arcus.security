@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.AzureKeyVault;
-using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -20,7 +21,7 @@ namespace Arcus.Security.Tests.Unit.Core
             services.AddSecretStore(stores =>
             {
                 stores.AddProvider(
-                    new InMemoryCachedSecretProvider(("Secret.Name", "Secret.Value")),
+                    new InMemoryCachedSecretProvider(new Dictionary<string, string> { ["Secret.Name"] = "Secret.Value" }),
                     options => options.Name = name);
             });
 
