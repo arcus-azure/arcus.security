@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Tests.Unit.Core.Stubs;
-using Microsoft.AspNetCore.DataProtection;
+using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using Xunit;
 using Secret = Arcus.Security.Core.Secret;
 
@@ -184,7 +182,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var secretValue = Guid.NewGuid().ToString();
 
             var secretProvider1 = new InMemorySecretProvider();
-            var secretProvider2 = new InMemorySecretProvider((secretName, secretValue));
+            var secretProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = secretValue });
             
             // Act
             services.AddSecretStore(stores =>
@@ -209,7 +207,7 @@ namespace Arcus.Security.Tests.Unit.Core
             var secretValue = Guid.NewGuid().ToString();
 
             var secretProvider1 = new InMemorySecretProvider();
-            var secretProvider2 = new InMemorySecretProvider((secretName, secretValue));
+            var secretProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = secretValue });
             
             // Act
             services.AddSecretStore(stores =>

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Providers;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -18,7 +20,7 @@ namespace Arcus.Security.Tests.Unit.Core
         {
             // Arrange
             var expected = Guid.NewGuid().ToString();
-            var stubProvider = new InMemorySecretProvider(("ARCUS_KEYVAULT_SECRET", expected));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { ["ARCUS_KEYVAULT_SECRET"] = expected });
 
             var builder = new HostBuilder();
 
@@ -40,8 +42,8 @@ namespace Arcus.Security.Tests.Unit.Core
         {
             // Arrange
             var expected = Guid.NewGuid().ToString();
-            var stubProvider1 = new InMemorySecretProvider(("arcus.keyvault.first", Guid.NewGuid().ToString()));
-            var stubProvider2 = new InMemorySecretProvider(("Arcus.KeyVault.Second", expected));
+            var stubProvider1 = new InMemorySecretProvider(new Dictionary<string, string> { ["arcus.keyvault.first"] = Guid.NewGuid().ToString() });
+            var stubProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { ["Arcus.KeyVault.Second"] = expected });
 
             var builder = new HostBuilder();
 
@@ -63,7 +65,7 @@ namespace Arcus.Security.Tests.Unit.Core
         public async Task GetRawSecret_WithMutation_FailsToRetrieveSecret()
         {
             // Arrange
-            var stubProvider = new InMemorySecretProvider(("Arcus.KeyVault.Secret", Guid.NewGuid().ToString()));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { ["Arcus.KeyVault.Secret"] = Guid.NewGuid().ToString() });
 
             var builder = new HostBuilder();
             

@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Providers;
-using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -19,7 +20,7 @@ namespace Arcus.Security.Tests.Unit.Core
         {
             // Arrange
             string expected = $"secret-{Guid.NewGuid()}";
-            var stubProvider = new InMemoryCachedSecretProvider(("Arcus.KeyVault.Secret", expected));
+            var stubProvider = new InMemoryCachedSecretProvider(new Dictionary<string, string> { ["Arcus.KeyVault.Secret"] = expected });
 
             var builder = new HostBuilder();
 
@@ -41,7 +42,7 @@ namespace Arcus.Security.Tests.Unit.Core
         {
             // Arrange
             string expected = $"secret-{Guid.NewGuid()}";
-            var stubProvider = new InMemoryCachedSecretProvider(("Arcus.KeyVault.Secret", expected));
+            var stubProvider = new InMemoryCachedSecretProvider(new Dictionary<string, string> { ["Arcus.KeyVault.Secret"] = expected });
 
             var builder = new HostBuilder();
 
@@ -63,7 +64,7 @@ namespace Arcus.Security.Tests.Unit.Core
         {
             // Arrange
             string expected = $"secret-{Guid.NewGuid()}";
-            var stubProvider = new InMemoryCachedSecretProvider(("Arcus.KeyVault.Secret", expected));
+            var stubProvider = new InMemoryCachedSecretProvider(new Dictionary<string, string> { ["Arcus.KeyVault.Secret"] = expected });
 
             var builder = new HostBuilder();
 

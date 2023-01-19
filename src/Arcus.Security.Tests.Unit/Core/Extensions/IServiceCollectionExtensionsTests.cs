@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -21,15 +23,15 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Arrange
             string secretKey1 = "MySecret1";
             string secretValue1 = $"secret-{Guid.NewGuid()}";
-            var stubProvider1 = new InMemorySecretProvider((secretKey1, secretValue1));
+            var stubProvider1 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey1] = secretValue1 });
             
             string secretKey2 = "MySecret2";
             string secretValue2 = $"secret-{Guid.NewGuid()}";
-            var stubProvider2 = new InMemorySecretProvider((secretKey2, secretValue2));
+            var stubProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey2] = secretValue2 });
 
             string secretKey3 = "MySecret3";
             string secretValue3 = $"secret-{Guid.NewGuid()}";
-            var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
+            var stubProvider3 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey3] = secretValue3 });
 
             var services = new ServiceCollection();
 
@@ -55,15 +57,15 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Arrange
             string secretKey1 = "MySecret1";
             string secretValue1 = $"secret-{Guid.NewGuid()}";
-            var stubProvider1 = new InMemorySecretProvider((secretKey1, secretValue1));
+            var stubProvider1 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey1] = secretValue1 });
 
             string secretKey2 = "MySecret2";
             string secretValue2 = $"secret-{Guid.NewGuid()}";
-            var stubProvider2 = new InMemorySecretProvider((secretKey2, secretValue2));
+            var stubProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey2] = secretValue2 });
 
             string secretKey3 = "MySecret3";
             string secretValue3 = $"secret-{Guid.NewGuid()}";
-            var stubProvider3 = new InMemorySecretProvider((secretKey3, secretValue3));
+            var stubProvider3 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey3] = secretValue3 });
 
             var services = new ServiceCollection();
 
@@ -89,7 +91,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Arrange
             var secretKey = "Arcus.KeyVault.Secret";
             var expected = Guid.NewGuid().ToString();
-            var stubProvider = new InMemoryCachedSecretProvider((secretKey, expected));
+            var stubProvider = new InMemoryCachedSecretProvider(new Dictionary<string, string> { [secretKey] = expected });
             var services = new ServiceCollection();
 
             // Act
@@ -164,7 +166,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         {
             // Arrange
             const string secretKey = "MySecret";
-            var stubProvider = new InMemorySecretProvider((secretKey, $"secret-{Guid.NewGuid()}"));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey] = $"secret-{Guid.NewGuid()}" });
 
             var services = new ServiceCollection();
 
@@ -187,7 +189,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
                                                   .AddProvider(new TestLoggerProvider(spyLogger)));
 
             const string secretName = "MySecret";
-            var stubProvider = new InMemorySecretProvider((secretName, $"secret-{Guid.NewGuid()}"));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = $"secret-{Guid.NewGuid()}" });
 
             // Act
             services.AddSecretStore(stores => stores.AddProvider(stubProvider));

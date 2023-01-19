@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Xunit;
-using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing.Security.Providers.InMemory;
 
 namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
 {
@@ -15,7 +15,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
             const string configurationKey = "Connection_String";
             const string expected = "connection to somewhere";
 
-            var stubProvider = new InMemorySecretProvider((configurationKey, expected));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [configurationKey] = expected });
 
             var configuration =
                 new ConfigurationBuilder()
@@ -37,7 +37,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
             const string configurationKey = "ConnectionString";
             const string configurationToken = "#{ConnectionString}#";
 
-            var stubProvider = new InMemorySecretProvider(("Some other secret key name", "Some other secret value"));
+            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { ["Some other secret key name"] = "Some other secret value" });
 
             var configuration =
                 new ConfigurationBuilder()

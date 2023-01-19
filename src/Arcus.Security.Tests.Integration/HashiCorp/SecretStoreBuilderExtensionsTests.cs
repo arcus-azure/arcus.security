@@ -142,7 +142,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
 
         private void AssertTrackedHashiCorpVaultDependency(int expectedTrackedDependencyCount)
         {
-            int actualTrackedDependencyCount = InMemoryLogSink.LogEvents.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
+            int actualTrackedDependencyCount = InMemoryLogSink.CurrentLogEmits.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
             Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);
         }
     }
