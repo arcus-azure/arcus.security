@@ -454,7 +454,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
                         }
 
                         throw new InvalidOperationException(
-                            "Old Azure Key Vault client does not support asynchronous operations, please use the new Azure Key Vault secret provider overloads that uses the new Azure SDK");
+                            "Old Azure Key Vault client does not support synchronous operations, please use the new Azure Key Vault secret provider overloads that uses the new Azure SDK");
                     });
 
                     isSuccessful = true;

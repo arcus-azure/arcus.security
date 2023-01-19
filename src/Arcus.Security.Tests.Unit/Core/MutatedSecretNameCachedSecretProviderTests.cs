@@ -81,6 +81,26 @@ namespace Arcus.Security.Tests.Unit.Core
         }
 
         [Fact]
+        public void ConfigureSecretStore_WithDefault_FailsToRetrieveCacheConfiguration()
+        {
+            // Arrange
+            var builder = new HostBuilder();
+
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(new InMemorySecretProvider());
+            });
+
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var provider = host.Services.GetRequiredService<ICachedSecretProvider>();
+                Assert.Throws<NotSupportedException>(() => provider.Configuration);
+            }
+        }
+
+        [Fact]
         public void CreateCachedProvider_WithoutImplementation_Throws()
         {
             Assert.ThrowsAny<ArgumentException>(

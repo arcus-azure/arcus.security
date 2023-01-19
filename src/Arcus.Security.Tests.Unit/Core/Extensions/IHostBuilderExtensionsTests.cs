@@ -878,7 +878,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
-                Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
+                Assert.Throws<InvalidOperationException>(() => store.GetCachedProvider<InMemoryCachedSecretProvider>(name));
             }
         }
 
