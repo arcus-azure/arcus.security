@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
+using Arcus.Testing.Security.Providers.InMemory;
 
 namespace Arcus.Security.Tests.Unit.Core.Stubs
 {
     public class InMemorySecretVersionProvider : InMemorySecretProvider, IVersionedSecretProvider
     {
         private readonly int _amountOfVersions;
+        private readonly IDictionary<string, string> _secrets;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemorySecretVersionProvider" /> class.
@@ -18,6 +19,7 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
             : base(new Dictionary<string, string> { [secretName]  = secretValue })
         {
             _amountOfVersions = amountOfVersions;
+            _secrets = new Dictionary<string, string> { [secretName] = secretValue };
         }
 
         public int CallsSinceCreation { get; private set; }
@@ -30,7 +32,7 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        public override Task<Secret> GetSecretAsync(string secretName)
+        public new Task<Secret> GetSecretAsync(string secretName)
         {
             ++CallsSinceCreation;
             return base.GetSecretAsync(secretName);
@@ -62,10 +64,10 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         {
             ++CallsSinceCreation;
 
-            if (SecretValueByName.ContainsKey(secretName))
+            if (_secrets.ContainsKey(secretName))
             {
                 IEnumerable<Secret> secrets =
-                    Enumerable.Repeat(SecretValueByName.Values.Single(), _amountOfVersions)
+                    Enumerable.Repeat(_secrets.Values.Single(), _amountOfVersions)
                               .TakeWhile((value, index) => index < amountOfVersions)
                               .Select(value => new Secret(value));
 

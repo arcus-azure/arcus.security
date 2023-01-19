@@ -6,7 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="Guard.Net" Version="1.2.0" />
-    <PackageReference Include="Arcus.Testing.Logging" Version="0.2.0-preview-1" />
+    <PackageReference Include="Arcus.Testing.Logging" Version="0.5.0" />
+    <PackageReference Include="Arcus.Testing.Security.Providers.InMemory" Version="0.5.0" />
     <PackageReference Include="Serilog" Version="2.10.0" />
   </ItemGroup>
 
