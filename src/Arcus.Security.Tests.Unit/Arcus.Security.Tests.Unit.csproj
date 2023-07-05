@@ -32,6 +32,7 @@
     <ProjectReference Include="..\Arcus.Security.Providers.CommandLine\Arcus.Security.Providers.CommandLine.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.DockerSecrets\Arcus.Security.Providers.DockerSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.HashiCorp\Arcus.Security.Providers.HashiCorp.csproj" />
+    <ProjectReference Include="..\Arcus.Security.Providers.Dapr\Arcus.Security.Providers.Dapr.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj" />
   </ItemGroup>

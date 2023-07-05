@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Integration.Fixture;
+using Arcus.Security.Tests.Integration.KeyVault.Configuration;
 using Azure;
 using Azure.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,22 +26,25 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
         }
 
+        private KeyVaultConfig KeyVault => Configuration.GetKeyVaultConfig();
+        private string TenantId => KeyVault.Azure.TenantId;
+        private string ClientId => KeyVault.ServicePrincipal.ClientId;
+        private string ClientSecret => KeyVault.ServicePrincipal.ClientSecret;
+        private string TestSecretName => KeyVault.SecretName;
+        private string VaultUri => KeyVault.VaultUri;
+        private string MsiConnectionString => Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
+
         [Fact]
         public async Task AddAzureKeyVault_WithServicePrincipal_GetSecretSucceeds()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, ClientId, ClientSecret);
             });
 
             // Assert
@@ -49,8 +52,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             }
         }
 
@@ -72,18 +75,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(keyVaultUri, applicationId, clientKey, 
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(VaultUri, ClientId, ClientSecret, 
                     configureOptions: options => options.TrackDependency = trackDependency);
             });
 
@@ -92,8 +90,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             }
             
             AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
@@ -103,22 +101,19 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithServicePrincipal_GetSecretFails()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, ClientId, ClientSecret);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            var keyName = "UnknownSecretName";
             Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
             Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
@@ -131,18 +126,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(keyVaultUri, applicationId, clientKey, 
+                stores.AddAzureKeyVaultWithServicePrincipalWithOptions(VaultUri, ClientId, ClientSecret, 
                     configureOptions: options => options.TrackDependency = trackDependency);
             });
 
@@ -150,6 +140,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using (IHost host = builder.Build())
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+                var keyName = "UnknownSecretName";
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
@@ -162,25 +154,20 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithServicePrincipalToDots_GetsSecretSucceeds()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
-                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => secretName.Remove(0, 5));
+                    VaultUri, ClientId, ClientSecret, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = "Test-" + TestSecretName;
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
             AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
@@ -189,74 +176,61 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithServicePrincipalWrongMutation_GetsSecretsFails()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
-                    keyVaultUri, applicationId, clientKey, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName, allowCaching: false);
+                    VaultUri, ClientId, ClientSecret, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName, allowCaching: false);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVault_WithCachedServicePrincipal_GetSecretSucceeds()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, clientKey, allowCaching: true);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, ClientId, ClientSecret, allowCaching: true);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVault_WithCachedServicePrincipal_GetSecretFails()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, clientKey, allowCaching: true);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, ClientId, ClientSecret, allowCaching: true);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
+
+            var keyName = "UnknownSecretName";
             Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
             Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
@@ -267,25 +241,20 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedServicePrincipalRemovesPrefix_GetsSecretsSucceeds()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
-                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => secretName.Remove(0, 5));
+                    VaultUri, ClientId, ClientSecret, allowCaching: true, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = "Test-" + TestSecretName;
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
             AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
@@ -294,48 +263,39 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedServicePrincipalWrongMutation_GetsSecretFails()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipalWithOptions(
-                    keyVaultUri, applicationId, clientKey, allowCaching: true, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
+                    VaultUri, ClientId, ClientSecret, allowCaching: true, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVault_WithManagedServiceIdentity_GetSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, connectionString));
+            builder.ConfigureSecretStore((_, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentity(VaultUri, MsiConnectionString));
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Theory]
@@ -344,15 +304,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithOptions_WithManagedServiceIdentity_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(keyVaultUri, connectionString,
+            builder.ConfigureSecretStore((_, stores) => stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(VaultUri, MsiConnectionString,
                 configureOptions: options => options.TrackDependency = trackDependency));
 
             // Assert
@@ -360,8 +316,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             }
             
             AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
@@ -371,22 +327,19 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithManagedServiceIdentity_GetSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, connectionString);
+                stores.AddAzureKeyVaultWithManagedServiceIdentity(VaultUri, MsiConnectionString);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            var keyName = "UnknownSecretName";
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
         }
@@ -395,24 +348,20 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithManagedServiceIdentityRemovesPrefix_GetsSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
-                    keyVaultUri, connectionString, mutateSecretName: secretName => secretName.Remove(0, 5));
+                    VaultUri, MsiConnectionString, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = "Test-" + TestSecretName;
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
             AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
         }
@@ -421,52 +370,45 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithManagedServiceIdentityWrongMutation_GetsSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
-                    keyVaultUri, connectionString, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
+                    VaultUri, MsiConnectionString, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVault_WithCachedManagedServiceIdentity_GetSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration);
+                stores.AddAzureKeyVaultWithManagedServiceIdentity(VaultUri, connectionString: MsiConnectionString, cacheConfiguration: cacheConfiguration);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+            AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             Assert.True(cacheConfiguration.IsCalled);
         }
 
@@ -474,23 +416,20 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedServiceIdentity_GetSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedServiceIdentity(keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration);
+                stores.AddAzureKeyVaultWithManagedServiceIdentity(VaultUri, connectionString: MsiConnectionString, cacheConfiguration: cacheConfiguration);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            var keyName = "UnknownSecretName";
             Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
             Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
@@ -501,25 +440,21 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedServiceIdentityRemovesPrefix_GetsSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
-                    keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => secretName.Remove(0, 5));
+                    VaultUri, connectionString: MsiConnectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => secretName.Remove(0, 5));
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = "Test-" + TestSecretName;
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
             AssertNotNullSecret(await provider.GetRawSecretAsync(appendedKeyName));
             Assert.True(cacheConfiguration.IsCalled);
@@ -529,51 +464,44 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedServiceIdentityWrongMutation_GetsSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var connectionString = Configuration.GetValue<string>("Arcus:MSI:AzureServicesAuth:ConnectionString");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedServiceIdentityWithOptions(
-                    keyVaultUri, connectionString: connectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
+                    VaultUri, connectionString: MsiConnectionString, cacheConfiguration: cacheConfiguration, mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVault_WithWrongServicePrincipalCredentials_Throws()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, "wrong-app-id", "wrong-access-key");
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, "wrong-app-id", "wrong-access-key");
             });
 
             // Assert
            using  IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exceptionFromSecretAsync = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetSecretAsync(keyName));
-            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetRawSecretAsync(keyName));
+            var exceptionFromSecretAsync = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetSecretAsync(TestSecretName));
+            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<AdalServiceException>(() => provider.GetRawSecretAsync(TestSecretName));
             var errorCode = "unauthorized_client";
             Assert.Equal(errorCode, exceptionFromSecretAsync.ErrorCode);
             Assert.Equal(errorCode, exceptionFromRawSecretAsync.ErrorCode);
@@ -585,23 +513,21 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             string applicationId = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:ApplicationId");
             var clientKey = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
 
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, applicationId, clientKey);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exceptionFromSecretAsync = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetSecretAsync(keyName));
-            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetRawSecretAsync(keyName));
+            var exceptionFromSecretAsync = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetSecretAsync(TestSecretName));
+            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<KeyVaultErrorException>(() => provider.GetRawSecretAsync(TestSecretName));
             Assert.Equal(HttpStatusCode.Forbidden, exceptionFromSecretAsync.Response.StatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, exceptionFromRawSecretAsync.Response.StatusCode);
         }
@@ -610,52 +536,40 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenantSimple_WithServicePrincipal_GetSecretSucceeds()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            AssertNotNullSecret(provider.GetSecret(keyName));
-            AssertNotNullSecret(provider.GetRawSecret(keyName));
-            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+            AssertNotNullSecret(provider.GetSecret(TestSecretName));
+            AssertNotNullSecret(provider.GetRawSecret(TestSecretName));
+            AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVaultWithTenant_WithServicePrincipal_GetSecretSucceeds()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             string prefix = "Test-";
-            
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri,
-                    tenantId,
-                    applicationId,
-                    clientKey,
-                    configureOptions: options => { },
+                    VaultUri,
+                    TenantId,
+                    ClientId,
+                    ClientSecret,
+                    configureOptions: _ => { },
                     name: "Azure Key Vault",
                     mutateSecretName: secretName => secretName.Remove(0, prefix.Length));
             });
@@ -664,7 +578,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = prefix + TestSecretName;
             AssertNotNullSecret(provider.GetSecret(appendedKeyName));
             AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
@@ -677,19 +591,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey,
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret,
                     configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
             });
 
@@ -698,8 +606,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             }
 
             AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
@@ -709,24 +617,19 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenant_WithServicePrincipal_GetSecretFails()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret, configureOptions: null, name: null, mutateSecretName: null);
             });
             
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            var keyName = "UnknownSecretName";
             Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
             Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
@@ -739,19 +642,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenantWithDependencyTracking_WithServicePrincipal_GetSecretFails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey,
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret,
                     configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
             });
             
@@ -759,6 +656,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using (IHost host = builder.Build())
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
+                
+                var keyName = "UnknownSecretName";
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
             }
@@ -770,19 +669,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenant_WithServicePrincipalToDots_GetsSecretSucceeds()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, tenantId, applicationId, clientKey, 
+                    VaultUri, TenantId, ClientId, ClientSecret, 
                     mutateSecretName: secretName => secretName.Remove(0, 5),
                     name: null,
                     configureOptions: null);
@@ -792,7 +685,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = "Test-" + TestSecretName;
             AssertNotNullSecret(provider.GetSecret(appendedKeyName));
             AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
@@ -803,19 +696,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenant_WithServicePrincipalWrongMutation_GetsSecretsFails()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, tenantId, applicationId, clientKey, 
+                    VaultUri, TenantId, ClientId, ClientSecret, 
                     mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
                     configureOptions: null,
                     name: null);
@@ -825,62 +712,51 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVaultWithTenant_WithCachedServicePrincipal_GetSecretSucceeds()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret, allowCaching: true, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            AssertNotNullSecret(provider.GetSecret(keyName));
-            AssertNotNullSecret(provider.GetRawSecret(keyName));
-            AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-            AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+            AssertNotNullSecret(provider.GetSecret(TestSecretName));
+            AssertNotNullSecret(provider.GetRawSecret(TestSecretName));
+            AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+            AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVaultWithTenant_WithCachedServicePrincipal_GetSecretFails()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret, allowCaching: true, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+            var keyName = "UnknownSecretName";
             Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
             Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
@@ -891,19 +767,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenant_WithCachedServicePrincipalRemovesPrefix_GetsSecretsSucceeds()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, 
+                    VaultUri, TenantId, ClientId, ClientSecret, allowCaching: true, 
                     mutateSecretName: secretName => secretName.Remove(0, 5),
                     configureOptions: null,
                     name: null);
@@ -913,7 +783,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            string appendedKeyName = "Test-" + keyName;
+            string appendedKeyName = "Test-" + TestSecretName;
             AssertNotNullSecret(provider.GetSecret(appendedKeyName));
             AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
             AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
@@ -924,19 +794,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenant_WithCachedServicePrincipalWrongMutation_GetsSecretFails()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithServicePrincipal(
-                    keyVaultUri, tenantId, applicationId, clientKey, allowCaching: true, 
+                    VaultUri, TenantId, ClientId, ClientSecret, allowCaching: true, 
                     mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
                     configureOptions: null,
                     name: null);
@@ -946,39 +810,33 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVault_WithManagedIdentity_GetSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            var clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId));
+            builder.ConfigureSecretStore((_, stores) => stores.AddAzureKeyVaultWithManagedIdentity(VaultUri, ClientId));
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(provider.GetSecret(keyName));
-                AssertNotNullSecret(provider.GetRawSecret(keyName));
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(provider.GetSecret(TestSecretName));
+                AssertNotNullSecret(provider.GetRawSecret(TestSecretName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             }
         }
 
@@ -986,35 +844,28 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultSimple_WithManagedIdentity_GetSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            var clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
             string prefix = "Test-";
-            
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri,
-                    clientId,
-                    configureOptions: options => { },
+                    VaultUri, ClientId,
+                    configureOptions: _ => { },
                     name: "Azure Key Vault",
                     mutateSecretName: secretName => secretName.Remove(0, prefix.Length));
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string appendedKeyName = "Test-" + keyName;
+                string appendedKeyName = "Test-" + TestSecretName;
                 AssertNotNullSecret(provider.GetSecret(appendedKeyName));
                 AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
                 AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
@@ -1028,31 +879,25 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentity_GetSecretSucceeds(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            var clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId, configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithManagedIdentity(VaultUri, ClientId, configureOptions: options => options.TrackDependency = trackDependency, name: null, mutateSecretName: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             using (IHost host = builder.Build())
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
             }
 
             AssertTrackedAzureKeyVaultDependency(expectedTrackedDependencies);
@@ -1062,33 +907,27 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithManagedIdentityRemovesPrefix_GetsSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId, 
+                    VaultUri, ClientId, 
                     mutateSecretName: secretName => secretName.Remove(0, 5),
                     configureOptions: null,
                     name: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string appendedKeyName = "Test-" + keyName;
+                string appendedKeyName = "Test-" + TestSecretName;
                 AssertNotNullSecret(provider.GetSecret(appendedKeyName));
                 AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
                 AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
@@ -1100,36 +939,30 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithManagedIdentityWrongMutation_GetsSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId, 
+                    VaultUri, ClientId, 
                     mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
                     configureOptions: null,
                     name: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
             }
         }
 
@@ -1139,35 +972,29 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithDependencyTracking_WithManagedIdentityWrongMutation_GetsSecretFails(bool trackDependency, int expectedTrackedDependencies)
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId,
+                    VaultUri, ClientId,
                     configureOptions: options => options.TrackDependency = trackDependency,
                     mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
                     name: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-                    await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-                    await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+                    await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+                    await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
                 }
             }
 
@@ -1178,33 +1005,27 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedIdentity_GetSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration, clientId, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithManagedIdentity(VaultUri, cacheConfiguration, ClientId, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                AssertNotNullSecret(provider.GetSecret(keyName));
-                AssertNotNullSecret(provider.GetRawSecret(keyName));
-                AssertNotNullSecret(await provider.GetSecretAsync(keyName));
-                AssertNotNullSecret(await provider.GetRawSecretAsync(keyName));
+                AssertNotNullSecret(provider.GetSecret(TestSecretName));
+                AssertNotNullSecret(provider.GetRawSecret(TestSecretName));
+                AssertNotNullSecret(await provider.GetSecretAsync(TestSecretName));
+                AssertNotNullSecret(await provider.GetRawSecretAsync(TestSecretName));
                 Assert.True(cacheConfiguration.IsCalled); 
             }
         }
@@ -1213,29 +1034,24 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedIdentity_GetSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = "UnknownSecretName";
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithManagedIdentity(VaultUri, clientId: ClientId, cacheConfiguration: cacheConfiguration, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
+                var keyName = "UnknownSecretName";
                 Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
                 Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
                 await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
@@ -1247,34 +1063,28 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedIdentityRemovesPrefix_GetsSecretSucceeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, 
+                    VaultUri, clientId: ClientId, cacheConfiguration: cacheConfiguration, 
                     mutateSecretName: secretName => secretName.Remove(0, 5),
                     configureOptions: null,
                     name: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                string appendedKeyName = "Test-" + keyName;
+                string appendedKeyName = "Test-" + TestSecretName;
                 AssertNotNullSecret(provider.GetSecret(appendedKeyName));
                 AssertNotNullSecret(provider.GetRawSecret(appendedKeyName));
                 AssertNotNullSecret(await provider.GetSecretAsync(appendedKeyName));
@@ -1287,37 +1097,31 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithCachedManagedIdentityWrongMutation_GetsSecretFails()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
             var cacheConfiguration = new SpyCacheConfiguration();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 stores.AddAzureKeyVaultWithManagedIdentity(
-                    keyVaultUri, clientId: clientId, cacheConfiguration: cacheConfiguration, 
+                    VaultUri, clientId: ClientId, cacheConfiguration: cacheConfiguration, 
                     mutateSecretName: secretName => "SOMETHING-WRONG-" + secretName,
                     configureOptions: null,
                     name: null);
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(keyName));
-                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(keyName));
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(keyName));
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(keyName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetSecret(TestSecretName));
+                Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetSecretAsync(TestSecretName));
+                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
             }
         }
 
@@ -1325,59 +1129,48 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVaultWithTenant_WithWrongServicePrincipalCredentials_Throws()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, "wrong-app-id", "wrong-access-key", configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, "wrong-app-id", "wrong-access-key", configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            Assert.Throws<AuthenticationFailedException>(() => provider.GetSecret(keyName));
-            Assert.Throws<AuthenticationFailedException>(() => provider.GetRawSecret(keyName));
-            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(keyName));
-            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetRawSecretAsync(keyName));
+            Assert.Throws<AuthenticationFailedException>(() => provider.GetSecret(TestSecretName));
+            Assert.Throws<AuthenticationFailedException>(() => provider.GetRawSecret(TestSecretName));
+            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
         [Fact]
         public async Task AddAzureKeyVaultWithTenant_WithWrongUnauthorizedServicePrincipal_Throws()
         {
             // Arrange
-            string tenantId = Configuration.GetTenantId();
-            string applicationId = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:AccessKey");
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            var keyName = Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(keyVaultUri, tenantId, applicationId, clientKey, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exceptionFromSecretSync = Assert.Throws<RequestFailedException>(() => provider.GetSecret(keyName));
-            var exceptionFromRawSecretSync = Assert.Throws<RequestFailedException>(() => provider.GetRawSecret(keyName));
-            var exceptionFromSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
-            var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetRawSecretAsync(keyName));
-            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromSecretSync.Status);
-            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromRawSecretSync.Status);
-            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromSecretAsync.Status);
-            Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromRawSecretAsync.Status);
+            Assert.All(new[]
+            {
+                Assert.Throws<RequestFailedException>(() => provider.GetSecret(TestSecretName)),
+                Assert.Throws<RequestFailedException>(() => provider.GetRawSecret(TestSecretName)),
+                await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(TestSecretName)),
+                await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetRawSecretAsync(TestSecretName))
+            }, exception => Assert.Equal(StatusCodes.Status403Forbidden, exception.Status));
         }
 
         private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
