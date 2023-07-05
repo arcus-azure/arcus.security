@@ -1,5 +1,5 @@
 ﻿using System;
-using Arcus.Security.Providers.KubernetesSecrets;
+using Arcus.Security.Providers.Dapr;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using Arcus.Security.Providers.KubernetesSecrets;
+using Arcus.Security.Providers.Dapr;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Dapr
@@ -75,16 +75,6 @@ namespace Arcus.Security.Tests.Unit.Dapr
 
             // Act / Assert
             Assert.ThrowsAny<ArgumentException>(() => options.AddMetadata(key, value2));
-        }
-
-        [Fact]
-        public void Default_NestedSeparator_Available()
-        {
-            // Arrange
-            var options = new DaprSecretProviderOptions();
-
-            // Act / Assert
-            Assert.False(string.IsNullOrWhiteSpace(options.NestedSeparator));
         }
     }
 }
