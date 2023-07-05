@@ -30,7 +30,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
             {
                 throw new KeyNotFoundException(
                     "Could not find the installation file path of the Dapr Sidecar in the local app settings" 
-                    + "please install the HashiCorp Vault on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
+                    + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
@@ -38,7 +38,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
             {
                 throw new KeyNotFoundException(
                     $"Could not find the installation file path of the Dapr Sidecar in the local app settings because the appsettings token '{filePath}' is not yet replaced," 
-                    + "please install the HashiCorp Vault on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
+                    + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
@@ -58,7 +58,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
             if (!file.Exists || !file.Name.StartsWith("dapr"))
             {
                 throw new FileNotFoundException(
-                    $"Could not find file path returned for key '{key}' because it doesn't point to valid Dapr Sidecar execution file ('vault'), " 
+                    $"Could not find file path returned for key '{key}' because it doesn't point to valid Dapr Sidecar execution file ('dapr'), " 
                     + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) " 
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
