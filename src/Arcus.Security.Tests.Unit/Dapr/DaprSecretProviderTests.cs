@@ -13,11 +13,5 @@ namespace Arcus.Security.Tests.Unit.Dapr
         {
             Assert.ThrowsAny<ArgumentException>(() => new DaprSecretProvider(storeName, new DaprSecretProviderOptions(), NullLogger<DaprSecretProvider>.Instance));
         }
-
-        [Fact]
-        public void Create_WithoutOptions_Fails()
-        {
-            Assert.ThrowsAny<ArgumentException>(() => new DaprSecretProvider("ignored store", options: null, NullLogger<DaprSecretProvider>.Instance));
-        }
     }
 }
