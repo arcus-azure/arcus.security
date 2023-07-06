@@ -7,10 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Arcus.Security.Tests.Integration.Dapr.Hosting
 {
-    public enum DaprStoreType
-    {
-        Local, AzureKeyVault
-    }
+    public enum DaprStoreType { None, Local, AzureKeyVault }
 
     /// <summary>
     /// Represents the available user options for the <see cref="DaprSidecarFixture"/>.
@@ -20,8 +17,15 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
         private JObject _startObject;
         private KeyVaultConfig _config;
 
+        /// <summary>
+        /// Gets the type of the secret source from where the Dapr runtime will get its secrets.
+        /// </summary>
         public DaprStoreType StoreType { get; private set; }
 
+        /// <summary>
+        /// Gets the name of the Dapr secret store from where the Dapr runtime will gets its secrets.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when no Dapr secret store type was configured.</exception>
         public string StoreName
         {
             get
@@ -36,9 +40,16 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
             }
         }
 
+        /// <summary>
+        /// Use Azure Key Vault to load the secrets into the Dapr secret store.
+        /// </summary>
+        /// <param name="configuration">The integration test configuration to load the authentication values to interact with Azure Key Vault.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when this method is called after the Dapr Sidecar was already configured with a secret source.</exception>
         public DaprSidecarOptions LoadKeyVault(TestConfig configuration)
         {
             Guard.NotNull(configuration, nameof(configuration));
+            Guard.For<InvalidOperationException>(() => StoreType is not DaprStoreType.None, $"Cannot load Azure Key Vault secrets into the Dapr secret store because the Dapr secret store was already configured: {StoreType}");
 
             _config = configuration.GetKeyVaultConfig();
             StoreType = DaprStoreType.AzureKeyVault;
@@ -51,9 +62,11 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
         /// </summary>
         /// <param name="secretStore">The Dapr local secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretStore"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when this method is called after the Dapr Sidecar was already configured with a secret source.</exception>
         public DaprSidecarOptions LoadSecrets(JObject secretStore)
         {
             Guard.NotNull(secretStore, nameof(secretStore));
+            Guard.For<InvalidOperationException>(() => StoreType is not DaprStoreType.None, $"Cannot load Azure Key Vault secrets into the Dapr secret store because the Dapr secret store was already configured: {StoreType}");
 
             _startObject = secretStore;
             StoreType = DaprStoreType.Local;
@@ -61,7 +74,11 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
             return this;
         }
 
-        internal void WriteSecretConfig()
+        /// <summary>
+        /// Writes the previously configured Dapr secret store configuration to disk.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when no Dapr secret store type was configured.</exception>
+        internal void WriteSecretStoreConfigToDisk()
         {
             switch (StoreType)
             {

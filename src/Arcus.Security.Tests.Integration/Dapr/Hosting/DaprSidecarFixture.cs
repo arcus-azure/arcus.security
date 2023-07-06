@@ -92,7 +92,7 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
 
             var options = new DaprSidecarOptions();
             configureOptions?.Invoke(options);
-            options.WriteSecretConfig();
+            options.WriteSecretStoreConfigToDisk();
 
             Process process = CreateProcess(configuration, port, options);
             var fixture = new DaprSidecarFixture(process, port, options, logger);
@@ -103,14 +103,14 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
 
         private static Process CreateProcess(TestConfig configuration, int port, DaprSidecarOptions options)
         {
-            FileInfo daprExeFile = configuration.GetDaprInstallationFilePath();
+            string daprExeFileName = configuration.GetDaprInstallationFileName();
 
             string vaultArgs = String.Join(" ",
                 "run",
                 $"--resources-path {nameof(Dapr)}/Resources/{options.StoreType}",
                 $"--app-port 6002 --dapr-http-port 3601 --dapr-grpc-port {port}");
 
-            var startInfo = new ProcessStartInfo(daprExeFile.FullName, vaultArgs)
+            var startInfo = new ProcessStartInfo(daprExeFileName, vaultArgs)
             {
                 WorkingDirectory = Directory.GetCurrentDirectory(),
                 UseShellExecute = false,

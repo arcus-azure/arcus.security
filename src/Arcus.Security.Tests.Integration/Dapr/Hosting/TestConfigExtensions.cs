@@ -19,14 +19,14 @@ namespace Arcus.Security.Tests.Integration.Fixture
         /// <exception cref="ArgumentException">Thrown when the <paramref name="configuration"/> is <c>null</c>.</exception>
         /// <exception cref="KeyNotFoundException">Thrown when there is no Dapr installation file path present in the application settings.</exception>
         /// <exception cref="FileNotFoundException">Thrown when a Dapr installation on the system where the tests are running cannot be found.</exception>
-        public static FileInfo GetDaprInstallationFilePath(this TestConfig configuration)
+        public static string GetDaprInstallationFileName(this TestConfig configuration)
         {
             Guard.NotNull(configuration, nameof(configuration));
 
             var key = "Arcus:Dapr:DaprBin";
-            string filePath = configuration.GetValue<string>(key);
+            string fileName = configuration.GetValue<string>(key);
             
-            if (string.IsNullOrWhiteSpace(filePath))
+            if (string.IsNullOrWhiteSpace(fileName))
             {
                 throw new KeyNotFoundException(
                     "Could not find the installation file path of the Dapr Sidecar in the local app settings" 
@@ -34,36 +34,15 @@ namespace Arcus.Security.Tests.Integration.Fixture
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
-            if (filePath.StartsWith("#{") && filePath.EndsWith("}#"))
+            if (fileName.StartsWith("#{") && fileName.EndsWith("}#"))
             {
                 throw new KeyNotFoundException(
-                    $"Could not find the installation file path of the Dapr Sidecar in the local app settings because the appsettings token '{filePath}' is not yet replaced," 
+                    $"Could not find the installation file path of the Dapr Sidecar in the local app settings because the appsettings token '{fileName}' is not yet replaced," 
                     + "please install the HashiCorp Vault on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
-            FileInfo file;
-            try
-            {
-                file = new FileInfo(filePath);
-            }
-            catch (Exception exception)
-            {
-                throw new FileNotFoundException(
-                    $"Could not find file path returned for key '{key}' because it doesn't point to valid Dapr Sidecar execution file, " 
-                    + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) " 
-                    + $"and add the installation folder as configuration key '{key}' to your local app settings", exception);
-            }
-
-            if (!file.Exists || !file.Name.StartsWith("dapr"))
-            {
-                throw new FileNotFoundException(
-                    $"Could not find file path returned for key '{key}' because it doesn't point to valid Dapr Sidecar execution file ('vault'), " 
-                    + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) " 
-                    + $"and add the installation folder as configuration key '{key}' to your local app settings");
-            }
-
-            return file;
+            return fileName;
         }
     }
 }
