@@ -126,12 +126,8 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
             }
 
             PolicyResult healthResult = 
-                await Policy.TimeoutAsync(TimeSpan.FromSeconds(20))
-                            .WrapAsync(Policy.Handle<Exception>(ex =>
-                                             {
-                                                 _logger.LogError(ex, "Failed to contact Dapr Sidecar: {Message}, retrying...", ex.Message);
-                                                 return true;
-                                             })
+                await Policy.TimeoutAsync(TimeSpan.FromSeconds(30))
+                            .WrapAsync(Policy.Handle<Exception>()
                                              .WaitAndRetryForeverAsync(_ => TimeSpan.FromMilliseconds(100)))
                             .ExecuteAndCaptureAsync(async () =>
                             {
