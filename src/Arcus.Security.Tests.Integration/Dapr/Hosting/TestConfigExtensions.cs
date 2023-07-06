@@ -30,15 +30,15 @@ namespace Arcus.Security.Tests.Integration.Fixture
             {
                 throw new KeyNotFoundException(
                     "Could not find the installation file path of the Dapr Sidecar in the local app settings" 
-                    + "please install the HashiCorp Vault on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
+                    + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 
             if (fileName.StartsWith("#{") && fileName.EndsWith("}#"))
             {
                 throw new KeyNotFoundException(
-                    $"Could not find the installation file path of the Dapr Sidecar in the local app settings because the appsettings token '{fileName}' is not yet replaced," 
-                    + "please install the HashiCorp Vault on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
+                    $"Could not find the installation file path of the Dapr Sidecar in the local app settings because the appsettings token '{filePath}' is not yet replaced," 
+                    + "please install the Dapr Sidecar on this machine (https://docs.dapr.io/getting-started/install-dapr-cli/) "
                     + $"and add the installation folder as configuration key '{key}' to your local app settings");
             }
 

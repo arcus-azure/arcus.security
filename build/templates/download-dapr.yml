@@ -10,6 +10,6 @@ steps:
   - bash: |
       wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
       dapr -h
-      echo "##vso[task.setvariable variable=Arcus.Dapr.DaprBin]/usr/local/bin"
+      echo "##vso[task.setvariable variable=Arcus.Dapr.DaprBin]dapr"
     workingDirectory: ${{ parameters.targetFolder }}
     displayName: 'Download Dapr'
