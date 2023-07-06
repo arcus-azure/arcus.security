@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.Dapr;
-using Arcus.Security.Tests.Integration.Dapr.Resources;
 using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Testing.Logging;
 using Dapr.Client;
@@ -16,12 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json.Linq;
 using Polly;
 using Serilog;
 using Xunit;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Arcus.Security.Tests.Integration.Dapr.Hosting
@@ -48,8 +43,6 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
     /// </summary>
     public sealed class DaprSidecarFixture : IAsyncDisposable
     {
-        private const string DaprLocalSecretStore = "localsecretstore";
-
         private readonly Process _process;
         private readonly DaprSidecarOptions _options;
         private readonly ILogger _logger;
@@ -105,7 +98,7 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
         {
             string daprExeFileName = configuration.GetDaprInstallationFileName();
 
-            string vaultArgs = String.Join(" ",
+            string vaultArgs = string.Join(" ",
                 "run",
                 $"--resources-path {nameof(Dapr)}/Resources/{options.StoreType}",
                 $"--app-port 6002 --dapr-http-port 3601 --dapr-grpc-port {port}");
@@ -134,11 +127,15 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
 
             PolicyResult healthResult = 
                 await Policy.TimeoutAsync(TimeSpan.FromSeconds(20))
-                            .WrapAsync(Policy.Handle<Exception>()
+                            .WrapAsync(Policy.Handle<Exception>(ex =>
+                                             {
+                                                 _logger.LogError(ex, "Failed to contact Dapr Sidecar: {Message}, retrying...", ex.Message);
+                                                 return true;
+                                             })
                                              .WaitAndRetryForeverAsync(_ => TimeSpan.FromMilliseconds(100)))
                             .ExecuteAndCaptureAsync(async () =>
                             {
-                                _logger.LogTrace("Checking Dapr Sidecar health...");
+                                _logger.LogTrace("Checking Dapr Sidecar availability...");
                  
                                 using var client = new DaprClientBuilder().UseGrpcEndpoint(Endpoint.OriginalString).Build();
                                 await client.GetMetadataAsync();
@@ -213,7 +210,7 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
                 logging.AddProvider(new CustomLoggerProvider(_logger));
             });
 
-            builder.ConfigureSecretStore((config, stores) =>
+            builder.ConfigureSecretStore((_, stores) =>
             {
                 configureSecretStore(stores);
             });
