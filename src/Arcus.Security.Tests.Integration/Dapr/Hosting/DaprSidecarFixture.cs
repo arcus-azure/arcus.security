@@ -101,7 +101,8 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
             string vaultArgs = string.Join(" ",
                 "run",
                 $"--resources-path {nameof(Dapr)}/Resources/{options.StoreType}",
-                $"--app-port 6002 --dapr-http-port 3601 --dapr-grpc-port {port}");
+                $"--app-id arcus-security-dapr --app-port 6002 --dapr-http-port 3601 --dapr-grpc-port {port}",
+                "--log-level debug --enable-api-logging true");
 
             var startInfo = new ProcessStartInfo(daprExeFileName, vaultArgs)
             {
