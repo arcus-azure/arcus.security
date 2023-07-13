@@ -10,7 +10,7 @@ By using this secret provider, you still benefit from all the Arcus secret store
 ⛔ Does not support [synchronous secret retrieval](../../secrets/general.md).
 
 ## Installation
-Adding secrets from Dapr into the secret store requires following package:
+Using the Dapr secrets building block with Arcus requires the following package:
 
 ```shell
 PM > Install-Package Arcus.Security.Providers.Dapr
