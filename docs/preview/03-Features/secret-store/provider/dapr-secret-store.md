@@ -17,7 +17,7 @@ PM > Install-Package Arcus.Security.Providers.Dapr
 ```
 
 ## Configuration
-After installing the package, the additional extensions becomes available when building the secret store.
+After installing the package, the extensions methods for using the Dapr components becomes available when building the secret store.
 
 ```csharp
 using Microsoft.Extensions.Hosting;
