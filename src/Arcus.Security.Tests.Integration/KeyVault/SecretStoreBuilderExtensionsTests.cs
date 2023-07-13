@@ -1153,11 +1153,13 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             // Arrange
             var builder = new HostBuilder();
             builder.UseSerilog(SerilogLogger, dispose: true);
+            string clientId = Configuration.GetRequiredValue("Arcus:UnauthorizedServicePrincipal:ApplicationId");
+            string clientSecret = Configuration.GetRequiredValue("Arcus:UnauthorizedServicePrincipal:AccessKey");
 
             // Act
             builder.ConfigureSecretStore((_, stores) =>
             {
-                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, ClientId, ClientSecret, configureOptions: null, name: null, mutateSecretName: null);
+                stores.AddAzureKeyVaultWithServicePrincipal(VaultUri, TenantId, clientId, clientSecret, configureOptions: null, name: null, mutateSecretName: null);
             });
 
             // Assert
