@@ -102,14 +102,15 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
                 "run",
                 $"--resources-path {nameof(Dapr)}/Resources/{options.StoreType}",
                 $"--app-id arcus-security-dapr --app-port 6002 --dapr-http-port 3601 --dapr-grpc-port {port}",
-                "--log-level debug --enable-api-logging true");
+                "--log-level debug");
 
             var startInfo = new ProcessStartInfo(daprExeFileName, vaultArgs)
             {
                 WorkingDirectory = Directory.GetCurrentDirectory(),
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                RedirectStandardOutput = true
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
 
             return new Process { StartInfo = startInfo };
@@ -118,7 +119,7 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
         private async Task StartProcessAsync()
         {
             _logger.LogTrace("Starting Dapr Sidecar: {FileName} {Arguments}", _process.StartInfo.FileName, _process.StartInfo.Arguments);
-            
+
             bool isStarted = _process.Start();
             if (!isStarted)
             {
@@ -240,7 +241,11 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
             {
                 _logger.LogTrace("Dapr Sidecar read standard output...");
                 string output = await _process.StandardOutput.ReadToEndAsync();
-                _logger.LogDebug("Dapr Sidecar console: {Output}", output);
+                _logger.LogDebug("Dapr Sidecar output: {Output}", output);
+
+                _logger.LogTrace("Dapr Sidecar read standard error...");
+                string error = await _process.StandardError.ReadToEndAsync();
+                _logger.LogDebug("Dapr Sidecar error: {Error}", error);
             }
 
             _logger.LogTrace("Stop Dapr Sidecar at {Endpoint}", Endpoint);

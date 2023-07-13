@@ -23,21 +23,19 @@ namespace Arcus.Security.Tests.Integration.Dapr
         {
         }
 
-        private KeyVaultConfig KeyVault => Configuration.GetKeyVaultConfig();
-
         [Fact]
         public async Task Dapr_WithAzureKeyVault_Succeeds()
         {
             // Arrange
+            KeyVaultConfig keyVaultConfig = Configuration.GetKeyVaultConfig();
             await using DaprSidecarFixture sideCar = await StartSideCarAsync(opt =>
             {
-                opt.LoadKeyVault(Configuration);
+                opt.LoadKeyVault(keyVaultConfig);
             });
 
             ISecretProvider provider = sideCar.GetSecretProvider();
-
-            Assert.NotNull(await provider.GetRawSecretAsync(KeyVault.SecretName));
-            Assert.NotNull((await provider.GetSecretAsync(KeyVault.SecretName)).Value);
+            Assert.NotNull(await provider.GetRawSecretAsync(keyVaultConfig.SecretName));
+            Assert.NotNull((await provider.GetSecretAsync(keyVaultConfig.SecretName)).Value);
         }
 
         [Fact]

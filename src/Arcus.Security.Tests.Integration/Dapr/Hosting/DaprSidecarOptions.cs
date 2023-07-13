@@ -46,12 +46,12 @@ namespace Arcus.Security.Tests.Integration.Dapr.Hosting
         /// <param name="configuration">The integration test configuration to load the authentication values to interact with Azure Key Vault.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when this method is called after the Dapr Sidecar was already configured with a secret source.</exception>
-        public DaprSidecarOptions LoadKeyVault(TestConfig configuration)
+        public DaprSidecarOptions LoadKeyVault(KeyVaultConfig configuration)
         {
             Guard.NotNull(configuration, nameof(configuration));
             Guard.For<InvalidOperationException>(() => StoreType is not DaprStoreType.None, $"Cannot load Azure Key Vault secrets into the Dapr secret store because the Dapr secret store was already configured: {StoreType}");
 
-            _config = configuration.GetKeyVaultConfig();
+            _config = configuration;
             StoreType = DaprStoreType.AzureKeyVault;
 
             return this;
