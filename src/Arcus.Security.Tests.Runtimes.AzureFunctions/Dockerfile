@@ -8,13 +8,13 @@ COPY ["Arcus.Security.Tests.Runtimes.AzureFunctions/Arcus.Security.Tests.Runtime
 
 COPY . .
 WORKDIR "/src/Arcus.Security.Tests.Runtimes.AzureFunctions"
-RUN dotnet build "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app
+RUN dotnet build "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app
+RUN dotnet publish "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app .
-ENV AzureWebJobsScriptRoot=/app \
+COPY --from=publish /app/publish .
+ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
