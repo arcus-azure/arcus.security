@@ -397,11 +397,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Func<SecretClient, Task<TResponse>> interactWithNewClient)
         {
             var isSuccessful = false;
-#if NET6_0 || NET8_0
             using (DurationMeasurement measurement = DurationMeasurement.Start())
-#else
-            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
-#endif
             { 
                 try
                 {
@@ -437,11 +433,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             Func<SecretClient, TResponse> interactWithNewClient)
         {
             var isSuccessful = false;
-#if NET6_0 || NET8_0
             using (DurationMeasurement measurement = DurationMeasurement.Start())
-#else
-            using (DependencyMeasurement measurement = DependencyMeasurement.Start())
-#endif
             { 
                 try
                 {

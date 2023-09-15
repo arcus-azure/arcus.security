@@ -10,10 +10,10 @@ steps:
     env:
       PROJECT_NAME: ${{ parameters.dockerProjectName }}
   - task: UseDotNet@2
-    displayName: 'Import .NET Core SDK ($(DotNet.Sdk.Version))'
+    displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
     inputs:
       packageType: 'sdk'
-      version: '$(DotNet.Sdk.Version)'
+      version: '$(DotNet.Sdk.VersionBC)'
       includePreviewVersions: true
   - task: Docker@1
     displayName: 'Build Docker image from ${{ parameters.dockerProjectName }}'
