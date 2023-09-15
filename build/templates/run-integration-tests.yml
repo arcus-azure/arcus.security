@@ -32,6 +32,7 @@ steps:
     parameters:
       dotnetSdkVersion: '$(DotNet.Sdk.Version)'
       projectName: '$(Project).Tests.Integration'
+      includePreviewVersions: true
   - task: Bash@3
     inputs:
       targetType: 'inline'
