@@ -30,8 +30,7 @@ namespace Arcus.Security.Tests.Runtimes.AzureFunctions
 
         [Function("order")]
         public async Task<HttpResponseData> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData request,
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData request)
         {
             string secretValue = await _secretProvider.GetRawSecretAsync("ArcusTestSecret");
             
