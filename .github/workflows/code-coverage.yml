@@ -28,14 +28,8 @@ jobs:
         dotnet-version: '8.0.x'
         dotnet-quality: 'preview'
 
-    - name: Coverlet coverage test
-      uses: b3b00/coverlet-action@1.2.4
-      with:
-        testProject: 'src/Arcus.Security.Tests.Unit/Arcus.Security.Tests.Unit.csproj'
-        excludes: '[Arcus.Security.Tests.*]*,[Arcus.Security.Providers.*]*'
-        threshold: 80
-        output: 'coverage.xml'
-        outputFormat: 'opencover'
+    - name: Coverlet coverage unit test
+      run: dotnet test --framework net8.0 -p:coverletOutput=coverage.json -p:CollectCoverage=true -p:CoverletOutputFormat=\"opencover,json\" -p:ExcludeByAttribute=\"Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute\" -p:Exclude=\"[Arcus.Security.Tests.*]*,[Arcus.Security.Providers.*]*\" src/Arcus.Security.Tests.Unit/Arcus.Security.Tests.Unit.csproj
 
     - name: Codecov
       uses: codecov/codecov-action@v3.1.1
