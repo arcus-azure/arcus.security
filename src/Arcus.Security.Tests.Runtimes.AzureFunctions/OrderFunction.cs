@@ -1,11 +1,10 @@
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using GuardNet;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Arcus.Security.Tests.Runtimes.AzureFunctions
@@ -29,13 +28,17 @@ namespace Arcus.Security.Tests.Runtimes.AzureFunctions
             _secretProvider = secretProvider;
         }
 
-        [FunctionName("order")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest request,
+        [Function("order")]
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequestData request,
             ILogger log)
         {
             string secretValue = await _secretProvider.GetRawSecretAsync("ArcusTestSecret");
-            return new OkObjectResult(secretValue);
+            
+            HttpResponseData response = request.CreateResponse(HttpStatusCode.OK);
+            await response.WriteStringAsync(secretValue);
+            
+            return response;
         }
     }
 }
