@@ -4,8 +4,8 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0.100-preview.7-alpine3.18 AS build
 WORKDIR /src
-COPY ["Arcus.Security.Tests.Runtimes.AzureFunctions/Arcus.Security.Tests.Runtimes.AzureFunctions.csproj", "Arcus.Security.Tests.Runtimes.AzureFunctions"]
-
+COPY ["Arcus.Security.Tests.Runtimes.AzureFunctions/Arcus.Security.Tests.Runtimes.AzureFunctions.csproj", "Arcus.Security.Tests.Runtimes.AzureFunctions/"]
+RUN dotnet restore "Arcus.Security.Tests.Runtimes.AzureFunctions/Arcus.Security.Tests.Runtimes.AzureFunctions.csproj"
 COPY . .
 WORKDIR "/src/Arcus.Security.Tests.Runtimes.AzureFunctions"
 RUN dotnet build "Arcus.Security.Tests.Runtimes.AzureFunctions.csproj" -c Release -o /app/build
