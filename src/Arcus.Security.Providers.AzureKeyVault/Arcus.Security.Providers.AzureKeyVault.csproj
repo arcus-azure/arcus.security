@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net8.0;net6.0;netstandard2.1</TargetFrameworks>
     <Authors>Arcus</Authors>
     <Description>Provides support for Azure Key Vault</Description>
     <Copyright>Copyright (c) Arcus</Copyright>
@@ -20,17 +20,7 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-    <None Include="..\..\docs\static\img\icon.png" Pack="true" PackagePath="\"/>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-    <PackageReference Include="Guard.Net" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
-    <PackageReference Include="Guard.Net" Version="1.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.8" />
+    <None Include="..\..\docs\static\img\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +32,7 @@
     <PackageReference Include="Microsoft.Azure.KeyVault.WebKey" Version="3.0.2" />
     <!-- End of deprecated packages -->
     <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.0" />
     <PackageReference Include="Polly" Version="7.2.1" />
   </ItemGroup>

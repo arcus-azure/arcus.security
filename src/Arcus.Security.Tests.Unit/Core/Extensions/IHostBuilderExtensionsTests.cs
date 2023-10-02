@@ -471,11 +471,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             IHost host = builder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
             await secretProvider.GetRawSecretAsync(secretName);
-#if NET6_0
             Assert.DoesNotContain(spyLogger.Messages, msg => msg.StartsWith("Get Secret"));
-#else
-            Assert.DoesNotContain(spyLogger.Messages, msg => msg.StartsWith("Events") && msg.Contains("Security"));
-#endif
         }
 
         [Theory]
@@ -501,11 +497,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             IHost host = builder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
             await secretProvider.GetRawSecretAsync(secretName);
-#if NET6_0
             Assert.Equal(emitSecurityEvents, spyLogger.Messages.Count(msg => msg.StartsWith("Get Secret")) == 1);
-#else
-            Assert.Equal(emitSecurityEvents, spyLogger.Messages.Count(msg => msg.StartsWith("Events") && msg.Contains("Security")) == 1); 
-#endif
         }
 
         [Fact]
@@ -530,11 +522,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             IHost host = builder.Build();
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
             await secretProvider.GetRawSecretAsync(secretName);
-#if NET6_0
             Assert.Equal(1, spyLogger.Messages.Count(msg => msg.StartsWith("Get Secret")));
-#else
-            Assert.Equal(1, spyLogger.Messages.Count(msg => msg.StartsWith("Events") && msg.Contains("Security"))); 
-#endif
         }
 
         [Fact]
