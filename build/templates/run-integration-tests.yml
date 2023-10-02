@@ -29,6 +29,15 @@ steps:
       imageName: '${{ parameters.dockerProjectName }}:$(Build.BuildId)'
       containerName: '${{ parameters.dockerProjectName }}'
       ports: '$(Arcus.AzureFunctions.HttpPort):80'
+  - template: 'download-dapr.yml'
+    parameters:
+      targetFolder: '$(Build.SourcesDirectory)'
+      daprBinVariableName: 'Arcus.Dapr.DaprBin'
+  - template: 'download-hashicorp-vault.yml'
+    parameters:
+      targetFolder: '$(Build.SourcesDirectory)'
+      version: $(HashiCorp.Vault.Version)
+      vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
   - template: test/run-integration-tests.yml@templates
     parameters:
       dotnetSdkVersion: '$(DotNet.Sdk.Version)'

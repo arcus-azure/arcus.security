@@ -52,7 +52,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             const string policyName = "my-policy";
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(SerilogLogger);
 
             using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
             {
@@ -104,7 +104,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             const string policyName = "my-policy";
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger);
+            builder.UseSerilog(SerilogLogger);
 
             using (var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger))
             {

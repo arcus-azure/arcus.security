@@ -9,6 +9,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Arcus.Observability.Telemetry.Serilog.Sinks.ApplicationInsights" Version="2.4.0" />
+    <PackageReference Include="Bogus" Version="34.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="3.1.0" />
     <PackageReference Include="Vault" Version="0.9.1.3" />
@@ -17,12 +18,14 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="YamlDotNet" Version="13.1.1" />
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Arcus.Security.Providers.AzureKeyVault\Arcus.Security.Providers.AzureKeyVault.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.DockerSecrets\Arcus.Security.Providers.DockerSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.HashiCorp\Arcus.Security.Providers.HashiCorp.csproj" />
+    <ProjectReference Include="..\Arcus.Security.Providers.Dapr\Arcus.Security.Providers.Dapr.csproj" />
     <ProjectReference Include="..\Arcus.Security.Providers.UserSecrets\Arcus.Security.Providers.UserSecrets.csproj" />
     <ProjectReference Include="..\Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj" />
   </ItemGroup>
@@ -34,6 +37,16 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Dapr\Resources\AzureKeyVault\az-keyvault-secret-store.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Dapr\Resources\Local\local-secret-store.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Dapr\Fixture\" />
   </ItemGroup>
 
 </Project>

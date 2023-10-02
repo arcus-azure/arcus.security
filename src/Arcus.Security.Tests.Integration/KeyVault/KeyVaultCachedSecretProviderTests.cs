@@ -5,6 +5,7 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
+using Arcus.Security.Tests.Integration.KeyVault.Configuration;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
@@ -28,23 +29,23 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_StoreSecret_Succeeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            
+            var keyVault = Configuration.GetKeyVaultConfig();
+            string clientId = keyVault.ServicePrincipal.ClientId;
+
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
             
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, keyVault.Azure.TenantId))
             using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, keyVault.ServicePrincipal.ClientSecret))
             {
-                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential());
-                var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                    tokenCredential: tokenCredential,
-                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
-                var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider);
+                var tokenCredential = new ChainedTokenCredential(
+                    new ManagedIdentityCredential(clientId),
+                    new EnvironmentCredential());
+                
+                var cachedSecretProvider = new KeyVaultCachedSecretProvider(
+                    new KeyVaultSecretProvider(
+                        tokenCredential, new KeyVaultConfiguration(keyVault.VaultUri)));
 
                 try
                 {
@@ -62,7 +63,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 }
                 finally
                 {
-                     var client = new SecretClient(new Uri(keyVaultUri), tokenCredential);
+                    var client = new SecretClient(new Uri(keyVault.VaultUri), tokenCredential);
                     await client.StartDeleteSecretAsync(secretName);
                 }
             }

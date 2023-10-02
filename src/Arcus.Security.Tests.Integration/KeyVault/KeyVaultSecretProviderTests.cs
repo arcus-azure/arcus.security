@@ -7,6 +7,7 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
+using Arcus.Security.Tests.Integration.KeyVault.Configuration;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
@@ -27,11 +28,12 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
         }
 
-        private string TenantId => Configuration.GetTenantId();
-        private string ClientId => Configuration.GetRequiredValue("Arcus:ServicePrincipal:ApplicationId");
-        private string ClientSecret => Configuration.GetRequiredValue("Arcus:ServicePrincipal:AccessKey");
-        private string TestSecretName => Configuration.GetRequiredValue("Arcus:KeyVault:TestKeyName");
-        private string VaultUri => Configuration.GetRequiredValue("Arcus:KeyVault:Uri");
+        private KeyVaultConfig KeyVault => Configuration.GetKeyVaultConfig();
+        private string TenantId => KeyVault.Azure.TenantId;
+        private string ClientId => KeyVault.ServicePrincipal.ClientId;
+        private string ClientSecret => KeyVault.ServicePrincipal.ClientSecret;
+        private string TestSecretName => KeyVault.SecretName;
+        private string VaultUri => KeyVault.VaultUri;
         private string TestSecretVersion => Configuration.GetRequiredValue("Arcus:KeyVault:TestKeyVersion");
 
         [Fact]

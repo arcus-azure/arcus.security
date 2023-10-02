@@ -1,0 +1,16 @@
+parameters:
+  - name: targetFolder
+    type: string
+    default: '$(Build.SourcesDirectory)'
+  - name: daprBinVariableName
+    type: string
+    default: 'Arcus.Dapr.DaprBin'
+
+steps:
+  - bash: |
+      wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash
+      dapr init
+      dapr -h
+      echo "##vso[task.setvariable variable=Arcus.Dapr.DaprBin]dapr"
+    workingDirectory: ${{ parameters.targetFolder }}
+    displayName: 'Download Dapr'

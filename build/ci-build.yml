@@ -106,11 +106,6 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: 'templates/download-hashicorp-vault.yml'
-            parameters:
-              targetFolder: '$(Build.SourcesDirectory)'
-              version: $(HashiCorp.Vault.Version)
-              vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
           - template: templates/run-integration-tests.yml
             parameters:
               dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
