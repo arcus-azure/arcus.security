@@ -18,17 +18,16 @@ namespace Arcus.Security.Tests.Unit.Core
             
             // Act
             var filter = new CriticalExceptionFilter(
-                typeof(RequestFailedException),
-                ex => ex is RequestFailedException httpException
-                      && httpException.Status == (int) statusCode);
+                typeof(HttpRequestException),
+                ex => ex is HttpRequestException httpException && httpException.StatusCode == statusCode);
 
             // Assert
             var expectedException = new HttpRequestException("Some HTTP failure", inner: null, statusCode: statusCode);
             var notExpectedException = new HttpRequestException("Som other HTTP failure", inner: null, HttpStatusCode.BadGateway);
 
-            Assert.True(filter.IsCritical(expectedException));
-            Assert.False(filter.IsCritical(notExpectedException));
-            Assert.False(filter.IsCritical(new AuthenticationException()));
+            Assert.True(filter.IsCritical(expectedException), "Critical filter should match expected HTTP exception");
+            Assert.False(filter.IsCritical(notExpectedException), "Critical filter should not match non-expected HTTP status code exception");
+            Assert.False(filter.IsCritical(new AuthenticationException()), "Critical filter should not match other exception type");
             Assert.Equal(typeof(HttpRequestException), filter.ExceptionType);
         }
 
