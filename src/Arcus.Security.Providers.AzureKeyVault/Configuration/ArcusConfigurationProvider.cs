@@ -15,7 +15,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         /// <summary>
         /// Initializes a new instance of the <see cref="ArcusConfigurationProvider"/> class.
         /// </summary>
-        /// <param name="secretProvider">The provder to retrieve secret values for configuration tokens.</param>
+        /// <param name="secretProvider">The provider to retrieve secret values for configuration tokens.</param>
         internal ArcusConfigurationProvider(ISecretProvider secretProvider)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), $"Requires a {nameof(ISecretProvider)} instance");

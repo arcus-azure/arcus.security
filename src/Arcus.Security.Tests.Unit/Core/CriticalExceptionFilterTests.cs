@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
 using Arcus.Security.Core;
-using Microsoft.Rest;
+using Azure;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -18,29 +18,18 @@ namespace Arcus.Security.Tests.Unit.Core
             
             // Act
             var filter = new CriticalExceptionFilter(
-                typeof(HttpOperationException),
-                ex => ex is HttpOperationException httpException
-                      && httpException.Response.StatusCode == statusCode);
+                typeof(RequestFailedException),
+                ex => ex is RequestFailedException httpException
+                      && httpException.Status == (int) statusCode);
 
             // Assert
-            var expectedException = new HttpOperationException("Some HTTP failure")
-            {
-                Response = new HttpResponseMessageWrapper(
-                    new HttpResponseMessage(statusCode), 
-                    "Some ignored response content")
-            };
-
-            var notExpectedException = new HttpOperationException("Som other HTTP failure")
-            {
-                Response = new HttpResponseMessageWrapper(
-                    new HttpResponseMessage(HttpStatusCode.BadGateway), 
-                    "Some ignored response content")
-            };
+            var expectedException = new HttpRequestException("Some HTTP failure", inner: null, statusCode: statusCode);
+            var notExpectedException = new HttpRequestException("Som other HTTP failure", inner: null, HttpStatusCode.BadGateway);
 
             Assert.True(filter.IsCritical(expectedException));
             Assert.False(filter.IsCritical(notExpectedException));
             Assert.False(filter.IsCritical(new AuthenticationException()));
-            Assert.Equal(typeof(HttpOperationException), filter.ExceptionType);
+            Assert.Equal(typeof(HttpRequestException), filter.ExceptionType);
         }
 
         [Fact]

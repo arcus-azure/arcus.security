@@ -1,12 +1,8 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.AzureKeyVault;
-using Arcus.Security.Providers.AzureKeyVault.Authentication;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure.Core;
-using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
 {
@@ -44,7 +40,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         /// <exception cref="System.ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
         public override Task<string> GetRawSecretAsync(string secretName)
         {
             GetRawSecretCalls++;
@@ -62,7 +57,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Doubles
         /// <exception cref="System.ArgumentException">The <paramref name="secretValue"/> must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="secretValue"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        /// <exception cref="KeyVaultErrorException">The call for a secret resulted in an invalid response</exception>
         public override Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
             StoreSecretCalls++;

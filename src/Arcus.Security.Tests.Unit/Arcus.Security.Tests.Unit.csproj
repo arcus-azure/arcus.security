@@ -36,4 +36,8 @@
     <ProjectReference Include="..\Arcus.Security.Tests.Core\Arcus.Security.Tests.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="KeyVault\Authentication\" />
+  </ItemGroup>
+
 </Project>
