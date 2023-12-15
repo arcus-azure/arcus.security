@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Security.Authentication;
 using Arcus.Security.Core;
-using Microsoft.Rest;
+using Azure;
 using Xunit;
 
 namespace Arcus.Security.Tests.Unit.Core
@@ -18,29 +18,17 @@ namespace Arcus.Security.Tests.Unit.Core
             
             // Act
             var filter = new CriticalExceptionFilter(
-                typeof(HttpOperationException),
-                ex => ex is HttpOperationException httpException
-                      && httpException.Response.StatusCode == statusCode);
+                typeof(HttpRequestException),
+                ex => ex is HttpRequestException httpException && httpException.StatusCode == statusCode);
 
             // Assert
-            var expectedException = new HttpOperationException("Some HTTP failure")
-            {
-                Response = new HttpResponseMessageWrapper(
-                    new HttpResponseMessage(statusCode), 
-                    "Some ignored response content")
-            };
+            var expectedException = new HttpRequestException("Some HTTP failure", inner: null, statusCode: statusCode);
+            var notExpectedException = new HttpRequestException("Som other HTTP failure", inner: null, HttpStatusCode.BadGateway);
 
-            var notExpectedException = new HttpOperationException("Som other HTTP failure")
-            {
-                Response = new HttpResponseMessageWrapper(
-                    new HttpResponseMessage(HttpStatusCode.BadGateway), 
-                    "Some ignored response content")
-            };
-
-            Assert.True(filter.IsCritical(expectedException));
-            Assert.False(filter.IsCritical(notExpectedException));
-            Assert.False(filter.IsCritical(new AuthenticationException()));
-            Assert.Equal(typeof(HttpOperationException), filter.ExceptionType);
+            Assert.True(filter.IsCritical(expectedException), "Critical filter should match expected HTTP exception");
+            Assert.False(filter.IsCritical(notExpectedException), "Critical filter should not match non-expected HTTP status code exception");
+            Assert.False(filter.IsCritical(new AuthenticationException()), "Critical filter should not match other exception type");
+            Assert.Equal(typeof(HttpRequestException), filter.ExceptionType);
         }
 
         [Fact]

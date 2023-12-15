@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using GuardNet;
-using Microsoft.Azure.KeyVault.Models;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Providers.AzureKeyVault
@@ -16,12 +14,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
     public class KeyVaultCachedSecretProvider : CachedSecretProvider
     {
         private readonly KeyVaultSecretProvider _secretProvider;
-
-        /// <summary>
-        /// Gets the regular expression that can check if the Azure Key Vault URI matches the <see cref="KeyVaultSecretProvider.SecretNamePattern"/>. (See https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates#objects-identifiers-and-versioning).
-        /// </summary>
-        [Obsolete("Will be removed in v2.0")]
-        protected readonly Regex SecretNameRegex = new Regex(KeyVaultSecretProvider.SecretNamePattern, RegexOptions.Compiled);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyVaultCachedSecretProvider"/> class.
@@ -77,7 +69,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns>Returns a <see cref="Secret"/> that contains the latest information for the given secret.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> or the <paramref name="secretValue"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given <paramref name="secretName"/>.</exception>
-        /// <exception cref="KeyVaultErrorException">Thrown when the call for a secret resulted in an invalid Azure Key Vault response.</exception>
         public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
