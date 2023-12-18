@@ -677,6 +677,28 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         }
 
         [Fact]
+        public void ConfigureSecretStore_WithDuplicateNames_FailsWhenRetrievingTypedSecretProvider()
+        {
+            // Arrange
+            string name = $"duplicate-name-{Guid.NewGuid()}";
+            var builder = new HostBuilder();
+            
+            // Act
+            builder.ConfigureSecretStore((config, stores) =>
+            {
+                stores.AddProvider(new InMemorySecretProvider(), options => options.Name = name)
+                      .AddProvider(new InMemorySecretProvider(), options => options.Name = name);
+            });
+            
+            // Assert
+            using (IHost host = builder.Build())
+            {
+                var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemorySecretProvider>(name));
+            }
+        }
+
+        [Fact]
         public void ConfigureSecretStore_WithDuplicateNames_FailsWhenRetrievingTypedCachedSecretProvider()
         {
             // Arrange
@@ -694,9 +716,6 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
-                Assert.Throws<InvalidOperationException>(() => store.GetProvider(name));
-                Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemoryCachedSecretProvider>(name));
-                Assert.Throws<InvalidOperationException>(() => store.GetCachedProvider(name));
                 Assert.Throws<InvalidOperationException>(() => store.GetCachedProvider<InMemoryCachedSecretProvider>(name));
             }
         }
