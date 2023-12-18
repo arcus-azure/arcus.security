@@ -27,7 +27,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(stubProvider, secretName => secretName.Replace(":", "."));
+                stores.AddProvider(stubProvider, opt => opt.MutateSecretName = secretName => secretName.Replace(":", "."));
             });
 
             // Assert
@@ -49,7 +49,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(stubProvider, secretName => secretName.Replace(":", "."));
+                stores.AddProvider(stubProvider, opt => opt.MutateSecretName = secretName => secretName.Replace(":", "."));
             });
 
             // Assert
@@ -71,7 +71,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(stubProvider, secretName => secretName.Replace(":", "."));
+                stores.AddProvider(stubProvider, opt => opt.MutateSecretName = secretName => secretName.Replace(":", "."));
             });
 
             // Assert

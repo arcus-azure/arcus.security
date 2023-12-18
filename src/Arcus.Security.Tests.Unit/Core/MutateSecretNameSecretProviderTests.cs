@@ -27,7 +27,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(stubProvider, name => name.ToUpper().Replace(".", "_"));
+                stores.AddProvider(stubProvider, opt => opt.MutateSecretName = name => name.ToUpper().Replace(".", "_"));
             });
 
             // Assert
@@ -50,7 +50,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(stubProvider1, name => name.ToLower())
+                stores.AddProvider(stubProvider1, opt => opt.MutateSecretName = name => name.ToLower())
                       .AddProvider(stubProvider2);
             });
 
@@ -72,7 +72,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(stubProvider, name => $"Prefix-{name}");
+                stores.AddProvider(stubProvider, opt => opt.MutateSecretName = name => $"Prefix-{name}");
             });
 
             // Assert
@@ -92,7 +92,7 @@ namespace Arcus.Security.Tests.Unit.Core
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(saboteurProvider, name => "Extra.Ignored.Prefix-" + name)
+                stores.AddProvider(saboteurProvider, opt => opt.MutateSecretName = name => "Extra.Ignored.Prefix-" + name)
                       .AddCriticalException<AuthenticationException>();
             });
 
