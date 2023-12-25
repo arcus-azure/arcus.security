@@ -504,13 +504,13 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
-                ISecretProvider actual1 = store.GetProvider(name);
-                Assert.Same(stubProvider1, actual1);
-                Assert.NotSame(stubProvider2, actual1);
+                Assert.Same(stubProvider1, store.GetProvider(name));
+                Assert.Same(stubProvider1, store.GetProvider<ISyncSecretProvider>(name));
+                Assert.Same(stubProvider1, store.GetProvider<InMemorySecretProvider>(name));
 
-                var actual2 = store.GetProvider<InMemorySecretProvider>(name);
-                Assert.Same(stubProvider1, actual2);
-                Assert.NotSame(stubProvider2, actual2);
+                Assert.NotSame(stubProvider2, store.GetProvider(name));
+                Assert.NotSame(stubProvider2, store.GetProvider<ISyncSecretProvider>(name));
+                Assert.NotSame(stubProvider2, store.GetProvider<InMemorySecretProvider>(name));
             }
         }
 
@@ -534,13 +534,11 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
-                ICachedSecretProvider actual1 = store.GetCachedProvider(name);
-                Assert.Same(stubProvider1, actual1);
-                Assert.NotSame(stubProvider2, actual1);
+                Assert.Same(stubProvider1, store.GetCachedProvider(name));
+                Assert.Same(stubProvider1, store.GetCachedProvider<InMemoryCachedSecretProvider>(name));
 
-                var actual2 = store.GetCachedProvider<InMemoryCachedSecretProvider>(name);
-                Assert.Same(stubProvider1, actual2);
-                Assert.NotSame(stubProvider2, actual2);
+                Assert.NotSame(stubProvider2, store.GetCachedProvider(name));
+                Assert.NotSame(stubProvider2, store.GetCachedProvider<InMemoryCachedSecretProvider>(name));
             }
         }
 
@@ -694,6 +692,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.NotNull(store.GetProvider<ISyncSecretProvider>(name));
                 Assert.Throws<InvalidOperationException>(() => store.GetProvider<InMemorySecretProvider>(name));
             }
         }
@@ -716,6 +715,9 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             using (IHost host = builder.Build())
             {
                 var store = host.Services.GetRequiredService<ISecretStore>();
+                Assert.NotNull(store.GetProvider(name));
+                Assert.NotNull(store.GetProvider<ISyncSecretProvider>(name));
+                Assert.NotNull(store.GetProvider<IVersionedSecretProvider>(name));
                 Assert.Throws<InvalidOperationException>(() => store.GetCachedProvider<InMemoryCachedSecretProvider>(name));
             }
         }
