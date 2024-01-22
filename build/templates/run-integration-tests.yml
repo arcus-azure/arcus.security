@@ -14,7 +14,7 @@ steps:
     inputs:
       packageType: 'sdk'
       version: '$(DotNet.Sdk.VersionBC)'
-      includePreviewVersions: true
+      includePreviewVersions: $(DotNet.Sdk.IncludePreviewVersions)
   - task: Docker@1
     displayName: 'Build Docker image from ${{ parameters.dockerProjectName }}'
     inputs:
@@ -33,7 +33,7 @@ steps:
     parameters:
       dotnetSdkVersion: '$(DotNet.Sdk.Version)'
       projectName: '$(Project).Tests.Integration'
-      includePreviewVersions: true
+      includePreviewVersions: $(DotNet.Sdk.IncludePreviewVersions)
   - task: Bash@3
     inputs:
       targetType: 'inline'

@@ -27,7 +27,7 @@ namespace Arcus.Security.Tests.Integration
             var configuration = new LoggerConfiguration()
                 .WriteTo.XunitTestLogging(testOutput)
                 .WriteTo.Sink(InMemoryLogSink)
-                .WriteTo.AzureApplicationInsights(Configuration.GetValue<string>("Arcus:ApplicationInsights:InstrumentationKey"));
+                .WriteTo.AzureApplicationInsightsWithInstrumentationKey(Configuration.GetValue<string>("Arcus:ApplicationInsights:InstrumentationKey"));
 
             Logger = configuration.CreateLogger();
         }

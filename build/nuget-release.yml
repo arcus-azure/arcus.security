@@ -39,7 +39,7 @@ stages:
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               version: $(Build.BuildNumber)
-              includePreviewVersions: true
+              includePreviewVersions: $(DotNet.Sdk.IncludePreviewVersions)
           - task: CopyFiles@2
             displayName: 'Copy build artifacts'
             inputs:
@@ -75,7 +75,7 @@ stages:
             parameters:
               dotnetSdkVersion: '$(DotNet.Sdk.Version)'
               projectName: '$(Project).Tests.Unit'
-              includePreviewVersions: true
+              includePreviewVersions: $(DotNet.Sdk.IncludePreviewVersions)
 
   - stage: IntegrationTests
     displayName: Integration Tests
