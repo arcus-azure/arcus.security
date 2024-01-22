@@ -21,20 +21,6 @@ namespace Arcus.Security.Core
         /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
         /// </summary>
         /// <param name="createSecretProvider">The function to create a secret provider to add to the secret store.</param>
-        /// <param name="mutateSecretName">The optional mutation function to transform secret names.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
-        [Obsolete("Use the other constructor overload with the " + nameof(SecretProviderOptions) + " instead")]
-        public SecretStoreSource(
-            Func<IServiceProvider, ISecretProvider> createSecretProvider, 
-            Func<string, string> mutateSecretName = null) 
-            : this(createSecretProvider, new SecretProviderOptions { MutateSecretName = mutateSecretName })
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
-        /// </summary>
-        /// <param name="createSecretProvider">The function to create a secret provider to add to the secret store.</param>
         /// <param name="options">The optional options to configure the <see cref="ISecretProvider"/>. in the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
         public SecretStoreSource(
@@ -46,18 +32,6 @@ namespace Arcus.Security.Core
             _createSecretProvider = createSecretProvider;
             
             Options = options ?? new SecretProviderOptions();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecretStoreSource"/> class.
-        /// </summary>
-        /// <param name="secretProvider">The secret provider to add to the secret store.</param>
-        /// <param name="mutateSecretName">The optional mutation function to transform secret names.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
-        [Obsolete("Use the other constructor overload with the " + nameof(SecretProviderOptions) + " instead")]
-        public SecretStoreSource(ISecretProvider secretProvider, Func<string, string> mutateSecretName = null)
-            : this(secretProvider, new SecretProviderOptions { MutateSecretName = mutateSecretName})
-        {
         }
 
         /// <summary>
@@ -78,10 +52,6 @@ namespace Arcus.Security.Core
         /// Gets the provider for this secret store.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when the <see cref="EnsureSecretProviderCreated"/> was not yet called after creating a lazy secret provider source.</exception>
-        /// <remarks>
-        ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
-        ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="ISecretProvider"/>.
-        /// </remarks>
         public ISecretProvider SecretProvider
         {
             get
@@ -100,28 +70,16 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Gets the versioned provider for this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="IVersionedSecretProvider"/> implementation.
         /// </summary>
-        /// <remarks>
-        ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
-        ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="IVersionedSecretProvider"/>.
-        /// </remarks>
         public IVersionedSecretProvider VersionedSecretProvider { get; private set; }
 
         /// <summary>
         /// Gets the synchronous variant of this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="ISyncSecretProvider"/> implementation.
         /// </summary>
-        /// <remarks>
-        ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
-        ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="ISyncSecretProvider"/>.
-        /// </remarks>
         public ISyncSecretProvider SyncSecretProvider { get; private set; }
 
         /// <summary>
         /// Gets the cached provider for this secret provider registration, if the <see cref="SecretProvider"/> is a <see cref="ICachedSecretProvider"/> implementation.
         /// </summary>
-        /// <remarks>
-        ///     When this secret provider source registration was initialized with the <see cref="SecretStoreSource(Func{IServiceProvider,ISecretProvider},Func{string,string})"/>
-        ///     than the <see cref="EnsureSecretProviderCreated"/> method has to be called first to initialized the lazy created <see cref="ICachedSecretProvider"/>.
-        /// </remarks>
         public ICachedSecretProvider CachedSecretProvider { get; private set; }
 
         /// <summary>
