@@ -9,14 +9,6 @@ namespace Arcus.Security.Core.Caching.Configuration
     public class CacheConfiguration : ICacheConfiguration
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CacheConfiguration"/> class with default cache entry of 5 minutes.
-        /// </summary>
-        [Obsolete ("Use the " + nameof(Default) + " static property to retrieve a default caching configuration instance")]
-        public CacheConfiguration() : this(TimeSpan.FromMinutes(5))
-        {
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="CacheConfiguration"/> class.
         /// </summary>
         /// <param name="duration">Duration for which an entry should be cached</param>
