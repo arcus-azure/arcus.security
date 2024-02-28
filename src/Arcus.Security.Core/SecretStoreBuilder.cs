@@ -38,6 +38,10 @@ namespace Microsoft.Extensions.Hosting
         /// <summary>
         /// Gets the available secret sources currently registered to be included in the resulting root secret store.
         /// </summary>
+        /// <remarks>
+        ///     The series of secret stores is directly publicly available, including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
+        ///     Though, for almost all use-cases, the <see cref="AddProvider(ISecretProvider)"/> and the <see cref="AddProvider(Func{IServiceProvider,ISecretProvider},Action{SecretProviderOptions})"/> should be sufficient.
+        /// </remarks>
         public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
 
         /// <summary>
