@@ -33,6 +33,9 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' existing = {
 
 module vault 'br/public:avm/res/key-vault/vault:0.6.1' = {
   name: 'vaultDeployment'
+  dependsOn: [
+    resourceGroup
+  ]
   scope: rg
   params: {
     name: keyVaultName
