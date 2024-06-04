@@ -55,20 +55,6 @@ module vault 'br/public:avm/res/key-vault/vault:0.6.1' = {
   }
 }
 
-resource kv 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: keyVaultName
-  scope: rg
-}
-
-resource secret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' existing = {
-  name: secretName
-  parent: kv
-}
-
 output Arcus_TenantId string = subscription().tenantId
 output Arcus_KeyVault_Uri string = vault.outputs.uri
 output Arcus_KeyVault_TestKeyName string = secretName
-
-var secretUriWithVersion = secret.properties.secretUriWithVersion
-var lastSlashIndex = length(replace(secretUriWithVersion, '/', ''))
-output Arcus_KeyVault_TestKeyVersion string = substring(secretUriWithVersion, lastSlashIndex + 1)

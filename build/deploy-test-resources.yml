@@ -66,6 +66,12 @@ stages:
                   --name $unauthorizedServicePrincipalName `
                   --skip-assignment | ConvertFrom-Json
 
+                $secret = az keyvault secret show `
+                  --vault-name $(keyVaultName) `
+                  --name $secretName | ConvertFrom-Json
+                $secretVersion = $secret.id.Split('/') | Select-Object -Last
+
+                $deployOutput.properties.outputs | Add-Member -Type NoteProperty -Name 'Arcus_KeyVault_TestKeyVersion' -Value $secretVersion
                 $deployOutput.properties.outputs | Add-Member -Type NoteProperty -Name 'Arcus_ServicePrincipal_ClientId' -Value $env:servicePrincipalId
                 $deployOutput.properties.outputs | Add-Member -Type NoteProperty -Name 'Arcus_UnauthorizedServicePrincipal_ClientId' -Value $unauthorizedServicePrincipal.appId
 
