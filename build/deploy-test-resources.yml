@@ -49,7 +49,7 @@ stages:
                   --location westeurope `
                   --template-file ./build/templates/deploy-test-resources.bicep `
                   --parameters resourceGroupName=${{ parameters.resourceGroupName }} `
-                  --parameters keyVaultName=$(keyVaultName) `
+                  --parameters keyVaultName=${{ parameters.keyVaultName }} `
                   --parameters secretName=$secretName `
                   --parameters secretValue=$secretValue `
                   --parameters servicePrincipal_objectId=$objectId `
