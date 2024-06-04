@@ -1,0 +1,84 @@
+name: Arcus Security - Deploy test resources
+
+trigger: none
+pr: none
+
+parameters:
+  - name: azureServiceConnection
+    displayName: 'Azure service connection'
+    type: string
+    default: 'Azure Codit-Arcus Service Principal'
+  - name: resourceGroupName
+    displayName: 'Resource group name'
+    default: arcus-security-dev-we-rg
+  - name: keyVaultName
+    displayName: 'Key vault name'
+    default: arcus-security-kv
+  - name: variableGroupName
+    displayName: 'Variable group name'
+    default: Arcus Security - Integration Testing
+
+variables:
+  - template: ./variables/build.yml
+
+stages:
+  - stage: Deploy
+    jobs:
+      - job: DeployBicep
+        displayName: 'Deploy test resources'
+        pool:
+          vmImage: '$(Vm.Image)'
+        steps:
+          - task: AzureCLI@2
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            inputs:
+              azureSubscription: '${{ parameters.azureServiceConnection }}'
+              addSpnToEnvironment: true
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+                Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
+
+                $secretName = 'ArcusTestSecret'
+                $secretValue = [System.Guid]::NewGuid().ToString()
+                $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
+
+                $deployOutput = az deployment sub create `
+                  --location westeurope `
+                  --template-file ./build/templates/deploy-test-resources.bicep `
+                  --parameters resourceGroupName=$(resourceGroupName) `
+                  --parameters keyVaultName=$(keyVaultName) `
+                  --parameters secretName=$secretName `
+                  --parameters secretValue=$secretValue `
+                  --parameters servicePrincipal_objectId=$objectId `
+                  | ConvertFrom-Json
+
+                $unauthorizedServicePrincipalName 'UnauthorizedArcusServicePrincipal'
+                $existingServicePrincipals = az ad sp list --query "[?appDisplayName=='$($unauthorizedServicePrincipalName)']" --all | ConvertFrom-Json
+                if ($existingServicePrincipals.Count -ge 0) {
+                  az ad sp delete --id $existingServicePrincipals[0].objectId
+                }
+
+                $unauthorizedServicePrincipal = az ad sp create-for-rbac `
+                  --name $unauthorizedServicePrincipalName `
+                  --skip-assignment | ConvertFrom-Json
+
+                $deployOutput.properties.outputs | Add-Member -Type NoteProperty -Name 'Arcus_ServicePrincipal_ClientId' -Value $env:servicePrincipalId
+                $deployOutput.properties.outputs | Add-Member -Type NoteProperty -Name 'Arcus_UnauthorizedServicePrincipal_ClientId' -Value $unauthorizedServicePrincipal.appId
+
+                az keyvault secret set `
+                  --vault-name $(keyVaultName) `
+                  --name 'Arcus-UnauthorizedServicePrincipal-ClientSecret' `
+                  --value $unauthorizedServicePrincipal.password
+
+                az keyvault secret set `
+                  --vault-name $(keyVaultName) `
+                  --name 'Arcus-ServicePrincipal-ClientSecret' `
+                  --value $env:servicePrincipalKey
+
+                $env:ArmOutputs = ConvertTo-Json $deployOutput
+                Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'
+
+                
