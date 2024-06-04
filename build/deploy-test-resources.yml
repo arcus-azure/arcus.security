@@ -48,6 +48,7 @@ stages:
                 $deployOutput = az deployment sub create `
                   --location westeurope `
                   --template-file ./build/templates/deploy-test-resources.bicep `
+                  --parameters location=westeurope `
                   --parameters resourceGroupName=${{ parameters.resourceGroupName }} `
                   --parameters keyVaultName=${{ parameters.keyVaultName }} `
                   --parameters secretName=$secretName `
@@ -57,7 +58,7 @@ stages:
 
                 $unauthorizedServicePrincipalName = 'UnauthorizedArcusServicePrincipal'
                 $existingServicePrincipals = az ad sp list --query "[?appDisplayName=='$($unauthorizedServicePrincipalName)']" --all | ConvertFrom-Json
-                if ($existingServicePrincipals.Count -ge 0) {
+                if ($existingServicePrincipals.Count -ge 1) {
                   az ad sp delete --id $existingServicePrincipals[0].objectId
                 }
 
