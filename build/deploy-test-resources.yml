@@ -48,7 +48,7 @@ stages:
                 $deployOutput = az deployment sub create `
                   --location westeurope `
                   --template-file ./build/templates/deploy-test-resources.bicep `
-                  --parameters resourceGroupName=$(resourceGroupName) `
+                  --parameters resourceGroupName=${{ parameters.resourceGroupName }} `
                   --parameters keyVaultName=$(keyVaultName) `
                   --parameters secretName=$secretName `
                   --parameters secretValue=$secretValue `
