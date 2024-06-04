@@ -55,7 +55,7 @@ stages:
                   --parameters servicePrincipal_objectId=$objectId `
                   | ConvertFrom-Json
 
-                $unauthorizedServicePrincipalName 'UnauthorizedArcusServicePrincipal'
+                $unauthorizedServicePrincipalName = 'UnauthorizedArcusServicePrincipal'
                 $existingServicePrincipals = az ad sp list --query "[?appDisplayName=='$($unauthorizedServicePrincipalName)']" --all | ConvertFrom-Json
                 if ($existingServicePrincipals.Count -ge 0) {
                   az ad sp delete --id $existingServicePrincipals[0].objectId
