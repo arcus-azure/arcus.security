@@ -18,6 +18,7 @@ steps:
         azureSubscription: '${{ parameters.azureServiceConnection }}'
         KeyVaultName: '${{ keyVaultName }}'
         SecretsFilter: '*'
+        RunAsPreJob: true
   - template: 'download-hashicorp-vault.yml'
     parameters:
       targetFolder: '$(Build.SourcesDirectory)'

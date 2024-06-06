@@ -48,7 +48,7 @@ stages:
                 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
                 Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
 
-                $secretName = 'Arcus-KeyVault-TestSecretValue'
+                $secretName = 'ArcusTestSecret'
                 $secretValue = [System.Guid]::NewGuid().ToString()
                 $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
 
@@ -69,9 +69,12 @@ stages:
                 $secretVersion = $secret.id.Split('/') | Select-Object -Last 1
                 Write-Host "Split from $($secret.id), got secret version: $secretVersion"
                 Write-Host "Deploy outputs: $($deployOutput.properties.outputs | ConvertTo-Json)"
+                
                 $secretVersionPropertyValue = [pscustomobject]@{ type='String'; value=$secretValue }
+                $servicePrincipalClientIdPropertyValue = [pscustomobject]@{ type='String'; value=$env:servicePrincipalId }
                 $deployOutput.properties.outputs `
-                  | Add-Member -MemberType NoteProperty -Name 'Arcus_KeyVault_TestSecretVersion' -Value $secretVersionPropertyValue -Force
+                  | Add-Member -MemberType NoteProperty -Name 'Arcus_KeyVault_TestSecretVersion' -Value $secretVersionPropertyValue -Force `
+                  | Add-Member -MemberType NoteProperty -Name 'Arcus_ServicePrincipal_ClientId' -Value $servicePrincipalClientIdPropertyValue -Force
 
                 $env:ArmOutputs = ConvertTo-Json $deployOutput.properties.outputs
                 Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'
