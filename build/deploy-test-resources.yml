@@ -60,7 +60,7 @@ stages:
                   --parameters keyVaultName=${{ parameters.keyVaultName }} `
                   --parameters secretName=$secretName `
                   --parameters secretValue=$secretValue `
-                  --parameters servicePrincipal_objectId=$objectId `
+                  --parameters servicePrincipal_objectId=$objectId `  
                   | ConvertFrom-Json
 
                 $secret = az keyvault secret show `
@@ -69,7 +69,7 @@ stages:
                 $secretVersion = $secret.id.Split('/') | Select-Object -Last 1
                 Write-Host "Split from $($secret.id), got secret version: $secretVersion"
                 Write-Host "Deploy outputs: $($deployOutput.properties.outputs | ConvertTo-Json)"
-                $secretVersionPropertyValue = [pscustomobject]@{ type='String'; value='$secretValue' }
+                $secretVersionPropertyValue = [pscustomobject]@{ type='String'; value=$secretValue }
                 $deployOutput.properties.outputs `
                   | Add-Member -MemberType NoteProperty -Name 'Arcus_KeyVault_TestSecretVersion' -Value $secretVersionPropertyValue -Force
 
