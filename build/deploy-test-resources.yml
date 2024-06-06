@@ -61,7 +61,7 @@ stages:
                   --name $secretName | ConvertFrom-Json
                 $secretVersion = $secret.id.Split('/') | Select-Object -Last 1
                 Write-Output "Split from $($secret.id), got secret version: $secretVersion"
-                $deployOutput.properties.outputs | Add-Member -Type NoteProperty -Name 'Arcus_KeyVault_TestSecretVersion' -Value $secretVersion
+                $deployOutput.properties.outputs | Add-Member -MemberType NoteProperty -Name 'Arcus_KeyVault_TestSecretVersion' -Value $secretVersion -Force
 
                 $env:ArmOutputs = ConvertTo-Json $deployOutput
                 Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'
