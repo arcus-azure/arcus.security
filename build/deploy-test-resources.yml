@@ -24,6 +24,13 @@ parameters:
 variables:
   - template: ./variables/build.yml
 
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: arcus-azure/azure-devops-templates
+      endpoint: arcus-azure
+
 stages:
   - stage: Deploy
     jobs:
