@@ -57,17 +57,22 @@ stages:
                   | ConvertFrom-Json
 
                 $unauthorizedServicePrincipalName = 'UnauthorizedArcusServicePrincipal'
-                $existingServicePrincipals = az ad sp list --query "[?appDisplayName=='$($unauthorizedServicePrincipalName)']" --all | ConvertFrom-Json
+                $query = "[?appDisplayName=='$($unauthorizedServicePrincipalName)']"
+                Write-Host "Upsert unauthorized service principal: $query..."
+
+                $existingServicePrincipals = az ad sp list --query $query --all | ConvertFrom-Json
                 if ($existingServicePrincipals.Count -ge 1) {
+                  Write-Host "Delete existing unauthorized service principal..."
                   az ad sp delete --id $existingServicePrincipals[0].objectId
                 }
 
+                Write-Host "(Re)create unauthorized service principal..."
                 $unauthorizedServicePrincipal = az ad sp create-for-rbac `
                   --name $unauthorizedServicePrincipalName `
                   --skip-assignment | ConvertFrom-Json
 
                 $secret = az keyvault secret show `
-                  --vault-name $(keyVaultName) `
+                  --vault-name ${{ parameters.keyVaultName }} `
                   --name $secretName | ConvertFrom-Json
                 $secretVersion = $secret.id.Split('/') | Select-Object -Last
 
