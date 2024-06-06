@@ -57,4 +57,4 @@ module vault 'br/public:avm/res/key-vault/vault:0.6.1' = {
 
 output Arcus_TenantId string = subscription().tenantId
 output Arcus_KeyVault_Uri string = vault.outputs.uri
-output Arcus_KeyVault_TestKeyName string = secretName
+output Arcus_KeyVault_TestSecretName string = secretName
