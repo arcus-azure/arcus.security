@@ -1,5 +1,7 @@
 parameters:
   dockerProjectName: ''
+  azureServiceConnection: ''
+  keyVaultNames: []
 
 steps:
   - bash: |
@@ -9,6 +11,18 @@ steps:
       fi
     env:
       PROJECT_NAME: ${{ parameters.dockerProjectName }}
+  - ${{ each keyVaultName in parameters.keyVaultNames }}:
+    - task: AzureKeyVault@2
+      displayName: 'Import secrets from Azure Key Vault'
+      inputs:
+        azureSubscription: '${{ parameters.azureServiceConnection }}'
+        KeyVaultName: '${{ keyVaultName }}'
+        SecretsFilter: '*'
+  - template: 'templates/download-hashicorp-vault.yml'
+    parameters:
+      targetFolder: '$(Build.SourcesDirectory)'
+      version: $(HashiCorp.Vault.Version)
+      vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
   - task: UseDotNet@2
     displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
     inputs:

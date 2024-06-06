@@ -18,6 +18,16 @@ parameters:
   - name: 'Package.Version.ManualTrigger'
     type: string
     default: 'preview'
+  - name: azureServiceConnection
+    displayName: 'Azure service connection'
+    type: string
+    default: 'Azure Codit-Arcus Service Principal'
+  - name: keyVaultNames
+    displayName: 'Azure Key vaults with integration test secrets'
+    type: object
+    default:
+      - 'arcus-security-kv'
+      - 'arcus-kv'
 
 resources:
   repositories:
@@ -106,14 +116,11 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: 'templates/download-hashicorp-vault.yml'
-            parameters:
-              targetFolder: '$(Build.SourcesDirectory)'
-              version: $(HashiCorp.Vault.Version)
-              vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
           - template: templates/run-integration-tests.yml
             parameters:
               dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
+              azureServiceConnection: '${{ parameters.azureServiceConnection }}'
+              keyVaultNames: ${{ parameters.keyVaultNames }}
 
   - stage: ReleaseToMyget
     displayName: 'Release to MyGet'

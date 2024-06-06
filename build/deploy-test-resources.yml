@@ -12,8 +12,11 @@ parameters:
     displayName: 'Resource group name'
     default: arcus-security-dev-we-rg
   - name: keyVaultName
-    displayName: 'Key vault name'
+    displayName: 'Arcus.Security Key vault name'
     default: arcus-security-kv
+  - name: generalKeyVaultName
+    displayName: 'General Key vault name'
+    default: arcus-kv
   - name: variableGroupName
     displayName: 'Variable group name'
     default: Arcus Security - Integration Testing
@@ -68,3 +71,19 @@ stages:
 
                 $env:ArmOutputs = ConvertTo-Json $deployOutput.properties.outputs
                 Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'
+
+  - stage: IntegrationTests
+    displayName: Integration Tests
+    dependsOn: Deploy
+    condition: succeeded()
+    jobs:
+      - job: IntegrationTests
+        displayName: 'Run integration tests'
+        pool:
+          vmImage: $(Vm.Image)
+        steps:
+          - template: templates/run-integration-tests.yml
+            parameters:
+              dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
+              azureServiceConnection: '${{ parameters.azureServiceConnection }}'
+              keyVaultNames: [ '${{ parameters.keyVaultName }}', '${{ parameters.generalKeyVaultName }}' ]
