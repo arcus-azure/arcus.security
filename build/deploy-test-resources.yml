@@ -60,7 +60,8 @@ stages:
                   --vault-name ${{ parameters.keyVaultName }} `
                   --name $secretName | ConvertFrom-Json
                 $secretVersion = $secret.id.Split('/') | Select-Object -Last 1
-                Write-Output "Split from $($secret.id), got secret version: $secretVersion"
+                Write-Host "Split from $($secret.id), got secret version: $secretVersion"
+                Write-Host "Deploy outputs: $($deployOutput.properties.outputs | ConvertTo-Json)"
                 $deployOutput.properties.outputs | Add-Member -MemberType NoteProperty -Name 'Arcus_KeyVault_TestSecretVersion' -Value $secretVersion -Force
 
                 $env:ArmOutputs = ConvertTo-Json $deployOutput.properties.outputs
