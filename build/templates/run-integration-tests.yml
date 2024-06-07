@@ -20,13 +20,12 @@ steps:
       inlineScript: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
-          Install-Module -Name Az.KeyVault -AllowClobber
 
-          $unauthorizedClientSecret = Get-AzKeyVaultSecret -VaultName 'arcus-kv' -Name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' -AsPlainText
-          $testSecretValue = Get-AzKeyVaultSecret -VaultName 'arcus-security-kv' -Name 'ArcusTestSecret' -AsPlainText
-          Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret -AsSecret
+          $unauthorizedClientSecret = az keyvault secret show --name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' --vault-name 'arcus-kv' | ConvertFrom-Json
+          $testSecret = az keyvault secret show --name 'ArcusTestSecret' --vault-name 'arcus-security-kv' | ConvertFrom-Json
+          Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret.value -AsSecret
           Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientSecret' -Value $env:servicePrincipalKey -AsSecret
-          Set-AzDevOpsVariable 'Arcus_KeyVault_TestSecretValue' -Value $testSecretValue -AsSecret
+          Set-AzDevOpsVariable 'Arcus_KeyVault_TestSecretValue' -Value $testSecret.value -AsSecret
   - template: 'download-hashicorp-vault.yml'
     parameters:
       targetFolder: '$(Build.SourcesDirectory)'
