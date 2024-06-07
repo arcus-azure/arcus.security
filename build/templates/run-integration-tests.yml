@@ -20,6 +20,7 @@ steps:
       inlineScript: |
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
+          Install-Module -Name Az.KeyVault -AllowClobber
 
           $unauthorizedClientSecret = Get-AzKeyVaultSecret -VaultName 'arcus-kv' -Name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' -AsPlainText
           $testSecretValue = Get-AzKeyVaultSecret -VaultName 'arcus-security-kv' -Name 'ArcusTestSecret' -AsPlainText
