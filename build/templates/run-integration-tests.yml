@@ -11,14 +11,22 @@ steps:
       fi
     env:
       PROJECT_NAME: ${{ parameters.dockerProjectName }}
-  - ${{ each keyVaultName in parameters.keyVaultNames }}:
-    - task: AzureKeyVault@2
-      displayName: 'Import secrets from Azure Key Vault'
-      inputs:
-        azureSubscription: '${{ parameters.azureServiceConnection }}'
-        KeyVaultName: '${{ keyVaultName }}'
-        SecretsFilter: '*'
-        RunAsPreJob: true
+  - task: AzureCLI@2
+    displayName: 'Import secrets from Azure Key Vault'
+    inputs:
+      azureSubscription: '${{ parameters.azureServiceConnection }}'
+      addSpnToEnvironment: true
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
+
+          $unauthorizedClientSecret = Get-AzKeyVaultSecret -VaultName $(keyVaultName) -Name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' -AsPlainText
+          $testSecretValue = Get-AzKeyVaultSecret -VaultName $(keyVaultName) -Name 'ArcusTestSecret' -AsPlainText
+          Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret -AsSecret
+          Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientSecret' -Value $env:servicePrincipalKey -AsSecret
+          Set-AzDevOpsVariable 'Arcus_KeyVault_TestSecretValue' -Value $testSecretValue -AsSecret
   - template: 'download-hashicorp-vault.yml'
     parameters:
       targetFolder: '$(Build.SourcesDirectory)'
