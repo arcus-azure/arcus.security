@@ -1,7 +1,6 @@
 parameters:
   dockerProjectName: ''
   azureServiceConnection: ''
-  keyVaultNames: []
 
 steps:
   - bash: |
@@ -22,8 +21,8 @@ steps:
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
 
-          $unauthorizedClientSecret = Get-AzKeyVaultSecret -VaultName $(keyVaultName) -Name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' -AsPlainText
-          $testSecretValue = Get-AzKeyVaultSecret -VaultName $(keyVaultName) -Name 'ArcusTestSecret' -AsPlainText
+          $unauthorizedClientSecret = Get-AzKeyVaultSecret -VaultName 'arcus-kv' -Name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' -AsPlainText
+          $testSecretValue = Get-AzKeyVaultSecret -VaultName 'arcus-security-kv' -Name 'ArcusTestSecret' -AsPlainText
           Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret -AsSecret
           Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientSecret' -Value $env:servicePrincipalKey -AsSecret
           Set-AzDevOpsVariable 'Arcus_KeyVault_TestSecretValue' -Value $testSecretValue -AsSecret

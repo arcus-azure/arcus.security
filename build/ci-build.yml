@@ -22,12 +22,6 @@ parameters:
     displayName: 'Azure service connection'
     type: string
     default: 'Azure Codit-Arcus Service Principal'
-  - name: keyVaultNames
-    displayName: 'Azure Key vaults with integration test secrets'
-    type: object
-    default:
-      - 'arcus-security-kv'
-      - 'arcus-kv'
 
 resources:
   repositories:
@@ -120,7 +114,6 @@ stages:
             parameters:
               dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
               azureServiceConnection: '${{ parameters.azureServiceConnection }}'
-              keyVaultNames: ${{ parameters.keyVaultNames }}
 
   - stage: ReleaseToMyget
     displayName: 'Release to MyGet'
