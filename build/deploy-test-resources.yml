@@ -84,7 +84,6 @@ stages:
               inlineScript: |
                 $clientSecret = ConvertTo-SecureString $env:servicePrincipalKey -AsPlainText -Force
                 $pscredential = New-Object -TypeName System.Management.Automation.PSCredential($env:servicePrincipalId, $clientSecret)
-                Disable-AzContextAutosave -Scope Process
                 $tenantId = az account show --query tenantId -o tsv
                 Connect-AzAccount -Credential $pscredential -TenantId $tenantId -ServicePrincipal
 
