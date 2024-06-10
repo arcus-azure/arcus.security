@@ -66,21 +66,34 @@ stages:
                 $env:ArmOutputs = ConvertTo-Json $deployOutput.properties.outputs
                 Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'
 
-          - task: AzurePowerShell@2
+  - stage: Tests
+    dependsOn: Deploy
+    jobs:
+      - job: InfraSmokeTests
+        displayName: 'Smoke test infrastructure'
+        pool:
+          vmImage: '$(Vm.Image)'
+        steps:
+          - task: AzureCLI@2
             displayName: 'Run infra smoke tests'
             inputs:
               azureSubscription: '${{ parameters.azureServiceConnection }}'
               addSpnToEnvironment: true
-              scriptType: 'inlineScript'
-              pwsh: true
-              inline: |
-                Install-Module -Name Pester -Force -SkipPublisherCheck -MaximumVersion 5.1.1
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                $clientSecret = ConvertTo-SecureString $env:servicePrincipalKey -AsPlainText -Force
+                $pscredential = New-Object -TypeName System.Management.Automation.PSCredential($env:servicePrincipalId, $clientSecret)
+                Disable-AzContextAutosave -Scope Process
+                $tenantId = az account show --query tenantId -o tsv
+                Connect-AzAccount -Credential $pscredential -TenantId $tenantId -ServicePrincipal
 
                 $arguments = @{
                   'resourceGroupName' = '${{ parameters.resourceGroupName }}'
                   'keyVaultName' = '${{ parameters.keyVaultName }}'
                   'secretName' = 'ArcusTestSecret'
                 }
+                Install-Module -Name Pester -Force -SkipPublisherCheck -MaximumVersion 5.1.1
                 Invoke-Pester -Script @ { Path = './build/templates/run-infra-smoke-tests.ps1'; Parameters = $parameters } -OutputFile testresults.xml -OutputFormat NUnitXml
           - task: PublishTestResults@2
             displayName: Publish infra smoke test results
