@@ -95,16 +95,13 @@ stages:
                 Connect-AzAccount -Credential $pscredential -TenantId $tenantId -ServicePrincipal
 
                 $env:RESOURCEGROUP_NAME = '${{ parameters.resourceGroupName }}'
+                $env:SERVICEPRINCIPAL_ID = $env:servicePrincipalId
                 $env:KEYVAULT_NAME = '${{ parameters.keyVaultName }}'
                 $env:SECRET_NAME = 'ArcusTestSecret'
                 $env:SECRET_VALUE = $env:Arcus_KeyVault_TestSecretValue
 
                 Install-Module -Name Pester -Force -SkipPublisherCheck
-                Import-Module Pester
-                
-                $config = [PesterConfiguration]::Default
-                $config.TestResult.Enabled = $true
-                Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -Configuration $config
+                Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1'
           - task: PublishTestResults@2
             displayName: Publish infra smoke test results
             condition: succeededOrFailed()

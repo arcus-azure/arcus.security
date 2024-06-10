@@ -1,7 +1,11 @@
 $resourceGroupName = $env:RESOURCEGROUP_NAME
+$servicePrincipalId = $env:SERVICEPRINCIPAL_ID
 $keyVaultName = $env:KEYVAULT_NAME
 $secretName = $env:SECRET_NAME
 $secretValue = $env:SECRET_VALUT
+
+$config = [PesterConfiguration]::Default
+$config.TestResult.Enabled = $true
 
 Describe "key vault" {
   BeforeAll {
@@ -28,6 +32,9 @@ Describe "key vault" {
   Context "security" {
     BeforeAll {
       $roleAssignments = Get-AzRoleAssignment -Scope $vault.ResourceId
+    }
+    It "should give read permissions on automation service principal" {
+      $roleAssignments.Name | Should -Contain $servicePrincipalId
     }
     It "should not have admin role permissions" {
       $roleAssignments.Name | Should -Not -Contain 'Key Vault Administrator'
