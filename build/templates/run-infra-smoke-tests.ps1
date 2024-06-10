@@ -11,9 +11,11 @@ Describe "key vault" {
       $vaults.Count | Should -Be 1
       $vaults[0].Name | Should -Be $keyVaultName
     }
-    It "should contain a secret with name" {
+    It "should contain an enabled secret with name" {
       $secrets =$actualSecret | Should -Be $secretName
       $secrets.Name | Should -Contain $secretName 
+      $secret = $secrets | Where-Object { $_.Name -eq $secretName } | Select-Object -First 1
+      $secret.Enabled | Should -Be $true -Message "should be marked 'enabled'"
     }
   }
 }
