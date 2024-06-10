@@ -1,8 +1,8 @@
-$resourceGroupName = $env:RESOURCEGROUP_NAME
-$servicePrincipalId = $env:SERVICEPRINCIPAL_ID
-$keyVaultName = $env:KEYVAULT_NAME
-$secretName = $env:SECRET_NAME
-$secretValue = $env:SECRET_VALUT
+$resourceGroupName = $env:Arcus_ResourceGroup_Name
+$servicePrincipalId = $env:Arcus_ServicePrincipal_Id
+$keyVaultName = $env:Arcus_KeyVault_Name
+$secretName = $env:Arcus_KeyVault_TestSecretName
+$secretValue = $env:Arcus_KeyVault_TestSecretValue
 
 $config = [PesterConfiguration]::Default
 $config.TestResult.Enabled = $true
