@@ -100,7 +100,7 @@ stages:
                   'secretName' = 'ArcusTestSecret'
                   'secretValue' = $env:Arcus_KeyVault_TestSecretValue
                 }
-                Install-Module -Name Pester -Force -SkipPublisherCheck
+                Install-Module -Name Pester -Force -SkipPublisherCheck -MinimumVersion 5.3.0
                 Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -Parameters $arguments -OutputFile testresults.xml -OutputFormat NUnitXml
           - task: PublishTestResults@2
             displayName: Publish infra smoke test results
