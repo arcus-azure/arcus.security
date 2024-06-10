@@ -82,6 +82,9 @@ stages:
               scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+                Install-Module -Name Az -Force -AllowClobber
+
                 $clientSecret = ConvertTo-SecureString $env:servicePrincipalKey -AsPlainText -Force
                 $pscredential = New-Object -TypeName System.Management.Automation.PSCredential($env:servicePrincipalId, $clientSecret)
                 $tenantId = az account show --query tenantId -o tsv
