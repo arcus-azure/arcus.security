@@ -100,6 +100,8 @@ stages:
                 $env:SECRET_VALUE = $env:Arcus_KeyVault_TestSecretValue
 
                 Install-Module -Name Pester -Force -SkipPublisherCheck
+                Import-Module Pester
+                
                 $config = [PesterConfiguration]::Default
                 $config.TestResult.Enabled = $true
                 Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -Configuration $config
