@@ -50,6 +50,8 @@ stages:
 
                 $secretName = 'ArcusTestSecret'
                 $secretValue = [System.Guid]::NewGuid().ToString()
+                Set-AzDevOpsVariable -Name 'Arcus_KeyVault_TestSecretValue' -Value $secretValue
+
                 $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
 
                 $deployOutput = az deployment sub create `
@@ -76,6 +78,8 @@ stages:
         steps:
           - task: AzureCLI@2
             displayName: 'Run infra smoke tests'
+            env:
+              Arcus_KeyVault_TestSecretValue: $(Arcus_KeyVault_TestSecretValue)
             inputs:
               azureSubscription: '${{ parameters.azureServiceConnection }}'
               addSpnToEnvironment: true
@@ -94,8 +98,9 @@ stages:
                   'resourceGroupName' = '${{ parameters.resourceGroupName }}'
                   'keyVaultName' = '${{ parameters.keyVaultName }}'
                   'secretName' = 'ArcusTestSecret'
+                  'secretValue' = $env:Arcus_KeyVault_TestSecretValue
                 }
-                Install-Module -Name Pester -Force -SkipPublisherCheck -MaximumVersion 5.1.1
+                Install-Module -Name Pester -Force -SkipPublisherCheck
                 Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -Parameters $arguments -OutputFile testresults.xml -OutputFormat NUnitXml
           - task: PublishTestResults@2
             displayName: Publish infra smoke test results
