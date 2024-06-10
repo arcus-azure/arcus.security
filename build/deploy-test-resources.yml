@@ -96,7 +96,7 @@ stages:
                   'secretName' = 'ArcusTestSecret'
                 }
                 Install-Module -Name Pester -Force -SkipPublisherCheck -MaximumVersion 5.1.1
-                Invoke-Pester -Script @{ Path = './build/templates/run-infra-smoke-tests.ps1'; Parameters = $parameters } -OutputFile testresults.xml -OutputFormat NUnitXml
+                Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -Parameters $arguments -OutputFile testresults.xml -OutputFormat NUnitXml
           - task: PublishTestResults@2
             displayName: Publish infra smoke test results
             condition: succeededOrFailed()
