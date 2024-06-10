@@ -94,14 +94,13 @@ stages:
                 $tenantId = az account show --query tenantId -o tsv
                 Connect-AzAccount -Credential $pscredential -TenantId $tenantId -ServicePrincipal
 
-                $arguments = @{
-                  'resourceGroupName' = '${{ parameters.resourceGroupName }}'
-                  'keyVaultName' = '${{ parameters.keyVaultName }}'
-                  'secretName' = 'ArcusTestSecret'
-                  'secretValue' = $env:Arcus_KeyVault_TestSecretValue
-                }
-                Install-Module -Name Pester -Force -SkipPublisherCheck -MinimumVersion 5.3.0
-                Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -Parameters $arguments -OutputFile testresults.xml -OutputFormat NUnitXml
+                $env:RESOURCEGROUP_NAME = '${{ parameters.resourceGroupName }}'
+                $env:KEYVAULT_NAME = '${{ parameters.keyVaultName }}'
+                $env:SECRET_NAME = 'ArcusTestSecret'
+                $env:SECRET_VALUE = $env:Arcus_KeyVault_TestSecretValue
+
+                Install-Module -Name Pester -Force -SkipPublisherCheck
+                Invoke-Pester -Path './build/templates/run-infra-smoke-tests.ps1' -OutputFile testresults.xml -OutputFormat NUnitXml
           - task: PublishTestResults@2
             displayName: Publish infra smoke test results
             condition: succeededOrFailed()

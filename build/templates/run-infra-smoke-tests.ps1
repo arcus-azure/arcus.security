@@ -1,8 +1,8 @@
 param (
-  [string] $resourceGroupName,
-  [string] $keyVaultName,
-  [string] $secretName,
-  [string] $secretValue
+  [string] $resourceGroupName = $env:RESOURCEGROUP_NAME,
+  [string] $keyVaultName = $env:KEYVAULT_NAME,
+  [string] $secretName = $env:SECRET_NAME,
+  [string] $secretValue = $env:SECRET_VALUT
 )
 
 Describe "key vault" {
