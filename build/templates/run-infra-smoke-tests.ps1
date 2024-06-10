@@ -1,9 +1,7 @@
-param (
-  [string] $resourceGroupName = $env:RESOURCEGROUP_NAME,
-  [string] $keyVaultName = $env:KEYVAULT_NAME,
-  [string] $secretName = $env:SECRET_NAME,
-  [string] $secretValue = $env:SECRET_VALUT
-)
+$resourceGroupName = $env:RESOURCEGROUP_NAME
+$keyVaultName = $env:KEYVAULT_NAME
+$secretName = $env:SECRET_NAME
+$secretValue = $env:SECRET_VALUT
 
 Describe "key vault" {
   BeforeAll {
