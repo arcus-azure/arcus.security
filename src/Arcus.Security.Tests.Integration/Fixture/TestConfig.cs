@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Arcus.Security.Core;
 using GuardNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
@@ -65,6 +66,24 @@ namespace Arcus.Security.Tests.Integration.Fixture
         {
             string clientSecret = GetRequiredValue("Arcus:ServicePrincipal:AccessKey");
             return clientSecret;
+        }
+
+        public string GetSecretName()
+        {
+            string secretName = GetRequiredValue("Arcus:KeyVault:TestKeyName");
+            return secretName;
+        }
+
+        public string GetSecretValue()
+        {
+            string secretValue = GetRequiredValue("Arcus:KeyVault:TestKeyValue");
+            return secretValue;
+        }
+
+        public string GetSecretVersion()
+        {
+            string secretVersion = GetRequiredValue("Arcus:KeyVault:TestKeyVersion");
+            return secretVersion;
         }
 
         /// <summary>

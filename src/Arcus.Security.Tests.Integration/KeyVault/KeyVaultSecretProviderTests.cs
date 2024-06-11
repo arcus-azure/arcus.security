@@ -14,12 +14,12 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         private string TenantId => Configuration.GetTenantId();
-        private string ClientId => Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-        private string ClientSecret => Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-        private string VaultUri => Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-        private string TestSecretName => Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-        private string TestSecretValue => Configuration.GetValue<string>("Arcus:KeyVault:TestKeyValue");
-        private string TestSecretVersion => Configuration.GetRequiredValue("Arcus:KeyVault:TestKeyVersion");
+        private string ClientId => Configuration.GetRequiredValue("Arcus:ServicePrincipal:ApplicationId");
+        private string ClientSecret => Configuration.GetRequiredValue("Arcus:ServicePrincipal:AccessKey");
+        private string VaultUri => Configuration.GetRequiredValue("Arcus:KeyVault:Uri");
+        private string TestSecretName => Configuration.GetSecretName();
+        private string TestSecretValue => Configuration.GetSecretValue();
+        private string TestSecretVersion => Configuration.GetSecretVersion();
        
 
         private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
