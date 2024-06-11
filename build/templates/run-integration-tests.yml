@@ -30,8 +30,9 @@ steps:
           Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientId' -Value $env:servicePrincipalId
           Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret.value -AsSecret
           Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientSecret' -Value $env:servicePrincipalKey -AsSecret
-          Set-AzDevOpsVariable 'Arcus_KeyVault_TestSecretValue' -Value $testSecretValue -AsSecret
-          Set-AzDevOpsVariable 'Arcus_KeyVault_TestSecretVersion' -Value $testSecretVersion
+
+          Write-Host "##vso[task.setvariable variable=Arcus_KeyVault_TestSecretValue;issecret=true]$testSecretValue"
+          Write-Host "##vso[task.setvariable variable=Arcus_KeyVault_TestSecretVersion]$testSecretVersion"
   - template: 'download-hashicorp-vault.yml'
     parameters:
       targetFolder: '$(Build.SourcesDirectory)'
