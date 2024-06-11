@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using Arcus.Security.Core;
-using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,8 +13,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         private string TenantId => Configuration.GetTenantId();
-        private string ClientId => Configuration.GetRequiredValue("Arcus:ServicePrincipal:ApplicationId");
-        private string ClientSecret => Configuration.GetRequiredValue("Arcus:ServicePrincipal:AccessKey");
+        private string ClientId => Configuration.GetServicePrincipalClientId();
+        private string ClientSecret => Configuration.GetServicePrincipalClientSecret();
         private string VaultUri => Configuration.GetRequiredValue("Arcus:KeyVault:Uri");
         private string TestSecretName => Configuration.GetSecretName();
         private string TestSecretValue => Configuration.GetSecretValue();
