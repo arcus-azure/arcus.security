@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Arcus.Security.Core;
+using Arcus.Security.Tests.Integration.KeyVault.Fixture;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,7 +20,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         private string TestSecretName => Configuration.GetSecretName();
         private string TestSecretValue => Configuration.GetSecretValue();
         private string TestSecretVersion => Configuration.GetSecretVersion();
-       
+
+        private TemporaryManagedIdentityConnection UseTemporaryManagedIdentityConnection()
+        {
+            return TemporaryManagedIdentityConnection.Create(TenantId, ClientId, ClientSecret);
+        }
 
         private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
         {

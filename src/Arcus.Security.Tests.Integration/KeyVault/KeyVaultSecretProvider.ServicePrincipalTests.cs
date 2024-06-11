@@ -9,7 +9,6 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure;
 using Azure.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -268,8 +267,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task AddAzureKeyVault_WithWrongUnauthorizedServicePrincipal_Throws()
         {
             // Arrange
-            string applicationId = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:ApplicationId");
-            var clientKey = Configuration.GetValue<string>("Arcus:UnauthorizedServicePrincipal:AccessKey");
+            string applicationId = Configuration.GetUnauthorizedServicePrincipalClientId();
+            string clientKey = Configuration.GetUnauthorizedServicePrincipalClientSecret();
             string keyName = TestSecretName;
 
             var builder = new HostBuilder();

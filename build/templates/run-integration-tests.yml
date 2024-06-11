@@ -23,9 +23,9 @@ steps:
 
           $unauthorizedClientSecret = az keyvault secret show --name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' --vault-name 'arcus-kv' | ConvertFrom-Json
           $testSecret = az keyvault secret show --name 'ArcusTestSecret' --vault-name 'arcus-security-kv' | ConvertFrom-Json
-          $testSecretVersion = ($testSecret.id.Split('/') | Select-Object -Last 1).Trim() -replace " ", ""
+          $testSecretVersion = $testSecret.id.Split('/') | Select-Object -Last 1
           Write-Host "Test secret '$($testSecret.name)' version is '$testSecretVersion'"
-          $testSecretValue = $testSecret.value -replace " ", ""
+          $testSecretValue = $testSecret.value
 
           Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientId' -Value $env:servicePrincipalId
           Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret.value -AsSecret
