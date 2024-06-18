@@ -68,6 +68,52 @@ namespace Arcus.Security.Tests.Integration.Fixture
         }
 
         /// <summary>
+        /// Gets the configured client ID of the service principal that is not authenticated.
+        /// </summary>
+        public string GetUnauthorizedServicePrincipalClientId()
+        {
+            string clientId = GetRequiredValue("Arcus:UnauthorizedServicePrincipal:ApplicationId");
+            return clientId;
+        }
+
+        /// <summary>
+        /// Gets the configured client secret of the service principal that is not authenticated.
+        /// </summary>
+        /// <returns></returns>
+        public string GetUnauthorizedServicePrincipalClientSecret()
+        {
+            string clientSecret = GetRequiredValue("Arcus:UnauthorizedServicePrincipal:AccessKey");
+            return clientSecret;
+        }
+
+        /// <summary>
+        /// Gets the name of the expected secret present in the Azure Key vault.
+        /// </summary>
+        public string GetSecretName()
+        {
+            string secretName = GetRequiredValue("Arcus:KeyVault:TestSecretName");
+            return secretName;
+        }
+
+        /// <summary>
+        /// Gets the value of the expected secret present in the Azure Key vault.
+        /// </summary>
+        public string GetSecretValue()
+        {
+            string secretValue = GetRequiredValue("Arcus:KeyVault:TestSecretValue");
+            return secretValue;
+        }
+
+        /// <summary>
+        /// Gets the version of the expected secret present in the Azure Key vault.
+        /// </summary>
+        public string GetSecretVersion()
+        {
+            string secretVersion = GetRequiredValue("Arcus:KeyVault:TestSecretVersion");
+            return secretVersion;
+        }
+
+        /// <summary>
         /// Gets the configured HashiCorp Vault execution file.
         /// </summary>
         /// <exception cref="KeyNotFoundException">Thrown when no installation file path was found in the configuration app settings.</exception>

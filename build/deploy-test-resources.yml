@@ -1,0 +1,69 @@
+name: Arcus Security - Deploy test resources
+
+trigger: none
+pr: none
+
+parameters:
+  - name: azureServiceConnection
+    displayName: 'Azure service connection'
+    type: string
+    default: 'Azure Codit-Arcus Service Principal'
+  - name: resourceGroupName
+    displayName: 'Resource group name'
+    default: arcus-security-dev-we-rg
+  - name: keyVaultName
+    displayName: 'Arcus.Security Key vault name'
+    default: arcus-security-kv
+  - name: variableGroupName
+    displayName: 'Variable group name'
+    default: Arcus Security - Integration Testing
+
+variables:
+  - template: ./variables/build.yml
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: arcus-azure/azure-devops-templates
+      endpoint: arcus-azure
+
+stages:
+  - stage: Deploy
+    jobs:
+      - job: DeployBicep
+        displayName: 'Deploy test resources'
+        pool:
+          vmImage: '$(Vm.Image)'
+        steps:
+          - task: AzureCLI@2
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            inputs:
+              azureSubscription: '${{ parameters.azureServiceConnection }}'
+              addSpnToEnvironment: true
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+                Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
+
+                $secretName = 'ArcusTestSecret'
+                $secretValue = [System.Guid]::NewGuid().ToString()
+                Set-AzDevOpsVariable -Name 'Arcus_KeyVault_TestSecretValue' -Value $secretValue
+
+                $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
+
+                $deployOutput = az deployment sub create `
+                  --location westeurope `
+                  --template-file ./build/templates/deploy-test-resources.bicep `
+                  --parameters location=westeurope `
+                  --parameters resourceGroupName=${{ parameters.resourceGroupName }} `
+                  --parameters keyVaultName=${{ parameters.keyVaultName }} `
+                  --parameters secretName=$secretName `
+                  --parameters secretValue=$secretValue `
+                  --parameters servicePrincipal_objectId=$objectId `  
+                  | ConvertFrom-Json
+
+                $env:ArmOutputs = ConvertTo-Json $deployOutput.properties.outputs
+                Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'

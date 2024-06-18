@@ -5,9 +5,9 @@ using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Tests.Core.Fixture;
 using Arcus.Security.Tests.Integration.Fixture;
+using Arcus.Security.Tests.Integration.KeyVault.Fixture;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -22,9 +22,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_Succeeds()
         {
             // Arrange
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
                         tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential()),
@@ -42,9 +40,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 var notExistingSecretName = $"secret-{Guid.NewGuid():N}";
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
@@ -67,11 +63,9 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
 
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using TemporaryManagedIdentityConnection connection = UseTemporaryManagedIdentityConnection();
             {
-                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential());
+                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(connection.ClientId), new EnvironmentCredential());
                 try
                 {
                     var keyVaultSecretProvider = new KeyVaultSecretProvider(
@@ -106,9 +100,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             builder.ConfigureSecretStore((config, stores) => stores.AddAzureKeyVaultWithManagedIdentity(VaultUri, cacheConfiguration: null, ClientId));
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -141,9 +133,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -175,9 +165,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             using (IHost host = builder.Build())
             {
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -206,9 +194,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -238,9 +224,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -272,9 +256,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using (IHost host = builder.Build())
                 {
@@ -301,9 +283,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -332,9 +312,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -364,9 +342,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -398,9 +374,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             });
 
             // Assert
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, TenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, ClientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, ClientSecret))
+            using var _ = UseTemporaryManagedIdentityConnection();
             {
                 using IHost host = builder.Build();
                 var provider = host.Services.GetRequiredService<ISecretProvider>();
@@ -416,22 +390,16 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task CachedKeyVaultSecretProvider_StoreSecret_Succeeds()
         {
             // Arrange
-            var keyVaultUri = Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-            string tenantId = Configuration.GetTenantId();
-            string clientId = Configuration.GetServicePrincipalClientId();
-            string clientKey = Configuration.GetServicePrincipalClientSecret();
-            
+
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
-            
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureTenantIdEnvironmentVariable, tenantId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientIdVariable, clientId))
-            using (TemporaryEnvironmentVariable.Create(Constants.AzureServicePrincipalClientSecretVariable, clientKey))
+
+            using TemporaryManagedIdentityConnection connection = UseTemporaryManagedIdentityConnection();
             {
-                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential());
+                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(connection.ClientId), new EnvironmentCredential());
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
                     tokenCredential: tokenCredential,
-                    vaultConfiguration: new KeyVaultConfiguration(keyVaultUri));
+                    vaultConfiguration: new KeyVaultConfiguration(VaultUri));
                 var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider);
 
                 try
@@ -450,7 +418,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
                 }
                 finally
                 {
-                     var client = new SecretClient(new Uri(keyVaultUri), tokenCredential);
+                     var client = new SecretClient(new Uri(VaultUri), tokenCredential);
                     await client.StartDeleteSecretAsync(secretName);
                 }
             }

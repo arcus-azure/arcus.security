@@ -1,5 +1,6 @@
 parameters:
   dockerProjectName: ''
+  azureServiceConnection: ''
 
 steps:
   - bash: |
@@ -9,6 +10,34 @@ steps:
       fi
     env:
       PROJECT_NAME: ${{ parameters.dockerProjectName }}
+  - task: AzureCLI@2
+    displayName: 'Import secrets from Azure Key Vault'
+    inputs:
+      azureSubscription: '${{ parameters.azureServiceConnection }}'
+      addSpnToEnvironment: true
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
+
+          $unauthorizedClientSecret = az keyvault secret show --name 'Arcus-Unauthorized-ServicePrincipal-ClientSecret' --vault-name 'arcus-kv' | ConvertFrom-Json
+          $testSecret = az keyvault secret show --name 'ArcusTestSecret' --vault-name 'arcus-security-kv' | ConvertFrom-Json
+          $testSecretVersion = $testSecret.id.Split('/') | Select-Object -Last 1
+          Write-Host "Test secret '$($testSecret.name)' version is '$testSecretVersion'"
+          $testSecretValue = $testSecret.value
+
+          Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientId' -Value $env:servicePrincipalId
+          Set-AzDevOpsVariable 'Arcus_Unauthorized_ServicePrincipal_ClientSecret' -Value $unauthorizedClientSecret.value -AsSecret
+          Set-AzDevOpsVariable 'Arcus_ServicePrincipal_ClientSecret' -Value $env:servicePrincipalKey -AsSecret
+
+          Write-Host "##vso[task.setvariable variable=Arcus_KeyVault_TestSecretValue;issecret=true]$testSecretValue"
+          Write-Host "##vso[task.setvariable variable=Arcus_KeyVault_TestSecretVersion]$testSecretVersion"
+  - template: 'download-hashicorp-vault.yml'
+    parameters:
+      targetFolder: '$(Build.SourcesDirectory)'
+      version: $(HashiCorp.Vault.Version)
+      vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
   - task: UseDotNet@2
     displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
     inputs:
