@@ -25,8 +25,8 @@ steps:
           Set-AzDevOpsVariable 'Arcus.Security.ServicePrincipal.ClientId' -Value $env:servicePrincipalId -AsSecret
           Set-AzDevOpsVariable 'Arcus.Security.ServicePrincipal.ClientSecret' -Value $env:servicePrincipalKey -AsSecret
 
-          $unauthorizedClientId = az keyvault secret show --name $env:ARCUS_GENERAL_UNAUTHORIZEDSERVICEPRINCIPAL_CLIENTID_SECRETNAME --vault-name $env:ARCUS_GENERAL_KEYVAULT_NAME | ConvertFrom-Json
-          $unauthorizedClientSecret = az keyvault secret show --name $env:ARCUS_GENERAL_UNAUTHORIZEDSERVICEPRINCIPAL_CLIENTSECRET_SECRETNAME --vault-name $env:ARCUS_GENERAL_KEYVAULT_NAME | ConvertFrom-Json
+          $unauthorizedClientId = az keyvault secret show --name $env:ARCUS_GENERAL_UNAUTHORIZED_SERVICEPRINCIPAL_CLIENTID_SECRETNAME --vault-name $env:ARCUS_GENERAL_KEYVAULT_NAME | ConvertFrom-Json
+          $unauthorizedClientSecret = az keyvault secret show --name $env:ARCUS_GENERAL_UNAUTHORIZED_SERVICEPRINCIPAL_CLIENTSECRET_SECRETNAME --vault-name $env:ARCUS_GENERAL_KEYVAULT_NAME | ConvertFrom-Json
           Set-AzDevOpsVariable 'Arcus.Security.Unauthorized.ServicePrincipal.ClientId' -Value $unauthorizedClientId.value -AsSecret
           Set-AzDevOpsVariable 'Arcus.Security.Unauthorized.ServicePrincipal.ClientSecret' -Value $unauthorizedClientSecret.value -AsSecret
 
