@@ -14,6 +14,7 @@ parameters:
 
 variables:
   - template: ./variables/build.yml
+  - template: ./variables/test.yml
 
 resources:
   repositories:
