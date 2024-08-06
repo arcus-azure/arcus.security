@@ -153,7 +153,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -243,7 +243,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         {
             // Arrange
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>

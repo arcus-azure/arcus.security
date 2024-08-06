@@ -15,8 +15,6 @@ resources:
       endpoint: arcus-azure
 
 variables:
-  - group: 'Arcus Security - Integration Testing'
-  - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
   - template: ./variables/build.yml
   - template: ./variables/test.yml

@@ -7,6 +7,7 @@ using Arcus.Security.Core;
 using Arcus.Security.Core.Caching.Configuration;
 using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Providers.AzureKeyVault.Configuration;
+using Arcus.Testing;
 using Azure;
 using Azure.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,7 +84,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var keyName = "UnknownSecretName";
 
             var builder = new HostBuilder();
-            builder.UseSerilog(Logger, dispose: true);
+            builder.UseSerilog(SerilogLogger, dispose: true);
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
