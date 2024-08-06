@@ -11,12 +11,6 @@ parameters:
   - name: resourceGroupName
     displayName: 'Resource group name'
     default: arcus-security-dev-we-rg
-  - name: keyVaultName
-    displayName: 'Arcus.Security Key vault name'
-    default: arcus-security-kv
-  - name: variableGroupName
-    displayName: 'Variable group name'
-    default: Arcus Security - Integration Testing
 
 variables:
   - template: ./variables/build.yml
@@ -45,13 +39,8 @@ stages:
               scriptType: 'pscore'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-                Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
-
-                $secretName = 'ArcusTestSecret'
+                $secretName = $env:ARCUS_SECURITY_KEYVAULT_TESTSECRETNAME
                 $secretValue = [System.Guid]::NewGuid().ToString()
-                Set-AzDevOpsVariable -Name 'Arcus_KeyVault_TestSecretValue' -Value $secretValue
-
                 $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
 
                 $deployOutput = az deployment sub create `
@@ -59,11 +48,8 @@ stages:
                   --template-file ./build/templates/deploy-test-resources.bicep `
                   --parameters location=westeurope `
                   --parameters resourceGroupName=${{ parameters.resourceGroupName }} `
-                  --parameters keyVaultName=${{ parameters.keyVaultName }} `
+                  --parameters keyVaultName=$env:ARCUS_SECURITY_KEYVAULT_NAME `
                   --parameters secretName=$secretName `
                   --parameters secretValue=$secretValue `
                   --parameters servicePrincipal_objectId=$objectId `  
                   | ConvertFrom-Json
-
-                $env:ArmOutputs = ConvertTo-Json $deployOutput.properties.outputs
-                Set-AzDevOpsArmOutputsToVariableGroup -VariableGroupName '${{ parameters.variableGroupName }}'
