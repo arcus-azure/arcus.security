@@ -42,7 +42,7 @@ stages:
                 $secretValue = [System.Guid]::NewGuid().ToString()
                 $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
 
-                $deployOutput = az deployment sub create `
+                az deployment sub create `
                   --location westeurope `
                   --template-file ./build/templates/deploy-test-resources.bicep `
                   --parameters location=westeurope `
