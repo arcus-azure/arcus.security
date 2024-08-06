@@ -32,8 +32,6 @@ stages:
           vmImage: '$(Vm.Image)'
         steps:
           - task: AzureCLI@2
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             inputs:
               azureSubscription: '${{ parameters.azureServiceConnection }}'
               addSpnToEnvironment: true
