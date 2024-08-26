@@ -1,5 +1,6 @@
 parameters:
   dockerProjectName: ''
+  azureServiceConnection: ''
 
 steps:
   - bash: |
@@ -9,6 +10,38 @@ steps:
       fi
     env:
       PROJECT_NAME: ${{ parameters.dockerProjectName }}
+  - task: AzureCLI@2
+    displayName: 'Import secrets from Azure Key Vault'
+    inputs:
+      azureSubscription: '${{ parameters.azureServiceConnection }}'
+      addSpnToEnvironment: true
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Arcus.Scripting.DevOps -AllowClobber
+
+          Set-AzDevOpsVariable 'Arcus.Security.TenantId' -Value $env:tenantId -AsSecret
+          Set-AzDevOpsVariable 'Arcus.Security.ServicePrincipal.ClientId' -Value $env:servicePrincipalId -AsSecret
+          Set-AzDevOpsVariable 'Arcus.Security.ServicePrincipal.ClientSecret' -Value $env:servicePrincipalKey -AsSecret
+
+          $unauthorizedClientId = az keyvault secret show --name $env:ARCUS_GENERAL_UNAUTHORIZED_SERVICEPRINCIPAL_CLIENTID_SECRETNAME --vault-name $env:ARCUS_GENERAL_KEYVAULT_NAME | ConvertFrom-Json
+          $unauthorizedClientSecret = az keyvault secret show --name $env:ARCUS_GENERAL_UNAUTHORIZED_SERVICEPRINCIPAL_CLIENTSECRET_SECRETNAME --vault-name $env:ARCUS_GENERAL_KEYVAULT_NAME | ConvertFrom-Json
+          Set-AzDevOpsVariable 'Arcus.Security.Unauthorized.ServicePrincipal.ClientId' -Value $unauthorizedClientId.value -AsSecret
+          Set-AzDevOpsVariable 'Arcus.Security.Unauthorized.ServicePrincipal.ClientSecret' -Value $unauthorizedClientSecret.value -AsSecret
+
+          $testSecret = az keyvault secret show --name $env:ARCUS_SECURITY_KEYVAULT_TESTSECRETNAME --vault-name $env:ARCUS_SECURITY_KEYVAULT_NAME | ConvertFrom-Json
+          $testSecretVersion = $testSecret.id.Split('/') | Select-Object -Last 1
+          Write-Host "Test secret '$($testSecret.name)' version is '$testSecretVersion'"
+          $testSecretValue = $testSecret.value
+
+          Set-AzDevOpsVariable -AsSecret -Name 'Arcus.Security.KeyVault.TestSecretValue' -Value $testSecretValue
+          Set-AzDevOpsVariable -AsSecret -Name 'Arcus.Security.KeyVault.TestSecretVersion' -Value $testSecretVersion
+  - template: 'download-hashicorp-vault.yml'
+    parameters:
+      targetFolder: '$(Build.SourcesDirectory)'
+      version: $(HashiCorp.Vault.Version)
+      vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
   - task: UseDotNet@2
     displayName: 'Import .NET Core SDK ($(DotNet.Sdk.VersionBC))'
     inputs:

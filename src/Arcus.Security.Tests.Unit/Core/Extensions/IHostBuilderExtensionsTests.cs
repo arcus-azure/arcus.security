@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Providers.HashiCorp.Extensions;
-using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
-using Arcus.Testing.Logging;
+using Arcus.Testing;
 using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -418,7 +417,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = $"secret-{Guid.NewGuid()}" });
             var spyLogger = new InMemoryLogger();
             var builder = new HostBuilder();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.ConfigureLogging(logging => logging.AddProvider(new CustomLoggerProvider(spyLogger)));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -443,7 +442,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = $"secret-{Guid.NewGuid()}" });
             var spyLogger = new InMemoryLogger();
             var builder = new HostBuilder();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.ConfigureLogging(logging => logging.AddProvider(new CustomLoggerProvider(spyLogger)));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>
@@ -467,7 +466,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = $"secret-{Guid.NewGuid()}" });
             var spyLogger = new InMemoryLogger();
             var builder = new HostBuilder();
-            builder.ConfigureLogging(logging => logging.AddProvider(new TestLoggerProvider(spyLogger)));
+            builder.ConfigureLogging(logging => logging.AddProvider(new CustomLoggerProvider(spyLogger)));
 
             // Act
             builder.ConfigureSecretStore((config, stores) =>

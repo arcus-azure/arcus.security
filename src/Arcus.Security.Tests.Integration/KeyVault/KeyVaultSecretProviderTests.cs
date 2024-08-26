@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Arcus.Security.Core;
-using Microsoft.Extensions.Configuration;
+using Arcus.Security.Tests.Integration.KeyVault.Fixture;
+using Arcus.Testing;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,13 +15,17 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         }
 
         private string TenantId => Configuration.GetTenantId();
-        private string ClientId => Configuration.GetValue<string>("Arcus:ServicePrincipal:ApplicationId");
-        private string ClientSecret => Configuration.GetValue<string>("Arcus:ServicePrincipal:AccessKey");
-        private string VaultUri => Configuration.GetValue<string>("Arcus:KeyVault:Uri");
-        private string TestSecretName => Configuration.GetValue<string>("Arcus:KeyVault:TestKeyName");
-        private string TestSecretValue => Configuration.GetValue<string>("Arcus:KeyVault:TestKeyValue");
-        private string TestSecretVersion => Configuration.GetRequiredValue("Arcus:KeyVault:TestKeyVersion");
-       
+        private string ClientId => Configuration.GetServicePrincipalClientId();
+        private string ClientSecret => Configuration.GetServicePrincipalClientSecret();
+        private string VaultUri => $"https://{Configuration.GetRequiredValue("Arcus:KeyVault:Name")}.vault.azure.net/";
+        private string TestSecretName => Configuration.GetSecretName();
+        private string TestSecretValue => Configuration.GetSecretValue();
+        private string TestSecretVersion => Configuration.GetSecretVersion();
+
+        private TemporaryManagedIdentityConnection UseTemporaryManagedIdentityConnection()
+        {
+            return TemporaryManagedIdentityConnection.Create(TenantId, ClientId, ClientSecret);
+        }
 
         private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
         {

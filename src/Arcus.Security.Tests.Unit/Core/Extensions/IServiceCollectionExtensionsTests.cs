@@ -5,8 +5,8 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Tests.Core.Stubs;
 using Arcus.Security.Tests.Unit.Core.Stubs;
+using Arcus.Testing;
 using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -184,9 +184,9 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         {
             // Arrange
             var services = new ServiceCollection();
-            var spyLogger = new SpyLogger();
+            var spyLogger = new InMemoryLogger();
             services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Trace)
-                                                  .AddProvider(new TestLoggerProvider(spyLogger)));
+                                                  .AddProvider(new CustomLoggerProvider(spyLogger)));
 
             const string secretName = "MySecret";
             var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretName] = $"secret-{Guid.NewGuid()}" });
@@ -198,7 +198,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
             await secretProvider.GetRawSecretAsync(secretName);
-            Assert.True(spyLogger.IsCalled);
+            Assert.NotEmpty(spyLogger.Messages);
         }
 
         [Fact]

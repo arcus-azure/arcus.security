@@ -1,0 +1,54 @@
+name: Arcus Security - Deploy test resources
+
+trigger: none
+pr: none
+
+parameters:
+  - name: azureServiceConnection
+    displayName: 'Azure service connection'
+    type: string
+    default: 'Azure Codit-Arcus Service Principal'
+  - name: resourceGroupName
+    displayName: 'Resource group name'
+    default: arcus-security-dev-we-rg
+
+variables:
+  - template: ./variables/build.yml
+  - template: ./variables/test.yml
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: arcus-azure/azure-devops-templates
+      endpoint: arcus-azure
+
+stages:
+  - stage: Deploy
+    jobs:
+      - job: DeployBicep
+        displayName: 'Deploy test resources'
+        pool:
+          vmImage: '$(Vm.Image)'
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.azureServiceConnection }}'
+              addSpnToEnvironment: true
+              scriptType: 'pscore'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                $secretName = $env:ARCUS_SECURITY_KEYVAULT_TESTSECRETNAME
+                $secretValue = [System.Guid]::NewGuid().ToString()
+                $objectId = (az ad sp show --id $env:servicePrincipalId | ConvertFrom-Json).id
+
+                az deployment sub create `
+                  --location westeurope `
+                  --template-file ./build/templates/deploy-test-resources.bicep `
+                  --parameters location=westeurope `
+                  --parameters resourceGroupName=${{ parameters.resourceGroupName }} `
+                  --parameters keyVaultName=$env:ARCUS_SECURITY_KEYVAULT_NAME `
+                  --parameters secretName=$secretName `
+                  --parameters secretValue=$secretValue `
+                  --parameters servicePrincipal_objectId=$objectId `  
+                  | ConvertFrom-Json

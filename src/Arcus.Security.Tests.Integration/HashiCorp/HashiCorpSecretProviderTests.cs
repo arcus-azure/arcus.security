@@ -4,12 +4,9 @@ using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Providers.HashiCorp.Configuration;
 using Arcus.Security.Providers.HashiCorp.Extensions;
-using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
-using Arcus.Testing.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
@@ -20,21 +17,19 @@ using Xunit.Abstractions;
 namespace Arcus.Security.Tests.Integration.HashiCorp
 {
     [Trait(name: "Category", value: "Integration")]
-    public class HashiCorpSecretProviderTests
+    public partial class HashiCorpSecretProviderTests : IntegrationTest
     {
         private const string DefaultDevMountPoint = "secret";
-
-        private readonly TestConfig _config;
-        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HashiCorpSecretProviderTests"/> class.
         /// </summary>
-        public HashiCorpSecretProviderTests(ITestOutputHelper outputWriter)
+        public HashiCorpSecretProviderTests(ITestOutputHelper outputWriter) : base(outputWriter)
         {
-            _config = TestConfig.Create();
-            _logger = new XunitTestLogger(outputWriter);
         }
+
+        private string UserPassUserName => Configuration["Arcus:HashiCorp:UserPass:UserName"];
+        private string UserPassPassword => Configuration["Arcus:HashiCorp:UserPass:Password"];
 
         [Fact]
         public async Task AuthenticateWithUserPassKeyValueV2_GetSecret_Succeeds()
@@ -44,17 +39,14 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
             {
                 await server.KeyValueV2.WriteSecretAsync(
                     mountPoint: DefaultDevMountPoint,
                     path: secretPath,
                     data: new Dictionary<string, object> { [secretName] = expected });
 
-                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
                 var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions 
                 {
@@ -78,17 +70,14 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
             {
                 await server.KeyValueV2.WriteSecretAsync(
                     mountPoint: DefaultDevMountPoint,
                     path: secretPath,
                     data: new Dictionary<string, object> { ["unknown-prefix-" + secretName] = expected });
 
-                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
                 var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions
                 {
@@ -110,13 +99,11 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
             const string secretNamePrefix = "Test-";
             
             var builder = new HostBuilder();
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
             {
                 await server.KeyValueV2.WriteSecretAsync(
                     mountPoint: DefaultDevMountPoint,
@@ -127,7 +114,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 builder.ConfigureSecretStore((config, stores) =>
                 {
                     stores.AddHashiCorpVaultWithUserPass(
-                        server.ListenAddress.ToString(), userName, password, secretPath,
+                        server.ListenAddress.ToString(), UserPassUserName, UserPassPassword, secretPath,
                         configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint, 
                         mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length),
                         name: null);
@@ -148,12 +135,10 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             var builder = new HostBuilder();
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
             {
                 await server.KeyValueV2.WriteSecretAsync(
                     mountPoint: DefaultDevMountPoint,
@@ -164,7 +149,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 builder.ConfigureSecretStore((config, stores) =>
                 {
                     stores.AddHashiCorpVaultWithUserPass(
-                        server.ListenAddress.ToString(), userName, password, secretPath,
+                        server.ListenAddress.ToString(), UserPassUserName, UserPassPassword, secretPath,
                         configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint,
                         mutateSecretName: secretName =>  "Test-" + secretName,
                         name: null);
@@ -183,20 +168,18 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
             const string secretNamePrefix = "Test-";
             
             var builder = new HostBuilder();
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
             {
                 await server.KeyValueV2.WriteSecretAsync(
                     mountPoint: DefaultDevMountPoint,
                     path: secretPath,
                     data: new Dictionary<string, object> { [secretKey] = expected });
 
-                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
 
                 // Act
@@ -223,19 +206,17 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             // Arrange
             string secretPath = "secretpath";
             string secretKey = "my-value", expected = "s3cr3t";
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
 
             var builder = new HostBuilder();
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, DefaultDevMountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
             {
                 await server.KeyValueV2.WriteSecretAsync(
                     mountPoint: DefaultDevMountPoint,
                     path: secretPath,
                     data: new Dictionary<string, object> { [secretKey] = expected });
 
-                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
 
                 // Act
@@ -262,13 +243,10 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
-
             const string mountPoint = "secret-v1";
             const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, mountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(mountPoint))
             {
                 await server.MountKeyValueAsync(mountPoint, keyValueVersion);
                 await server.KeyValueV1.WriteSecretAsync(
@@ -276,7 +254,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     path: secretPath,
                     values: new Dictionary<string, object> { [secretName] = expected });
 
-                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
                 var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions
                 {
@@ -300,13 +278,10 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretName = "my-value";
             string expected = "s3cr3t";
 
-            string userName = _config["Arcus:HashiCorp:UserPass:UserName"];
-            string password = _config["Arcus:HashiCorp:UserPass:Password"];
-
             const string mountPoint = "secret-v1";
             const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(userName, password, mountPoint))
+            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(mountPoint))
             {
                 await server.MountKeyValueAsync(mountPoint, keyValueVersion);
                 await server.KeyValueV1.WriteSecretAsync(
@@ -314,7 +289,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                     path: secretPath,
                     values: new Dictionary<string, object> { ["unknown-prefix-" + secretName] = expected });
 
-                var authentication = new UserPassAuthMethodInfo(userName, password);
+                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
                 var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
                 var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions{
                     KeyValueMountPoint = mountPoint, 
@@ -329,16 +304,18 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             }
         }
 
-        private async Task<HashiCorpVaultTestServer> StartServerWithUserPassAsync(string userName, string password, string availableSecretMountPoint)
+        private async Task<HashiCorpVaultTestServer> StartServerWithUserPassAsync(string availableSecretMountPoint)
         {
             const string policyName = "my-policy";
 
-            var server = await HashiCorpVaultTestServer.StartServerAsync(_config, _logger);
+            var server = await HashiCorpVaultTestServer.StartServerAsync(Configuration, Logger);
             await server.AddPolicyAsync(policyName, availableSecretMountPoint, new[] { "read" });
             await server.EnableAuthenticationTypeAsync(AuthMethodDefaultPaths.UserPass, "Authenticating with username and password");
-            await server.AddUserPassUserAsync(userName, password, policyName);
+            await server.AddUserPassUserAsync(UserPassUserName, UserPassPassword, policyName);
 
             return server;
         }
+
+
     }
 }

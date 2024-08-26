@@ -1,36 +1,35 @@
 ﻿using System;
-using Arcus.Security.Tests.Integration.Fixture;
-using Arcus.Testing.Logging.Extensions;
-using Arcus.Testing.Logging;
-using Microsoft.Extensions.Configuration;
+using Arcus.Testing;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
 using Xunit.Abstractions;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Arcus.Security.Tests.Integration
 {
     public class IntegrationTest : IDisposable
     {
         private bool _disposed;
-        
-        protected TestConfig Configuration { get; }
-        protected Logger Logger { get; }
-        protected InMemoryLogSink InMemoryLogSink { get; }
 
-        public IntegrationTest(ITestOutputHelper testOutput)
+        protected IntegrationTest(ITestOutputHelper testOutput)
         {
-            // The appsettings.local.json allows users to override (gitignored) settings locally for testing purposes
             Configuration = TestConfig.Create();
+            Logger = new XunitTestLogger(testOutput);
+
             InMemoryLogSink = new InMemoryLogSink();
-            
+
             var configuration = new LoggerConfiguration()
                 .WriteTo.XunitTestLogging(testOutput)
-                .WriteTo.Sink(InMemoryLogSink)
-                .WriteTo.AzureApplicationInsightsWithInstrumentationKey(Configuration.GetValue<string>("Arcus:ApplicationInsights:InstrumentationKey"));
+                .WriteTo.Sink(InMemoryLogSink);
 
-            Logger = configuration.CreateLogger();
+            SerilogLogger = configuration.CreateLogger();
         }
+
+        protected TestConfig Configuration { get; }
+        protected ILogger Logger { get; }
+        protected Logger SerilogLogger { get; }
+        protected InMemoryLogSink InMemoryLogSink { get; }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -53,7 +52,7 @@ namespace Arcus.Security.Tests.Integration
         /// </summary> 
         protected virtual void Dispose(bool disposing)
         {
-            Logger.Dispose();
+            SerilogLogger.Dispose();
         }
     }
 }
