@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Microsoft.Extensions.Configuration;
 using GuardNet;
@@ -18,9 +19,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         /// <param name="secretProvider">The provider to retrieve secret values for configuration tokens.</param>
         internal ArcusConfigurationProvider(ISecretProvider secretProvider)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), $"Requires a {nameof(ISecretProvider)} instance");
-
-            _secretProvider = secretProvider;
+            _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
         }
         
         /// <summary>

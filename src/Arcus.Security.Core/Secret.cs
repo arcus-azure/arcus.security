@@ -15,12 +15,9 @@ namespace Arcus.Security.Core
         /// <param name="version">The version of the secret.</param>
         /// <param name="expirationDate">The expiration date of the secret.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="value"/> cannot be <c>null</c>.</exception>
-        /// <exception cref="ArgumentNullException">The <paramref name="version"/> cannot be <c>null</c>.</exception>
         public Secret(string value, string version = null, DateTimeOffset? expirationDate = null)
         {
-            Guard.NotNull(value, nameof(value));
-
-            Value = value;
+            Value = value ?? throw new ArgumentNullException(nameof(value));
             Version = version;
             Expires = expirationDate;
         }

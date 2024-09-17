@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
-using GuardNet;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,8 +16,8 @@ namespace Arcus.Security.Core
     /// </summary>
     internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISecretStore, ISyncSecretProvider
     {
-        private readonly IEnumerable<SecretStoreSource> _secretProviders;
-        private readonly IEnumerable<CriticalExceptionFilter> _criticalExceptionFilters;
+        private readonly SecretStoreSource[] _secretProviders;
+        private readonly CriticalExceptionFilter[] _criticalExceptionFilters;
         private readonly SecretStoreAuditingOptions _auditingOptions;
         private readonly IDictionary<string, Lazy<ISecretProvider>> _groupedSecretStores;
         private readonly ILogger _logger;
@@ -38,20 +37,36 @@ namespace Arcus.Security.Core
             SecretStoreAuditingOptions auditingOptions,
             ILogger<CompositeSecretProvider> logger)
         {
-            Guard.NotNull(secretProviderSources, nameof(secretProviderSources), "Requires a series of registered secret provider registrations to retrieve secrets");
-            Guard.NotNull(criticalExceptionFilters, nameof(criticalExceptionFilters), "Requires a series of registered critical exception filters to determine if a thrown exception is critical");
-            Guard.NotNull(auditingOptions, nameof(auditingOptions), "Requires a set of options to configure the auditing of the secret store");
-            Guard.For(() => secretProviderSources.Any(source => source is null), new ArgumentException("Requires all registered secret provider registrations to be not 'null'", nameof(secretProviderSources)));
-            Guard.For(() => criticalExceptionFilters.Any(filter => filter is null), new ArgumentException("Requires all registered critical exception filters to be not 'null'", nameof(criticalExceptionFilters)));
+            if (secretProviderSources is null)
+            {
+                throw new ArgumentNullException(nameof(secretProviderSources));
+            }
 
-            _secretProviders = secretProviderSources;
-            _criticalExceptionFilters = criticalExceptionFilters;
-            _auditingOptions = auditingOptions;
+            if (criticalExceptionFilters is null)
+            {
+                throw new InvalidOperationException(nameof(criticalExceptionFilters));
+            }
+
+            SecretStoreSource[] sourcesArr = secretProviderSources.ToArray();
+            CriticalExceptionFilter[] filtersArr = criticalExceptionFilters.ToArray();
+            if (sourcesArr.Any(s => s is null))
+            {
+                throw new ArgumentException("One or more secret sources are 'null'", nameof(secretProviderSources));
+            }
+
+            if (filtersArr.Any(f => f is null))
+            {
+                throw new ArgumentException("One or more exception filters are 'null'", nameof(criticalExceptionFilters));
+            }
+
+            _secretProviders = sourcesArr;
+            _criticalExceptionFilters = filtersArr;
+            _auditingOptions = auditingOptions ?? new SecretStoreAuditingOptions();
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
 
-            _groupedSecretStores = CreateGroupedSecretProviders(secretProviderSources, criticalExceptionFilters, auditingOptions, logger);
-            HasCachedSecretProviders = _secretProviders.Any(provider => provider.CachedSecretProvider != null);
-            HasSyncSecretProviders = _secretProviders.Any(provider => provider.SyncSecretProvider != null);
+            _groupedSecretStores = CreateGroupedSecretProviders(sourcesArr, filtersArr, auditingOptions, logger);
+            HasCachedSecretProviders = sourcesArr.Any(provider => provider.CachedSecretProvider != null);
+            HasSyncSecretProviders = sourcesArr.Any(provider => provider.SyncSecretProvider != null);
         }
 
         /// <summary>
@@ -106,7 +121,10 @@ namespace Arcus.Security.Core
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ISecretProvider"/> were registered with the same name.</exception>
         public TSecretProvider GetProvider<TSecretProvider>(string name) where TSecretProvider : ISecretProvider
         {
-            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+            }
 
             ISecretProvider provider = GetProvider(name);
             if (provider is TSecretProvider concreteProvider)
@@ -134,7 +152,10 @@ namespace Arcus.Security.Core
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
         public ISecretProvider GetProvider(string name)
         {
-            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+            }
 
             ISecretProvider subset = GetSingleOrSubsetSecretProvider(name);
             return subset;
@@ -155,10 +176,16 @@ namespace Arcus.Security.Core
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
         public TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(string name) where TCachedSecretProvider : ICachedSecretProvider
         {
-            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
-            Guard.For<NotSupportedException>(
-                () => !HasCachedSecretProviders, 
-                $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+            }
+
+            if (!HasCachedSecretProviders)
+            {
+                throw new NotSupportedException(
+                    $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
+            }
 
             ICachedSecretProvider provider = GetCachedProvider(name);
             if (provider is TCachedSecretProvider concreteProvider)
@@ -190,11 +217,17 @@ namespace Arcus.Security.Core
         /// </exception>
         public ICachedSecretProvider GetCachedProvider(string name)
         {
-            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a non-blank name to retrieve the registered named secret provider");
-            Guard.For<NotSupportedException>(
-                () => !HasCachedSecretProviders, 
-                $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
-            
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+            }
+
+            if (!HasCachedSecretProviders)
+            {
+                throw new NotSupportedException(
+                    $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
+            }
+
             ISecretProvider source = GetSingleOrSubsetSecretProvider(name);
             if (source is ICachedSecretProvider cachedSource)
             {
@@ -226,7 +259,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             return WithSecretStore(secretName, source =>
             {
@@ -250,7 +286,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             return WithSecretStore(secretName, source =>
             {
@@ -273,7 +312,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         internal async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             IEnumerable<Secret> secretValues = 
                 await WithSecretStoreAsync(secretName, async source =>
@@ -309,7 +351,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         internal async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             IEnumerable<string> secretValues = 
                 await WithSecretStoreAsync(secretName, async source =>
@@ -347,8 +392,15 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
-            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to retrieve the secret in the secret store");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
+
+            if (amountOfVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to retrieve the secret in the secret store");
+            }
 
             IEnumerable<string> secretValues = 
                 await WithSecretStoreAsync(secretName, async source =>
@@ -381,8 +433,15 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
-            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to retrieve the secret in the secret store");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
+
+            if (amountOfVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to retrieve the secret in the secret store");
+            }
 
             IEnumerable<Secret> secretValues = 
                 await WithSecretStoreAsync(secretName, async source =>
@@ -415,7 +474,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             string secretValue = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetRawSecretAsync(secretName));
@@ -433,7 +495,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             Secret secret = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetSecretAsync(secretName));
@@ -453,7 +518,10 @@ namespace Arcus.Security.Core
         /// <exception cref="NotSupportedException">Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances.</exception>
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             string secretValue = await WithCachedSecretStoreAsync(
                 secretName, source => source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache));
@@ -473,7 +541,10 @@ namespace Arcus.Security.Core
         /// <exception cref="NotSupportedException">Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances.</exception>
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             Secret secret = await WithCachedSecretStoreAsync(
                 secretName, source => source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache));
@@ -488,7 +559,10 @@ namespace Arcus.Security.Core
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
         public async Task InvalidateSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             await WithCachedSecretStoreAsync(secretName, async source =>
             {
@@ -508,10 +582,11 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, Task<T>> callRegisteredProvider,
             string eventName = "Get Secret") where T : class
         {
-            Guard.For<NotSupportedException>(
-                () => !HasCachedSecretProviders, 
-                $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
-
+            if (!HasCachedSecretProviders)
+            {
+                throw new NotSupportedException(
+                    $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
+            }
             return await WithSecretStoreAsync(secretName, async source =>
             {
                 if (source.CachedSecretProvider is null)
@@ -569,9 +644,11 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, T> callRegisteredProvider,
             string eventName = "Get Secret") where T : class
         {
-            Guard.For<NotSupportedException>(
-                () => !HasSyncSecretProviders, 
-                $"Cannot use synchronous secret store operation because none of the secret providers in the secret store were registered as synchronous secret providers ({nameof(ISyncSecretProvider)})");
+            if (!HasSyncSecretProviders)
+            {
+                throw new NotSupportedException(
+                    $"Cannot use synchronous secret store operation because none of the secret providers in the secret store were registered as synchronous secret providers ({nameof(ISyncSecretProvider)})");
+            }
 
             var criticalExceptions = new Collection<Exception>();
             foreach (SecretStoreSource source in _secretProviders)
@@ -656,7 +733,7 @@ namespace Arcus.Security.Core
             }
         }
 
-        private void LogPossibleCriticalExceptions(string secretName, IEnumerable<Exception> criticalExceptions)
+        private void LogPossibleCriticalExceptions(string secretName, IReadOnlyCollection<Exception> criticalExceptions)
         {
             if (criticalExceptions.Any())
             {
@@ -687,7 +764,7 @@ namespace Arcus.Security.Core
             });
         }
 
-        private Exception DetermineSecretStoreException(string secretName, IEnumerable<Exception> criticalExceptions)
+        private Exception DetermineSecretStoreException(string secretName, IReadOnlyCollection<Exception> criticalExceptions)
         {
             if (!criticalExceptions.Any())
             {

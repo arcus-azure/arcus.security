@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 
 namespace Arcus.Security.Core
 {
@@ -34,7 +33,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">The name must not be <c>null</c>.</exception>
         public SecretNotFoundException(string name, Exception innerException) : base($"The secret {name} was not found.", innerException)
         {
-            Guard.NotNullOrEmpty(name, nameof(name));
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Requires a non-blank secret name", nameof(name));
+            }
+
             Name = name;
         }
 

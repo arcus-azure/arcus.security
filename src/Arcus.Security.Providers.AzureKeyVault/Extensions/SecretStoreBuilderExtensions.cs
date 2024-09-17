@@ -7,7 +7,6 @@ using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
-using GuardNet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -36,12 +35,6 @@ namespace Microsoft.Extensions.Hosting
             string clientId,
             X509Certificate2 certificate)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the client or application is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
-            Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithCertificate(
                 builder,
                 rawVaultUri,
@@ -72,12 +65,6 @@ namespace Microsoft.Extensions.Hosting
             X509Certificate2 certificate,
             ICacheConfiguration cacheConfiguration)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the client or application is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
-            Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithCertificate(
                 builder,
                 rawVaultUri,
@@ -117,12 +104,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the client or application is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
-            Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithCertificate(
                 builder,
                 rawVaultUri,
@@ -163,12 +144,6 @@ namespace Microsoft.Extensions.Hosting
             Action<KeyVaultOptions> configureOptions,
             Action<SecretProviderOptions> configureProviderOptions)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the client or application is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the application requesting the authentication token that has read permissions on the Azure Key Vault to add a secret provider to the secret store");
-            Guard.NotNull(certificate, nameof(certificate), "Requires a certificate that is being used as credential on the Azure Key Vault to add the secret provider to the secret store");
-
             return AddAzureKeyVault(
                 builder,
                 new ClientCertificateCredential(tenantId, clientId, certificate),
@@ -189,9 +164,6 @@ namespace Microsoft.Extensions.Hosting
             this SecretStoreBuilder builder,
             string rawVaultUri)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithManagedIdentity(
                 builder,
                 rawVaultUri,
@@ -214,9 +186,6 @@ namespace Microsoft.Extensions.Hosting
             string rawVaultUri,
             string clientId)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithManagedIdentity(
                 builder,
                 rawVaultUri,
@@ -240,9 +209,6 @@ namespace Microsoft.Extensions.Hosting
             string rawVaultUri,
             ICacheConfiguration cacheConfiguration)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithManagedIdentity(
                 builder,
                 rawVaultUri,
@@ -267,9 +233,6 @@ namespace Microsoft.Extensions.Hosting
             ICacheConfiguration cacheConfiguration,
             string clientId)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithManagedIdentity(
                 builder,
                 rawVaultUri,
@@ -299,9 +262,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithManagedIdentity(
                 builder,
                 rawVaultUri,
@@ -335,9 +295,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVaultWithManagedIdentity(
                 builder,
                 rawVaultUri,
@@ -372,9 +329,6 @@ namespace Microsoft.Extensions.Hosting
             Action<KeyVaultOptions> configureOptions,
             Action<SecretProviderOptions> configureProviderOptions)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-
             return AddAzureKeyVault(
                 builder,
                 new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = clientId }), 
@@ -401,12 +355,6 @@ namespace Microsoft.Extensions.Hosting
             string clientId,
             string clientKey)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the Service Principal is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey), "Requires a non-blank client access key of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add to the secret provider to the secret store");
-
             return AddAzureKeyVaultWithServicePrincipal(
                 builder,
                 rawVaultUri,
@@ -437,12 +385,6 @@ namespace Microsoft.Extensions.Hosting
             string clientKey,
             ICacheConfiguration cacheConfiguration)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the Service Principal is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey), "Requires a non-blank client access key of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add to the secret provider to the secret store");
-
             return AddAzureKeyVaultWithServicePrincipal(
                 builder,
                 rawVaultUri,
@@ -484,12 +426,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the Service Principal is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey), "Requires a non-blank client access key of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add to the secret provider to the secret store");
-
             return AddAzureKeyVaultWithServicePrincipal(
                 builder,
                 rawVaultUri,
@@ -532,12 +468,6 @@ namespace Microsoft.Extensions.Hosting
             Action<KeyVaultOptions> configureOptions,
             Action<SecretProviderOptions> configureProviderOptions)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNullOrWhitespace(rawVaultUri, nameof(rawVaultUri), "Requires a non-blank URI of the Azure Key Vault instance to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(tenantId, nameof(tenantId), "Requires a non-blank tenant ID of the directory where the Service Principal is located");
-            Guard.NotNullOrWhitespace(clientId, nameof(clientId), "Requires a non-blank client ID of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add the secret provider to the secret store");
-            Guard.NotNullOrWhitespace(clientKey, nameof(clientKey), "Requires a non-blank client access key of the Service Principal that has permissions to read the secrets in the Azure Key Vault to add to the secret provider to the secret store");
-
             return AddAzureKeyVault(
                 builder,
                 new ClientSecretCredential(tenantId, clientId, clientKey), 
@@ -561,10 +491,6 @@ namespace Microsoft.Extensions.Hosting
             IKeyVaultConfiguration configuration,
             ICacheConfiguration cacheConfiguration)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
-            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
-
             return AddAzureKeyVault(
                 builder,
                 tokenCredential,
@@ -587,10 +513,6 @@ namespace Microsoft.Extensions.Hosting
             TokenCredential tokenCredential,
             IKeyVaultConfiguration configuration)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
-            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
-
             return AddAzureKeyVault(
                 builder,
                 tokenCredential,
@@ -618,10 +540,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
-            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
-
             return AddAzureKeyVault(
                 builder,
                 tokenCredential,
@@ -653,9 +571,20 @@ namespace Microsoft.Extensions.Hosting
             Action<KeyVaultOptions> configureOptions,
             Action<SecretProviderOptions> configureProviderOptions)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Azure Key Vault secret provider");
-            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to add the secret provider to the secret store");
-            Guard.NotNull(configuration, nameof(configuration), "Requires an Azure Key Vault configuration instance to add the secret provider to the secret store");
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            if (tokenCredential is null)
+            {
+                throw new ArgumentNullException(nameof(tokenCredential));
+            }
+
+            if (configuration is null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
 
             // Thrown during failure with Key Vault authorization.
             builder.AddCriticalException<RequestFailedException>(exception =>

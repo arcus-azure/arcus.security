@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
-using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Providers.AzureKeyVault
@@ -27,11 +26,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider, ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache) 
             : base(secretProvider, cacheConfiguration, memoryCache)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires an Azure Key Vault secret provider to provide additional caching operations");
-            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration), "Requires a custom caching configuration instance for the cached Azure Key Vault secret provider");
-            Guard.NotNull(memoryCache, nameof(memoryCache), "Requires a custom memory cache implementation to store the Azure Key Vault secrets in memory");
-            
-            _secretProvider = secretProvider;
+            _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
         }
 
         /// <summary>
@@ -44,9 +39,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider, ICacheConfiguration cacheConfiguration) 
             : base(secretProvider, cacheConfiguration)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires an Azure Key Vault secret provider to provide additional caching operations");
-            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration), "Requires a custom caching configuration instance for the cached Azure Key Vault secret provider");
-            _secretProvider = secretProvider;
+            _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
         }
 
         /// <summary>
@@ -57,8 +50,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider) : base(secretProvider)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires an Azure Key Vault secret provider to provide additional caching operations");
-            _secretProvider = secretProvider;
+            _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
         }
 
         /// <summary>
@@ -71,8 +63,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given <paramref name="secretName"/>.</exception>
         public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to store a secret in Azure Key Vault", nameof(secretName));
+            }
+
+            if (string.IsNullOrWhiteSpace(secretValue))
+            {
+                throw new ArgumentException("Requires a non-blank secret value to store a secret in Azure Key Vault", nameof(secretName));
+            }
 
             Secret secret = await _secretProvider.StoreSecretAsync(secretName, secretValue);
             MemoryCache.Set(secretName, new [] { secret }, CacheEntry);

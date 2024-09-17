@@ -9,7 +9,6 @@ using Arcus.Security.Core;
 using Azure;
 using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
-using GuardNet;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
@@ -49,8 +48,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
-            Guard.NotNull(vaultConfiguration, nameof(vaultConfiguration), "Requires a Azure Key Vault configuration to setup the secret provider");
-            Guard.NotNull(tokenCredential, nameof(tokenCredential), "Requires an Azure Key Vault authentication instance to authenticate with the vault");
+            if (vaultConfiguration is null)
+            {
+                throw new ArgumentNullException(nameof(vaultConfiguration));
+            }
+
+            if (tokenCredential is null)
+            {
+                throw new ArgumentNullException(nameof(tokenCredential));
+            }
 
             VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
 
@@ -79,7 +85,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public virtual string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
 
             Secret secret = GetSecret(secretName);
             return secret?.Value;
@@ -94,7 +103,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public virtual Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
 
             Secret secret = InteractWithKeyVault(secretName, client => client.GetSecret(secretName));
             return secret;
@@ -110,7 +122,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
 
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
@@ -126,7 +141,10 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
 
             Logger.LogTrace("Getting a secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
             Secret secret = await InteractWithKeyVaultAsync(
@@ -149,8 +167,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.NotNullOrWhitespace(secretValue, nameof(secretValue), "Requires a non-blank secret value to store a secret in Azure Key Vault");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
+            
+            if (string.IsNullOrWhiteSpace(secretValue))
+            {
+                throw new ArgumentException("Requires a non-blank secret value to store a secret in Azure Key Vault", nameof(secretValue));
+            }
 
             Logger.LogTrace("Storing secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
             Secret secret = await InteractWithKeyVaultAsync(
@@ -212,8 +237,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public virtual async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
+
+            if (amountOfVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+            }
 
             IEnumerable<Secret> secrets = await GetSecretsAsync(secretName, amountOfVersions);
             return secrets.Select(secret => secret.Value);
@@ -229,8 +261,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public virtual async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to request a secret in Azure Key Vault");
-            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+            }
+
+            if (amountOfVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+            }
 
             string[] versions = await DetermineVersionsAsync(secretName);
             var secrets = new Collection<Secret>();
@@ -345,7 +384,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// </returns>
         protected static Task<Response<KeyVaultSecret>> ThrottleTooManyRequestsAsync(Func<Task<Response<KeyVaultSecret>>> secretOperation)
         {
-            Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
+            if (secretOperation is null)
+            {
+                throw new ArgumentNullException(nameof(secretOperation));
+            }
+
             return GetExponentialBackOffRetryAsyncPolicy((RequestFailedException ex) => ex.Status == 429)
                     .ExecuteAsync(secretOperation);
         }
@@ -394,7 +437,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// </returns>
         protected static Response<KeyVaultSecret> ThrottleTooManyRequests(Func<Response<KeyVaultSecret>> secretOperation)
         {
-            Guard.NotNull(secretOperation, nameof(secretOperation), "Requires a function to throttle against too many requests exceptions");
+            if (secretOperation is null)
+            {
+                throw new ArgumentNullException(nameof(secretOperation));
+            }
+
             return GetExponentialBackOffRetrySyncPolicy((RequestFailedException ex) => ex.Status == 429)
                 .Execute(secretOperation);
         }

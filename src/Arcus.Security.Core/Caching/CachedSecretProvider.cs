@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching.Configuration;
-using GuardNet;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Core.Caching
@@ -29,16 +28,15 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <see cref="ICacheConfiguration.Duration"/> is not a positive time duration.</exception>
         public CachedSecretProvider(ISecretProvider secretProvider, ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
-            Guard.NotNull(memoryCache, nameof(memoryCache), "Requires a memory caching implementation to include caching while retrieving secrets");
-            Guard.NotNull(cacheConfiguration, nameof(cacheConfiguration), "Requires a configuration instance to influence the caching during the retrieval of secrets");
-            Guard.NotLessThan(cacheConfiguration.Duration, TimeSpan.Zero, nameof(cacheConfiguration), 
-                "Requires a positive time duration in the cache configuration in which the caching should take place");
-            
-            _secretProvider = secretProvider;
-            _cacheConfiguration = cacheConfiguration;
-            
-            MemoryCache = memoryCache;
+            _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
+            _cacheConfiguration = cacheConfiguration ?? throw new ArgumentNullException(nameof(cacheConfiguration));
+
+            if (_cacheConfiguration.Duration < TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(cacheConfiguration), cacheConfiguration.Duration, "Requires a positive time duration in the cache configuration in which the caching should take place");
+            }
+
+            MemoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
 
             CacheEntry = new MemoryCacheEntryOptions()
                 // Keep in cache for this time, reset time if accessed.
@@ -93,8 +91,11 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
-            
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
+
             return GetRawSecretAsync(secretName, ignoreCache: false);
         }
 
@@ -108,7 +109,10 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
             
             return GetSecretAsync(secretName, ignoreCache: false);
         }
@@ -124,7 +128,10 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
             
             Secret secret = await GetSecretAsync(secretName, ignoreCache);
             return secret?.Value;
@@ -141,7 +148,10 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             if (TryGetValueFromCache(secretName, ignoreCache, out Secret[] cachedSecret))
             {
@@ -177,8 +187,15 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the versioned secrets");
-            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to look up the versioned secrets");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
+            
+            if (amountOfVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to look up the versioned secrets");
+            }
 
             IEnumerable<Secret> secrets = await GetSecretsAsync(secretName, amountOfVersions);
             return secrets?.Select(secret => secret?.Value).ToArray();
@@ -194,8 +211,15 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         public async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the versioned secrets");
-            Guard.NotLessThan(amountOfVersions, 1, nameof(amountOfVersions), "Requires at least 1 secret version to look up the versioned secrets");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
+
+            if (amountOfVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to look up the versioned secrets");
+            }
 
             if (_secretProvider is IVersionedSecretProvider versionProvider)
             {
@@ -224,7 +248,10 @@ namespace Arcus.Security.Core.Caching
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
         public Task InvalidateSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to invalidate the cached secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to invalidate the secret", nameof(secretName));
+            }
 
             MemoryCache.Remove(secretName);
             return Task.CompletedTask;
@@ -239,7 +266,10 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             Secret secret = GetSecret(secretName);
             return secret?.Value;
@@ -254,7 +284,10 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+            }
 
             if (TryGetValueFromCache(secretName, ignoreCache: false, out Secret[] cachedSecrets))
             {
