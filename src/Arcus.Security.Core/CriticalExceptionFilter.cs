@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 
 namespace Arcus.Security.Core
 {
@@ -20,9 +19,16 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exceptionType"/> or the <paramref name="exceptionFilter"/> is <c>null</c>.</exception>
         public CriticalExceptionFilter(Type exceptionType, Func<Exception, bool> exceptionFilter)
         {
-            Guard.NotNull(exceptionType, nameof(exceptionType), "Requires an exception type to create an critical exception filter");
-            Guard.NotNull(exceptionFilter, nameof(exceptionFilter), "Requires an exception filter to determine whether an exception is considered critical");
-            
+            if (exceptionType is null)
+            {
+                throw new ArgumentNullException(nameof(exceptionType));
+            }
+
+            if (exceptionFilter is null)
+            {
+                throw new ArgumentNullException(nameof(exceptionFilter));
+            }
+
             _exceptionFilter = exceptionFilter;
             ExceptionType = exceptionType;
         }
@@ -42,7 +48,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exception"/> is <c>null</c>.</exception>
         public bool IsCritical(Exception exception)
         {
-            Guard.NotNull(exception, nameof(exception), "Requires an exception instance to determine if it's considered a critical one");
+            if (exception is null)
+            {
+                throw new ArgumentNullException(nameof(exception));
+            }
+
             return _exceptionFilter(exception);
         }
     }

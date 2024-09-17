@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Providers;
-using GuardNet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -26,8 +25,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="services"/> is <c>null</c>.</exception>
         public SecretStoreBuilder(IServiceCollection services)
         {
-            Guard.NotNull(services, nameof(services), "Requires a sequence of registered services to register the secret providers for the secret store");
-            Services = services;
+            Services = services ?? throw new ArgumentNullException(nameof(services));
         }
 
         /// <summary>
@@ -69,9 +67,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public SecretStoreBuilder AddProvider(ISecretProvider secretProvider)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to add to the secret store");
-
-            return AddProvider(secretProvider, configureOptions: null);
+            return AddProvider(secretProvider ?? throw new ArgumentNullException(nameof(secretProvider)), configureOptions: null);
         }
 
         /// <summary>
@@ -87,7 +83,10 @@ namespace Microsoft.Extensions.Hosting
             ISecretProvider secretProvider,
             Action<SecretProviderOptions> configureOptions)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to add to the secret store");
+            if (secretProvider is null)
+            {
+                throw new ArgumentNullException(nameof(secretProvider));
+            }
 
             var options = new SecretProviderOptions();
             configureOptions?.Invoke(options);
@@ -115,9 +114,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
         public SecretStoreBuilder AddProvider(Func<IServiceProvider, ISecretProvider> createSecretProvider)
         {
-            Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create a secret provider to add to the secret store");
-
-            return AddProvider(createSecretProvider, configureOptions: null);
+            return AddProvider(createSecretProvider ?? throw new ArgumentNullException(nameof(createSecretProvider)), configureOptions: null);
         }
 
         /// <summary>
@@ -133,7 +130,10 @@ namespace Microsoft.Extensions.Hosting
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             Action<SecretProviderOptions> configureOptions)
         {
-            Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create a secret provider to add to the secret store");
+            if (createSecretProvider is null)
+            {
+                throw new ArgumentNullException(nameof(createSecretProvider));
+            }
 
             var options = new SecretProviderOptions();
             configureOptions?.Invoke(options);
@@ -171,7 +171,10 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exceptionFilter"/> is <c>null</c>.</exception>
         public SecretStoreBuilder AddCriticalException<TException>(Func<TException, bool> exceptionFilter) where TException : Exception
         {
-            Guard.NotNull(exceptionFilter, nameof(exceptionFilter), "Requires an exception filter to select only exceptions that match a specific criteria");
+            if (exceptionFilter is null)
+            {
+                throw new ArgumentNullException(nameof(exceptionFilter));
+            }
 
             CriticalExceptionFilters.Add(new CriticalExceptionFilter(typeof(TException), exception =>
             {
@@ -193,9 +196,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configureOptions"/> is <c>null</c>.</exception>
         public SecretStoreBuilder WithAuditing(Action<SecretStoreAuditingOptions> configureOptions)
         {
-            Guard.NotNull(configureOptions, nameof(configureOptions), "Requires a function to configure the auditing options");
-
-            _configureAuditingOptions.Add(configureOptions);
+            _configureAuditingOptions.Add(configureOptions ?? throw new ArgumentNullException(nameof(configureOptions)));
             return this;
         }
 

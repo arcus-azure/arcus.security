@@ -1,6 +1,5 @@
 ﻿using System;
 using Arcus.Security.Core.Caching;
-using GuardNet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,9 +26,7 @@ namespace Arcus.Security.Core
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             SecretProviderOptions options)
         {
-            Guard.NotNull(createSecretProvider, nameof(createSecretProvider), "Requires a function to create an secret provider instance to register it in the secret store");
-            
-            _createSecretProvider = createSecretProvider;
+            _createSecretProvider = createSecretProvider ?? throw new ArgumentNullException(nameof(createSecretProvider));
             
             Options = options ?? new SecretProviderOptions();
         }
@@ -42,9 +39,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public SecretStoreSource(ISecretProvider secretProvider, SecretProviderOptions options)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance to register it in the secret store");
-
-            AssignSecretProvider(secretProvider);
+            AssignSecretProvider(secretProvider ?? throw new ArgumentNullException(nameof(secretProvider)));
             Options = options ?? new SecretProviderOptions();
         }
 
@@ -98,8 +93,10 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="serviceProvider"/> is <c>null</c>.</exception>
         public void EnsureSecretProviderCreated(IServiceProvider serviceProvider)
         {
-            Guard.NotNull(serviceProvider, nameof(serviceProvider), 
-                $"Requires an instance to provide the registered services to create the {nameof(ISecretProvider)} and possible {nameof(ICachedSecretProvider)}");
+            if (serviceProvider is null)
+            {
+                throw new ArgumentNullException(nameof(serviceProvider));
+            }
 
             if (_secretProvider is null)
             {
