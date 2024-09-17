@@ -144,6 +144,11 @@ namespace Microsoft.Extensions.Hosting
             Action<KeyVaultOptions> configureOptions,
             Action<SecretProviderOptions> configureProviderOptions)
         {
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                throw new ArgumentException("Requires a non-blank client ID to authenticate the Azure Key vault secret provider with a certificate", nameof(clientId));
+            }
+
             return AddAzureKeyVault(
                 builder,
                 new ClientCertificateCredential(tenantId, clientId, certificate),
@@ -468,6 +473,16 @@ namespace Microsoft.Extensions.Hosting
             Action<KeyVaultOptions> configureOptions,
             Action<SecretProviderOptions> configureProviderOptions)
         {
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                throw new ArgumentException("Requires a non-blank client ID to authenticate the Azure Key vault secret provider", nameof(clientId));
+            }
+
+            if (string.IsNullOrWhiteSpace(clientKey))
+            {
+                throw new ArgumentException("Requires a non-blank client secret to authenticate the Azure Key vault secret provider", nameof(clientKey));
+            }
+
             return AddAzureKeyVault(
                 builder,
                 new ClientSecretCredential(tenantId, clientId, clientKey), 

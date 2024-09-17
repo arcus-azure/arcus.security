@@ -29,8 +29,14 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         /// </summary>
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="rawVaultUri"/> is not using https.</exception>
-        public KeyVaultConfiguration(string rawVaultUri) : this(new Uri(rawVaultUri))
+        public KeyVaultConfiguration(string rawVaultUri)
         {
+            if (string.IsNullOrWhiteSpace(rawVaultUri))
+            {
+                throw new ArgumentException("Requires a non-blank Azure Key vault URI", nameof(rawVaultUri));
+            }
+
+            VaultUri = new Uri(rawVaultUri);
         }
     }
 }
