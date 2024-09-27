@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Arcus.Observability.Telemetry.Core;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp.Configuration;
-using GuardNet;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using VaultSharp;
@@ -46,10 +45,25 @@ namespace Arcus.Security.Providers.HashiCorp
             HashiCorpVaultOptions options,
             ILogger<HashiCorpSecretProvider> logger)
         {
-            Guard.NotNull(settings, nameof(settings), "Requires HashiCorp settings to successfully connect to the Vault");
-            Guard.NotNull(settings.AuthMethodInfo, nameof(settings.AuthMethodInfo), "Requires a authentication method to connect to the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault KeyValue secret engine should look for secrets");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
+            if (settings is null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            if (settings.AuthMethodInfo is null)
+            {
+                throw new ArgumentNullException(nameof(settings), "Requires a authentication method to connect to the HashiCorp Vault");
+            }
+
+            if (string.IsNullOrWhiteSpace(secretPath))
+            {
+                throw new ArgumentException("Requires a path where the HashiCorp Vault KeyValue secret engine should look for secrets", nameof(secretPath));
+            }
+
+            if (!Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute))
+            {
+                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
+            }
 
             Options = options;
             SecretPath = secretPath;
@@ -85,9 +99,6 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), 
-                $"Requires a non-blank secret name to look up the secret in the HashiCorp Vault {Options.KeyValueVersion} KeyValue secret engine");
-
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
         }
@@ -100,9 +111,6 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName),
-                $"Requires a non-blank secret name to look up the secret in the HashiCorp Vault {Options.KeyValueVersion} KeyValue secret engine");
-
             SecretData result = await GetTrackedSecretAsync(secretName);
 
             if (result.Data.TryGetValue(secretName, out object value) && value != null)
@@ -128,8 +136,10 @@ namespace Arcus.Security.Providers.HashiCorp
         /// </exception>
         protected async Task<SecretData> GetTrackedSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName),
-                $"Requires a non-blank secret name to look up the secret in the HashiCorp Vault {Options.KeyValueVersion} KeyValue secret engine");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException($"Requires a non-blank secret name to look up the secret in the HashiCorp Vault {Options.KeyValueVersion} KeyValue secret engine", nameof(secretName));
+            }
 
             var context = new Dictionary<string, object>
             {

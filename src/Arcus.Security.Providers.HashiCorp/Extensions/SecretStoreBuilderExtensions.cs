@@ -2,7 +2,6 @@
 using System.Net;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp.Configuration;
-using GuardNet;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -45,13 +44,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string password,
             string secretPath)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(username, nameof(username), "Requires a username for the UserPass authentication during connecting with the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(password, nameof(password), "Requires a password for the UserPass authentication during connecting with the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault secrets are stored");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
-
             return AddHashiCorpVaultWithUserPass(builder, vaultServerUriWithPort, username, password, secretPath, configureOptions: null);
         }
 
@@ -83,13 +75,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string secretPath,
             Action<HashiCorpVaultUserPassOptions> configureOptions)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(username, nameof(username), "Requires a username for the UserPass authentication during connecting with the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(password, nameof(password), "Requires a password for the UserPass authentication during connecting with the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault secrets are stored");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
-
             return AddHashiCorpVaultWithUserPass(builder, vaultServerUriWithPort, username, password, secretPath, configureOptions, name: null, mutateSecretName: null);
         }
 
@@ -125,12 +110,30 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(username, nameof(username), "Requires a username for the UserPass authentication during connecting with the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(password, nameof(password), "Requires a password for the UserPass authentication during connecting with the HashiCorp Vault");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault secrets are stored");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
+            if (string.IsNullOrWhiteSpace(vaultServerUriWithPort))
+            {
+                throw new ArgumentException("Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault", nameof(vaultServerUriWithPort));
+            }
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                throw new ArgumentException("Requires a username for the UserPass authentication during connecting with the HashiCorp Vault", nameof(username));
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                throw new ArgumentException("Requires a password for the UserPass authentication during connecting with the HashiCorp Vault", nameof(password));
+            }
+
+            if (string.IsNullOrWhiteSpace(secretPath))
+            {
+                throw new ArgumentException("Requires a path where the HashiCorp Vault secrets are stored", nameof(secretPath));
+            }
+
+            if (!Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute))
+            {
+                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(vaultServerUriWithPort));
+            }
 
             var options = new HashiCorpVaultUserPassOptions();
             configureOptions?.Invoke(options);
@@ -175,12 +178,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string jsonWebToken,
             string secretPath)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(jsonWebToken, nameof(jsonWebToken), "Requires a valid Json Web Token (JWT) during the Kubernetes authentication procedure");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault secrets are stored");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
-
             return AddHashiCorpVaultWithKubernetes(builder, vaultServerUriWithPort, roleName, jsonWebToken, secretPath, configureOptions: null, name: null, mutateSecretName: null);
         }
 
@@ -220,11 +217,25 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNullOrWhitespace(vaultServerUriWithPort, nameof(vaultServerUriWithPort), "Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(jsonWebToken, nameof(jsonWebToken), "Requires a valid Json Web Token (JWT) during the Kubernetes authentication procedure");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a path where the HashiCorp Vault secrets are stored");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
+            if (string.IsNullOrWhiteSpace(vaultServerUriWithPort))
+            {
+                throw new ArgumentException("Requires a valid HashiCorp Vault URI with HTTP port to connect to the running HashiCorp Vault", nameof(vaultServerUriWithPort));
+            }
+
+            if (string.IsNullOrWhiteSpace(jsonWebToken))
+            {
+                throw new ArgumentException("Requires a valid Json Web Token (JWT) during the Kubernetes authentication procedure", nameof(jsonWebToken));
+            }
+
+            if (string.IsNullOrWhiteSpace(secretPath))
+            {
+                throw new ArgumentException("Requires a path where the HashiCorp Vault secrets are stored", nameof(secretPath));
+            }
+            
+            if (!Uri.IsWellFormedUriString(vaultServerUriWithPort, UriKind.RelativeOrAbsolute))
+            {
+                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(vaultServerUriWithPort));
+            }
 
             var options = new HashiCorpVaultKubernetesOptions();
             configureOptions?.Invoke(options);
@@ -262,13 +273,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             VaultClientSettings settings,
             string secretPath)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNull(settings, nameof(settings), "Requires HashiCorp Vault settings to correctly connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(settings.VaultServerUriWithPort, nameof(settings.VaultServerUriWithPort), "Requires a non-blank HashiCorp Vault settings to have a valid URI with HTTP port");
-            Guard.NotNull(settings.AuthMethodInfo, nameof(settings.AuthMethodInfo), "Requires the HashiCorp Vault settings to have an authentication method configured");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a secret path to look for secret values");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
-
             return AddHashiCorpVault(builder, settings, secretPath, configureOptions: null, name: null, mutateSecretName: null);
         }
 
@@ -301,13 +305,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNull(settings, nameof(settings), "Requires HashiCorp Vault settings to correctly connect to the running HashiCorp Vault");
-            Guard.NotNullOrWhitespace(settings.VaultServerUriWithPort, nameof(settings.VaultServerUriWithPort), "Requires a non-blank HashiCorp Vault settings to have a valid URI with HTTP port");
-            Guard.NotNull(settings.AuthMethodInfo, nameof(settings.AuthMethodInfo), "Requires the HashiCorp Vault settings to have an authentication method configured");
-            Guard.NotNullOrWhitespace(secretPath, nameof(secretPath), "Requires a secret path to look for secret values");
-            Guard.For<ArgumentException>(() => !Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute), "Requires a HashiCorp Vault server URI with HTTP port");
-
             var options = new HashiCorpVaultOptions();
             configureOptions?.Invoke(options);
 
@@ -335,9 +332,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Func<IServiceProvider, TSecretProvider> implementationFactory)
             where TSecretProvider : HashiCorpSecretProvider
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNull(implementationFactory, nameof(implementationFactory), "Requires a factory function to create a HashiCorp KeyValue Vault secret provider implementation");
-
             return AddHashiCorpVault(builder, implementationFactory, name: null, mutateSecretName: null);
         }
 
@@ -362,9 +356,11 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             Func<string, string> mutateSecretName)
             where TSecretProvider : HashiCorpSecretProvider
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the HashiCorp Vault secret provider");
-            Guard.NotNull(implementationFactory, nameof(implementationFactory), "Requires a factory function to create a HashiCorp KeyValue Vault secret provider implementation");
-            
+            if (implementationFactory is null)
+            {
+                throw new ArgumentNullException(nameof(implementationFactory));
+            }
+
             AddHashiCorpCriticalExceptions(builder);
 
             return builder.AddProvider(implementationFactory, options =>

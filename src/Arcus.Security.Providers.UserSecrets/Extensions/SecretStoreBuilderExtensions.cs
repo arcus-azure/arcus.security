@@ -3,7 +3,6 @@ using System.IO;
 using System.Reflection;
 using Arcus.Security.Core;
 using Arcus.Security.Providers.UserSecrets;
-using GuardNet;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.FileProviders;
@@ -31,8 +30,6 @@ namespace Microsoft.Extensions.Hosting
             this SecretStoreBuilder builder,
             Func<string, string> mutateSecretName = null) where T : class
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
-
             return AddUserSecrets<T>(builder, options => options.MutateSecretName = mutateSecretName);
         }
 
@@ -51,8 +48,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName) where T : class
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
-
             return AddUserSecrets<T>(builder, options =>
             {
                 options.Name = name;
@@ -80,9 +75,6 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="InvalidOperationException">Thrown when <paramref name="assembly"/> does not have a valid <see cref="UserSecretsIdAttribute"/>.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
-            Guard.NotNull(assembly, nameof(assembly), "Requires an assembly to retrieve the user secrets ID which locates the local user secrets");
-
             return AddUserSecrets(builder, assembly, options => options.MutateSecretName = mutateSecretName);
         }
 
@@ -103,9 +95,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
-            Guard.NotNull(assembly, nameof(assembly), "Requires an assembly to retrieve the user secrets ID which locates the local user secrets");
-
             return AddUserSecrets(builder, assembly, options =>
             {
                 options.Name = name;
@@ -121,6 +110,11 @@ namespace Microsoft.Extensions.Hosting
 
         private static string GetUserSecretsIdFromTypeAssembly(Assembly assembly)
         {
+            if (assembly is null)
+            {
+                throw new ArgumentNullException(nameof(assembly));
+            }
+
             var attribute = assembly.GetCustomAttribute<UserSecretsIdAttribute>();
             if (attribute is null)
             {
@@ -144,9 +138,6 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentException">Thrown when the <paramref name="userSecretsId"/> is blank.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, string userSecretsId, Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
-            Guard.NotNullOrWhitespace(userSecretsId, nameof(userSecretsId), "Requires a non-blank user secrets ID to locate the user secrets");
-
             return AddUserSecrets(builder, userSecretsId, options => options.MutateSecretName = mutateSecretName);
         }
 
@@ -166,9 +157,6 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the user secrets");
-            Guard.NotNullOrWhitespace(userSecretsId, nameof(userSecretsId), "Requires a non-blank user secrets ID to locate the user secrets");
-
             return AddUserSecrets(builder, userSecretsId, options =>
             {
                 options.Name = name;
@@ -189,6 +177,11 @@ namespace Microsoft.Extensions.Hosting
 
         private static string GetUserSecretsDirectoryPath(string usersSecretsId)
         {
+            if (string.IsNullOrWhiteSpace(usersSecretsId))
+            {
+                throw new ArgumentException("Requires a non-blank user secret ID to determine the local path of the users secrets", nameof(usersSecretsId));
+            }
+
             string secretPath = PathHelper.GetSecretsPathFromSecretsId(usersSecretsId);
             string directoryPath = Path.GetDirectoryName(secretPath);
             

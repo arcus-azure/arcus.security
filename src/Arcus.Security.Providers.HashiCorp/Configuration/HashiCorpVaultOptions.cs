@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 using VaultSharp.V1.SecretsEngines;
 
 namespace Arcus.Security.Providers.HashiCorp.Configuration
@@ -21,7 +20,11 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
             get => _keyValueMountPoint;
             set
             {
-                Guard.NotNullOrWhitespace(value, nameof(value), "Requires a non-blank point where the KeyVault secret engine is mounted");
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Requires a non-blank point where the KeyVault secret engine is mounted", nameof(value)); 
+                }
+
                 _keyValueMountPoint = value;
             }
         }
@@ -35,7 +38,11 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
             get => _engineVersion;
             set
             {
-                Guard.For<ArgumentOutOfRangeException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), value), "Requires the client API version to be either V1 or V2");
+                if (!Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), value))
+                {
+                    throw new ArgumentException("Requires the client API version to be either V1 or V2", nameof(value));
+                }
+
                 _engineVersion = value;
             }
         }
