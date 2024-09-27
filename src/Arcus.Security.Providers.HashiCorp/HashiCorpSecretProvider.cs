@@ -60,6 +60,11 @@ namespace Arcus.Security.Providers.HashiCorp
                 throw new ArgumentException("Requires a path where the HashiCorp Vault KeyValue secret engine should look for secrets", nameof(secretPath));
             }
 
+            if (string.IsNullOrWhiteSpace(settings.VaultServerUriWithPort))
+            {
+                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
+            }
+
             if (!Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute))
             {
                 throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));

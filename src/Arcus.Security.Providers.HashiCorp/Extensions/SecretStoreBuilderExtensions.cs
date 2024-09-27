@@ -377,6 +377,26 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             HashiCorpVaultOptions options,
             Action<SecretProviderOptions> configureSecretProviderOptions)
         {
+            if (settings is null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            if (settings.AuthMethodInfo is null)
+            {
+                throw new ArgumentNullException(nameof(settings), "Requires a authentication method to connect to the HashiCorp Vault");
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.VaultServerUriWithPort))
+            {
+                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
+            }
+
+            if (!Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute))
+            {
+                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
+            }
+
             AddHashiCorpCriticalExceptions(builder);
 
             return builder.AddProvider(serviceProvider =>
