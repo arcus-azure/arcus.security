@@ -18,6 +18,10 @@ parameters:
   - name: 'Package.Version.ManualTrigger'
     type: string
     default: 'preview'
+  - name: azureServiceConnection
+    displayName: 'Azure service connection'
+    type: string
+    default: 'Azure Codit-Arcus Service Principal'
 
 resources:
   repositories:
@@ -27,9 +31,6 @@ resources:
       endpoint: arcus-azure
 
 variables:
-  # 'Arcus_ServicePrincipal_AccessKey' is added as secret on build in Azure DevOps
-  - group: 'Arcus Security - Integration Testing'
-  - group: 'Arcus - GitHub Package Registry'
   - group: 'Build Configuration'
   - template: ./variables/build.yml
   - template: ./variables/test.yml
@@ -106,14 +107,10 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: 'templates/download-hashicorp-vault.yml'
-            parameters:
-              targetFolder: '$(Build.SourcesDirectory)'
-              version: $(HashiCorp.Vault.Version)
-              vaultBinVariableName: 'Arcus.HashiCorp.VaultBin'
           - template: templates/run-integration-tests.yml
             parameters:
               dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
+              azureServiceConnection: '${{ parameters.azureServiceConnection }}'
 
   - stage: ReleaseToMyget
     displayName: 'Release to MyGet'

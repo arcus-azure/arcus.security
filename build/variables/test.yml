@@ -1,5 +1,8 @@
 variables:
-  Arcus.KeyVault.TestKeyName: "ArcusTestSecret"
-  Arcus.KeyVault.TestKeyVersion: "8bde7a16366849e28b7abe26732e12e3"
+  Arcus.Security.KeyVault.Name: 'arcus-security-kv'
+  Arcus.Security.KeyVault.TestSecretName: 'ArcusTestSecret'
+  Arcus.General.KeyVault.Name: 'arcus-kv'
+  Arcus.General.Unauthorized.ServicePrincipal.ClientId.SecretName: 'Arcus-Unauthorized-ServicePrincipal-ClientId'
+  Arcus.General.Unauthorized.ServicePrincipal.ClientSecret.SecretName: 'Arcus-Unauthorized-ServicePrincipal-ClientSecret'
+  Arcus.AzureFunctions.HttpPort: '5000'
   HashiCorp.Vault.Version: 1.5.0
-  Arcus.AzureFunctions.HttpPort: "5000"

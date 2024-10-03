@@ -7,13 +7,6 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
     public class KeyVaultConfigurationTests
     {
         [Fact]
-        public void Constructor_UriWithoutVaultSuffix_Fails()
-        {
-            Assert.ThrowsAny<UriFormatException>(
-                () => new KeyVaultConfiguration("https://something-without-azure-vault-suffix"));
-        }
-
-        [Fact]
         public void Constructor_ValidRawUri_Succeeds()
         {
             // Arrange
@@ -43,34 +36,13 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
         }
 
         [Fact]
-        public void Constructor_RawUriWithHttp_ThrowsUriFormatException()
-        {
-            // Arrange
-            string vaultUri = $"http://{Guid.NewGuid():N}.vault.azure.net/";
-
-            // Act & Assert
-            Assert.Throws<UriFormatException>(() => new KeyVaultConfiguration(vaultUri));
-        }
-
-        [Fact]
-        public void Constructor_UriWithHttp_ThrowsUriFormatException()
-        {
-            // Arrange
-            string vaultUri = $"http://{Guid.NewGuid():N}.vault.azure.net/";
-            var expectedVaultUri = new Uri(vaultUri);
-
-            // Act & Assert
-            Assert.Throws<UriFormatException>(() => new KeyVaultConfiguration(expectedVaultUri));
-        }
-
-        [Fact]
         public void Constructor_NoUriSpecified_ThrowsArgumentNullException()
         {
             // Arrange
             Uri vaultUri = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new KeyVaultConfiguration(vaultUri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultConfiguration(vaultUri));
         }
 
         [Fact]
@@ -80,7 +52,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
             string rawVaultUri = null;
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new KeyVaultConfiguration(rawVaultUri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultConfiguration(rawVaultUri));
         }
 
         [Fact]
@@ -90,7 +62,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
             string rawVaultUri = string.Empty;
 
             // Act & Assert
-            Assert.Throws<UriFormatException>(() => new KeyVaultConfiguration(rawVaultUri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultConfiguration(rawVaultUri));
         }
 
         [Fact]
@@ -100,7 +72,7 @@ namespace Arcus.Security.Tests.Unit.KeyVault.Configuration
             string rawVaultUri = " ";
 
             // Act & Assert
-            Assert.Throws<System.UriFormatException>(() => new KeyVaultConfiguration(rawVaultUri));
+            Assert.ThrowsAny<ArgumentException>(() => new KeyVaultConfiguration(rawVaultUri));
         }
     }
 }

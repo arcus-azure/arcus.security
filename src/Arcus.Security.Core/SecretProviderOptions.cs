@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using GuardNet;
-using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Core
 {
@@ -28,10 +26,11 @@ namespace Arcus.Security.Core
             get => _name;
             set
             {
-                Guard.For<ArgumentException>(
-                    () => value != null && String.IsNullOrWhiteSpace(value),
-                    "Requires a non-blank value for the name of the secret provider to be registered in the secret store");
-                
+                if (value != null && string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Requires a non-blank value for the name of the secret provider to be registered in the secret store", nameof(value));
+                }
+
                 _name = value;
             }
         }
@@ -46,8 +45,15 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="allowedVersions"/> is less than zero.</exception>
         public void AddVersionedSecret(string secretName, int allowedVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to make the secret a versioned secret in the secret store");
-            Guard.NotLessThan(allowedVersions, 1, nameof(allowedVersions), "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to make the secret a versioned secret in the secret store", nameof(secretName));
+            }
+
+            if (allowedVersions < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(allowedVersions), allowedVersions, "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
+            }
 
             _versionedSecretNames[secretName] = allowedVersions;
         }
@@ -63,7 +69,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         internal bool TryGetAllowedSecretVersions(string secretName, out int allowedVersions)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to retrieve a versioned secret in the secret store");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to make the secret a versioned secret in the secret store", nameof(secretName));
+            }
+
             return _versionedSecretNames.TryGetValue(secretName, out allowedVersions);
         }
     }
