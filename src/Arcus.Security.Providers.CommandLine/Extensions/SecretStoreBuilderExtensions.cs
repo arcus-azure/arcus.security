@@ -1,6 +1,5 @@
 ﻿using System;
 using Arcus.Security.Providers.CommandLine;
-using GuardNet;
 using Microsoft.Extensions.Configuration.CommandLine;
 
 // ReSharper disable once CheckNamespace
@@ -19,9 +18,6 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="arguments"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddCommandLine(this SecretStoreBuilder builder, string[] arguments)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the command line arguments as secrets to the secret store");
-            Guard.NotNull(arguments, nameof(arguments), "Requires a set of command line arguments to be set as secret in the secret store");
-
             return AddCommandLine(builder, arguments, name: null);
         }
 
@@ -34,9 +30,6 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="arguments"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddCommandLine(this SecretStoreBuilder builder, string[] arguments, string name)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the command line arguments as secrets to the secret store");
-            Guard.NotNull(arguments, nameof(arguments), "Requires a set of command line arguments to be set as secret in the secret store");
-
             return AddCommandLine(builder, arguments, name, mutateSecretName: null);
         }
 
@@ -49,9 +42,6 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="arguments"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddCommandLine(this SecretStoreBuilder builder, string[] arguments, Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the command line arguments as secrets to the secret store");
-            Guard.NotNull(arguments, nameof(arguments), "Requires a set of command line arguments to be set as secret in the secret store");
-
             return AddCommandLine(builder, arguments, name: null, mutateSecretName: mutateSecretName);
         }
 
@@ -65,9 +55,16 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="arguments"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddCommandLine(this SecretStoreBuilder builder, string[] arguments, string name, Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the command line arguments as secrets to the secret store");
-            Guard.NotNull(arguments, nameof(arguments), "Requires a set of command line arguments to be set as secret in the secret store");
-            
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            if (arguments is null)
+            {
+                throw new ArgumentNullException(nameof(arguments));
+            }
+
             var configProvider = new CommandLineConfigurationProvider(arguments);
             configProvider.Load();
             
