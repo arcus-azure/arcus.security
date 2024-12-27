@@ -1,4 +1,4 @@
-﻿using GuardNet;
+﻿using System;
 using VaultSharp.V1.AuthMethods;
 
 namespace Arcus.Security.Providers.HashiCorp.Configuration
@@ -19,7 +19,11 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
             get => _userPassMountPoint;
             set
             {
-                Guard.NotNullOrWhitespace(value, nameof(value), "Requires a non-blank mount point for the UserPass authentication");
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Requires a non-blank mount point for the UserPass authentication", nameof(value));
+                }
+
                 _userPassMountPoint = value;
             }
         }

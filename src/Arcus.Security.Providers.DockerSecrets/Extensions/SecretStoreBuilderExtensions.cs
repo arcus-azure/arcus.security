@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Arcus.Security.Providers.DockerSecrets;
-using GuardNet;
 using Microsoft.Extensions.Configuration.KeyPerFile;
 using Microsoft.Extensions.FileProviders;
 
@@ -23,16 +22,6 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
         public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath, Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Docker secrets to");
-            Guard.NotNullOrWhitespace(directoryPath, nameof(directoryPath), "Requires a non-blank directory path inside the Docker container to locate the secrets");
-            Guard.For(() => !Path.IsPathRooted(directoryPath), 
-                new ArgumentException("Requires an absolute directory path inside the Docker container to located the secrets", nameof(directoryPath)));
-            
-            if (!Directory.Exists(directoryPath))
-            {
-                throw new DirectoryNotFoundException($"The directory {directoryPath} which is configured as secretsDirectoryPath does not exist.");
-            }
-            
             return AddDockerSecrets(builder, directoryPath, name: null, mutateSecretName: mutateSecretName);
         }
 
@@ -52,10 +41,20 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the Docker secrets to");
-            Guard.NotNullOrWhitespace(directoryPath, nameof(directoryPath), "Requires a non-blank directory path inside the Docker container to locate the secrets");
-            Guard.For(() => !Path.IsPathRooted(directoryPath), 
-                new ArgumentException("Requires an absolute directory path inside the Docker container to located the secrets", nameof(directoryPath)));
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            if (string.IsNullOrWhiteSpace(directoryPath))
+            {
+                throw new ArgumentException("Requires a non-blank directory path inside the Docker container to locate the secrets", nameof(directoryPath));
+            }
+
+            if (!Path.IsPathRooted(directoryPath))
+            {
+                throw new ArgumentException("Requires an absolute directory path inside the Docker container to located the secrets", nameof(directoryPath));
+            }
 
             if (!Directory.Exists(directoryPath))
             {

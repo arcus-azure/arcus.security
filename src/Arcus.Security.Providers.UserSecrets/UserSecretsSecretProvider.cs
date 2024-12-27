@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
-using GuardNet;
 using Microsoft.Extensions.Configuration.Json;
 
 namespace Arcus.Security.Providers.UserSecrets
@@ -20,8 +19,7 @@ namespace Arcus.Security.Providers.UserSecrets
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="jsonProvider"/> is <c>null</c>.</exception>
         public UserSecretsSecretProvider(JsonConfigurationProvider jsonProvider)
         {
-            Guard.NotNull(jsonProvider, nameof(jsonProvider), "Requires a JSON configuration instance to provide user secrets");
-            _jsonProvider = jsonProvider;
+            _jsonProvider = jsonProvider ?? throw new ArgumentNullException(nameof(jsonProvider));
         }
 
         /// <summary>
@@ -34,8 +32,6 @@ namespace Arcus.Security.Providers.UserSecrets
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
-
             Secret secret = GetSecret(secretName);
             return Task.FromResult(secret);
         }
@@ -50,8 +46,6 @@ namespace Arcus.Security.Providers.UserSecrets
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
-
             string secretValue = GetRawSecret(secretName);
             return Task.FromResult(secretValue);
         }
@@ -65,8 +59,6 @@ namespace Arcus.Security.Providers.UserSecrets
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
-
             string secretValue = GetRawSecret(secretName);
             if (secretValue is null)
             {
@@ -85,7 +77,10 @@ namespace Arcus.Security.Providers.UserSecrets
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the user secret value");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name to look up the user secret value", nameof(secretName));
+            }
 
             if (_jsonProvider.TryGet(secretName, out string value))
             {
