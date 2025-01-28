@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GuardNet;
 
 // ReSharper disable once CheckNamespace
 namespace Arcus.Security.Core
@@ -23,8 +22,14 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public static string GetRawSecret(this ISecretProvider secretProvider, string secretName)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (secretProvider is null)
+            {
+                throw new ArgumentNullException(nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
+            }
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            }
 
             if (secretProvider is ISyncSecretProvider composite)
             {
@@ -46,8 +51,14 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public static Secret GetSecret(this ISecretProvider secretProvider, string secretName)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (secretProvider is null)
+            {
+                throw new ArgumentNullException(nameof(secretProvider
+            }
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            }
 
             if (secretProvider is ISyncSecretProvider composite)
             {
@@ -73,7 +84,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public static async Task<IEnumerable<string>> GetRawSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            }
 
             if (secretProvider is CompositeSecretProvider composite)
             {
@@ -99,7 +113,10 @@ namespace Arcus.Security.Core
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public static async Task<IEnumerable<Secret>> GetSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            }
 
             if (secretProvider is CompositeSecretProvider composite)
             {

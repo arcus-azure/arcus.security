@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using GuardNet;
 using Microsoft.Extensions.Configuration;
 
 namespace Arcus.Security.Core.Providers
@@ -19,7 +18,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> is <c>null</c>.</exception>
         public ConfigurationSecretProvider(IConfiguration configuration)
         {
-            Guard.NotNull(configuration, nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
+            if (configuration is null)
+            {
+                throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
+            }
 
             _configuration = configuration;
         }
@@ -32,7 +34,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            }
 
             Secret secret = GetSecret(secretName);
             return Task.FromResult(secret);
@@ -46,7 +51,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            }
 
             string secretValue = GetRawSecret(secretName);
             return Task.FromResult(secretValue);
@@ -61,7 +69,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            }
 
             string secretValue = GetRawSecret(secretName);
             if (secretValue is null)
@@ -81,7 +92,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+            }
             
             string secretValue = _configuration[secretName];
             return secretValue;

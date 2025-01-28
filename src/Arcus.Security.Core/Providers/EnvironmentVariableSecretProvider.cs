@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using GuardNet;
 
 namespace Arcus.Security.Core.Providers
 {
@@ -22,8 +21,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
         public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget, string prefix = null)
         {
-            Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(EnvironmentVariableTarget), target), 
-                $"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
+            if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
+            {
+                throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
+            }
 
             _prefix = prefix ?? String.Empty;
             _target = target;
@@ -39,7 +40,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            }
 
             Secret secret = GetSecret(secretName);
             return Task.FromResult(secret);
@@ -55,7 +59,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            }
 
             string secretValue = GetRawSecret(secretName);
             return Task.FromResult(secretValue);
@@ -70,7 +77,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            }
 
             string secretValue = GetRawSecret(secretName);
             if (secretValue is null)
@@ -90,7 +100,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+            }
 
             string environmentVariable = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
             return environmentVariable;

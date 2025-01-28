@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
-using GuardNet;
 using Microsoft.Extensions.Logging;
 
 namespace Arcus.Security.Core.Providers
@@ -29,7 +28,11 @@ namespace Arcus.Security.Core.Providers
             ILogger logger)
             : base(implementation, mutateSecretName, logger)
         {
-            Guard.NotNull(implementation, nameof(implementation), "Requires an secret provider instance to pass the mutated secret name to");
+            if (implementation is null)
+            {
+                throw new ArgumentNullException(nameof(implementation), "Requires a secret provider instance to pass the mutated")
+            }
+
             _implementation = implementation;
         }
 
@@ -49,7 +52,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            }
 
             string secretValue = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
@@ -70,7 +76,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            }
 
             Secret secret = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
@@ -87,7 +96,10 @@ namespace Arcus.Security.Core.Providers
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
         public async Task InvalidateSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            }
 
             await SafeguardMutateSecretAsync(secretName, async mutatedSecretName => 
             {

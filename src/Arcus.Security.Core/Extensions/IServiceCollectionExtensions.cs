@@ -1,6 +1,5 @@
 ﻿using System;
 using Arcus.Security.Core;
-using GuardNet;
 using Microsoft.Extensions.Hosting;
 
 // ReSharper disable once CheckNamespace
@@ -20,8 +19,14 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="services"/> or <paramref name="configureSecretStores"/> is <c>null</c>.</exception>
         public static IServiceCollection AddSecretStore(this IServiceCollection services, Action<SecretStoreBuilder> configureSecretStores)
         {
-            Guard.NotNull(services, nameof(services), "Requires a set of services to add the secret store");
-            Guard.NotNull(configureSecretStores, nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
+            if (services is null)
+            {
+                throw new ArgumentNullException(nameof(services), "Requires a set of services to add the secret store");
+            }
+            if (configureSecretStores is null)
+            {
+                throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
+            }
 
             var builder = new SecretStoreBuilder(services);
             configureSecretStores(builder);
