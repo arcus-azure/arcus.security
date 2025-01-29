@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
-using GuardNet;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -24,7 +23,11 @@ namespace Arcus.Security.Tests.Runtimes.AzureFunctions
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public OrderFunction(ISecretProvider secretProvider, ILogger<OrderFunction> logger)
         {
-            Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider instance");
+            if (secretProvider is null)
+            {
+                throw new ArgumentNullException(nameof(secretProvider), "Requires a secret provider instance");
+            }
+
             _secretProvider = secretProvider;
         }
 
