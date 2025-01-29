@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Microsoft.Extensions.Configuration;
-using GuardNet;
 
 namespace Arcus.Security.Providers.AzureKeyVault.Configuration
 {
