@@ -26,9 +26,10 @@ namespace Arcus.Security.Core
             {
                 throw new ArgumentNullException(nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
             }
+
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
 
             if (secretProvider is ISyncSecretProvider composite)
@@ -55,9 +56,10 @@ namespace Arcus.Security.Core
             {
                 throw new ArgumentNullException(nameof(secretProvider
             }
+
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
 
             if (secretProvider is ISyncSecretProvider composite)
@@ -86,7 +88,7 @@ namespace Arcus.Security.Core
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
 
             if (secretProvider is CompositeSecretProvider composite)
@@ -115,7 +117,7 @@ namespace Arcus.Security.Core
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret");
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
 
             if (secretProvider is CompositeSecretProvider composite)

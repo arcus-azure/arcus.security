@@ -46,14 +46,17 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 throw new ArgumentNullException(nameof(process));
             }
+
             if (string.IsNullOrWhiteSpace(rootToken))
             {
                 throw new ArgumentNullException(nameof(rootToken));
             }
+
             if (string.IsNullOrWhiteSpace(listenAddress))
             {
                 throw new ArgumentNullException(nameof(listenAddress));
             }
+
             if (logger is null)
             {
                 throw new ArgumentNullException(nameof(logger));
@@ -99,6 +102,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 throw new ArgumentNullException(nameof(logger), "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
             }
+
             if (configuration is null)
             {
                 throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the HashiCorp Vault installation folder");
@@ -203,8 +207,9 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentNullException(nameof(path), "Requires a path to mount the KeyValue secret engine to");
+                throw new ArgumentException("Requires a path to mount the KeyValue secret engine to", nameof(path));
             }
+
             if (!Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), version))
             {
                 throw new ArgumentException("Requires a KeyValue secret engine version that is either V1 or V2", nameof(version));
@@ -236,14 +241,17 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 throw new ArgumentNullException(nameof(name), "Requires a name to identify the policy");
             }
+
             if (string.IsNullOrWhiteSpace(path))
             {
                 throw new ArgumentNullException(nameof(path), "Requires a path where the policy will be applicable");
             }
+
             if (capabilities is null || !capabilities.Any())
             {
                 throw new ArgumentNullException(nameof(capabilities), "Requires a set of capabilities that should be available in this policy");
             }
+
             if (capabilities.Any(string.IsNullOrWhiteSpace))
             {
                 throw new ArgumentException("Requires all the capabilities of the policy to be filled out (not blank)", nameof(capabilities));
@@ -265,7 +273,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             if (string.IsNullOrWhiteSpace(type))
             {
-                throw new ArgumentNullException(nameof(type), "Requires an authentication type to enable the authentication");
+                throw new ArgumentException("Requires an authentication type to enable the authentication", nameof(type));
             }
 
             await _systemEndpoint.EnableAuth(path: type, authType: type, description: description);
@@ -283,15 +291,17 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                throw new ArgumentNullException(nameof(username));
+                throw new ArgumentNullException("Requires a non-blank user name", nameof(username));
             }
+
             if (string.IsNullOrWhiteSpace(password))
             {
-                throw new ArgumentNullException(nameof(password));
+                throw new ArgumentNullException("Requires a non-blank password", nameof(password));
             }
+
             if (string.IsNullOrWhiteSpace(policyName))
             {
-                throw new ArgumentNullException(nameof(policyName));
+                throw new ArgumentNullException("Requires a non-blank policy name", nameof(policyName));
             }
 
             await _authenticationEndpoint.Write($"/userpass/users/{username}", new UsersRequest
@@ -340,10 +350,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 throw new ArgumentNullException(nameof(action), "Requires disposing function to be retried");
             }
+
             if (timeoutInSeconds < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(timeoutInSeconds), "Requires a timeout (in sec) greater than zero");
             }
+
             if (retryIntervalInSeconds < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(retryIntervalInSeconds), "Requires a retry interval (in sec) greater than zero");

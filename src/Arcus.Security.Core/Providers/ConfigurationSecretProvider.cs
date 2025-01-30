@@ -36,7 +36,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret configuration value", nameof(secretName));
             }
 
             Secret secret = GetSecret(secretName);
@@ -94,7 +94,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the secret configuration value");
+                throw new ArgumentException("Requires a non-blank secret name to look up the secret configuration value", nameof(secretName));
             }
             
             string secretValue = _configuration[secretName];

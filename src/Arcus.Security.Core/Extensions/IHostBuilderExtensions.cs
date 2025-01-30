@@ -24,6 +24,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 throw new ArgumentNullException(nameof(hostBuilder), "Requires a host builder to add the secret store");
             }
+
             if (configureSecretStores is null)
             {
                 throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
@@ -44,6 +45,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 throw new ArgumentNullException(nameof(hostBuilder), "Requires a host builder to add the secret store");
             }
+            
             if (configureSecretStores is null)
             {
                 throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");

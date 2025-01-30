@@ -23,7 +23,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
             {
-                throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
+                throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'", nameof(target));
             }
 
             _prefix = prefix ?? String.Empty;
@@ -102,7 +102,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
+                throw new ArgumentException("Requires a non-blank secret name to look up the environment secret", nameof(secretName));
             }
 
             string environmentVariable = Environment.GetEnvironmentVariable(_prefix + secretName, _target);

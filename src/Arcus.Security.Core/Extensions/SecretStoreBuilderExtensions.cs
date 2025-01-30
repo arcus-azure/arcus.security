@@ -24,18 +24,7 @@ namespace Microsoft.Extensions.Hosting
             EnvironmentVariableTarget target = EnvironmentVariableSecretProvider.DefaultTarget,
             string prefix = null,
             Func<string, string> mutateSecretName = null)
-        {
-            if (builder is null)
-            {
-                throw new ArgumentNullException(nameof(builder), "Requires a secret store builder to add the environment secrets");
-            }
-            if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
-            {
-                throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
-            }
-
-            return AddEnvironmentVariables(builder, target, prefix, name: null, mutateSecretName: mutateSecretName);
-        }
+                => AddEnvironmentVariables(builder, target, prefix, name: null, mutateSecretName: mutateSecretName);
 
         /// <summary>
         /// Adds a secret source to the secret store of the application that gets its secrets from the environment.
@@ -58,6 +47,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 throw new ArgumentNullException(nameof(builder), "Requires a secret store builder to add the environment secrets");
             }
+
             if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
             {
                 throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
@@ -81,18 +71,7 @@ namespace Microsoft.Extensions.Hosting
             this SecretStoreBuilder builder,
             IConfiguration configuration,
             Func<string, string> mutateSecretName = null)
-        {
-            if (builder is null)
-            {
-                throw new ArgumentNullException(nameof(builder), "Requires a secret store builder to add the configuration secrets");
-            }
-            if (configuration is null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
-            }
-
-            return AddConfiguration(builder, configuration, name: null, mutateSecretName: mutateSecretName);
-        }
+                => AddConfiguration(builder, configuration, name: null, mutateSecretName: mutateSecretName);
 
         /// <summary>
         /// Adds a secret source to the secret store of the application that gets its secrets from the <see cref="IConfiguration"/>.
@@ -112,6 +91,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 throw new ArgumentNullException(nameof(builder), "Requires a secret store builder to add the configuration secrets");
             }
+            
             if (configuration is null)
             {
                 throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the secrets from");

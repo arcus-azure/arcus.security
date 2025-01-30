@@ -25,6 +25,7 @@ namespace Microsoft.Azure.Functions.Extensions.DependencyInjection
             {
                 throw new ArgumentNullException(nameof(functionsHostBuilder), "Requires a functions host builder to add the secret store");
             }
+
             if (configureSecretStores is null)
             {
                 throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to configure the secret store with potential secret providers");
@@ -48,6 +49,7 @@ namespace Microsoft.Azure.Functions.Extensions.DependencyInjection
             {
                 throw new ArgumentNullException(nameof(functionsHostBuilder), "Requires a functions host builder to add the secret store");
             }
+
             if (configureSecretStores is null)
             {
                 throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to configure the secret store with potential secret providers");

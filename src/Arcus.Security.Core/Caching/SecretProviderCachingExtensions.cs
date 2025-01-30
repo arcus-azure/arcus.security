@@ -24,10 +24,12 @@ namespace Arcus.Security.Core.Caching
             {
                 throw new ArgumentNullException(nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
             }
+
             if (cachingDuration < TimeSpan.Zero)
             {
                 throw new ArgumentOutOfRangeException(nameof(cachingDuration), "Requires a positive time duration in which the caching should take place");
             }
+
             if (memoryCache is null)
             {
                 throw new ArgumentNullException(nameof(memoryCache), "Requires a memory caching implementation to include caching while retrieving secrets");
@@ -51,9 +53,10 @@ namespace Arcus.Security.Core.Caching
             {
                 throw new ArgumentNullException(nameof(secretProvider), "Requires a secret provider instance to include caching while retrieving secrets");
             }
+            
             if (cachingDuration < TimeSpan.Zero)
             {
-                throw new ArgumentOutOfRangeException(nameof(cachingDuration), "Requires a positive time duration in which the caching should take place");
+                throw new ArgumentOutOfRangeException(nameof(cachingDuration), cachingDuration, "Requires a positive time duration in which the caching should take place");
             }
 
             return new CachedSecretProvider(secretProvider, new CacheConfiguration(cachingDuration));

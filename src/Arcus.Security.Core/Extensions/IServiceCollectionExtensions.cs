@@ -23,6 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 throw new ArgumentNullException(nameof(services), "Requires a set of services to add the secret store");
             }
+            
             if (configureSecretStores is null)
             {
                 throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");

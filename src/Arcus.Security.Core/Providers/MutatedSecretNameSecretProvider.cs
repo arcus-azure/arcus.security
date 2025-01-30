@@ -28,6 +28,7 @@ namespace Arcus.Security.Core.Providers
             {
                 throw new ArgumentNullException(nameof(implementation), "Requires a secret provider instance to pass the mutated");
             }
+
             if (mutateSecretName is null)
             {
                 throw new ArgumentNullException(nameof(mutateSecretName), "Requires a transformation function to mutate the incoming secret name to something that the actual secret provider can understand");
@@ -54,7 +55,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
 
             string secretValue = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
@@ -76,7 +80,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
 
             Secret secret = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
@@ -120,7 +124,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
 
             Secret secret = SafeguardMutateSecret(secretName, mutatedSecretName =>
@@ -142,8 +146,9 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
+
             if (asyncFuncAfterMutation is null)
             {
                 throw new ArgumentNullException(nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
@@ -173,8 +178,9 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
+
             if (asyncFuncAfterMutation is null)
             {
                 throw new ArgumentNullException(nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
@@ -217,8 +223,9 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
+
             if (afterMutation is null)
             {
                 throw new ArgumentNullException(nameof(afterMutation), "Requires a function to run after the secret name mutation");
@@ -242,7 +249,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
 
             try
