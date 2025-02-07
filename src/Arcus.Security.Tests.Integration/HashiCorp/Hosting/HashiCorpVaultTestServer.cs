@@ -49,12 +49,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             if (string.IsNullOrWhiteSpace(rootToken))
             {
-                throw new ArgumentNullException(nameof(rootToken));
+                throw new ArgumentException(nameof(rootToken));
             }
 
             if (string.IsNullOrWhiteSpace(listenAddress))
             {
-                throw new ArgumentNullException(nameof(listenAddress));
+                throw new ArgumentException(nameof(listenAddress));
             }
 
             if (logger is null)
@@ -239,12 +239,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentNullException(nameof(name), "Requires a name to identify the policy");
+                throw new ArgumentException("Requires a name to identify the policy", nameof(name));
             }
 
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new ArgumentNullException(nameof(path), "Requires a path where the policy will be applicable");
+                throw new ArgumentException("Requires a path where the policy will be applicable", nameof(path));
             }
 
             if (capabilities is null || !capabilities.Any())
@@ -291,17 +291,17 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                throw new ArgumentNullException("Requires a non-blank user name", nameof(username));
+                throw new ArgumentException("Requires a non-blank user name", nameof(username));
             }
 
             if (string.IsNullOrWhiteSpace(password))
             {
-                throw new ArgumentNullException("Requires a non-blank password", nameof(password));
+                throw new ArgumentException("Requires a non-blank password", nameof(password));
             }
 
             if (string.IsNullOrWhiteSpace(policyName))
             {
-                throw new ArgumentNullException("Requires a non-blank policy name", nameof(policyName));
+                throw new ArgumentException("Requires a non-blank policy name", nameof(policyName));
             }
 
             await _authenticationEndpoint.Write($"/userpass/users/{username}", new UsersRequest

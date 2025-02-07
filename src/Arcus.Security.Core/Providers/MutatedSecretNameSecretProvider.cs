@@ -102,7 +102,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
-                throw new ArgumentNullException(nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
 
             string secretValue = SafeguardMutateSecret(secretName, mutatedSecretName =>
