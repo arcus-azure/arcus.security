@@ -249,7 +249,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             if (capabilities is null || !capabilities.Any())
             {
-                throw new ArgumentNullException(nameof(capabilities), "Requires a set of capabilities that should be available in this policy");
+                throw new ArgumentException("Requires a set of capabilities that should be available in this policy", nameof(capabilities));
             }
 
             if (capabilities.Any(string.IsNullOrWhiteSpace))
