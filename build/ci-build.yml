@@ -129,4 +129,9 @@ stages:
             inputs:
               artifact: 'Build'
               path: '$(Build.SourcesDirectory)'
-          - template: nuget/publish-preview-package.yml@templates
+          - task: DotNetCoreCLI@2
+            displayName: 'Push to MyGet.org'
+            inputs:
+              command: 'custom'
+              custom: 'nuget'
+              arguments: 'push src/**/*.nupkg --skip-duplicate --source $(MyGet.SourceUrl) --api-key $(MyGet.ApiKey)'
