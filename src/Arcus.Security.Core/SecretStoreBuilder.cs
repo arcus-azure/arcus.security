@@ -16,7 +16,9 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
+#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0
         private readonly ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
@@ -55,6 +57,7 @@ namespace Microsoft.Extensions.Hosting
         /// <summary>
         /// Gets the configured options related to auditing during the lifetime of the secret store.
         /// </summary>
+        [Obsolete("Will be removed in v3.0")]
         internal SecretStoreAuditingOptions AuditingOptions { get; } = new SecretStoreAuditingOptions();
 
         /// <summary>
@@ -147,7 +150,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 SecretStoreSources.Add(CreateMutatedSecretSource(createSecretProvider, options));
             }
-            
+
             return this;
         }
 
@@ -194,6 +197,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="configureOptions">The function to customize the auditing options of the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configureOptions"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 as the hard-link to Arcus.Observability will be removed")]
         public SecretStoreBuilder WithAuditing(Action<SecretStoreAuditingOptions> configureOptions)
         {
             _configureAuditingOptions.Add(configureOptions ?? throw new ArgumentNullException(nameof(configureOptions)));
@@ -208,7 +212,9 @@ namespace Microsoft.Extensions.Hosting
         {
             AddSecretStoreSources();
             AddCriticalExceptionFilters();
+#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0.
             AddAuditingOptions();
+#pragma warning restore CS0612 // Type or member is obsolete
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
@@ -246,6 +252,7 @@ namespace Microsoft.Extensions.Hosting
             }
         }
 
+        [Obsolete]
         private void AddAuditingOptions()
         {
             foreach (Action<SecretStoreAuditingOptions> configureAuditingOptions in _configureAuditingOptions)

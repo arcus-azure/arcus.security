@@ -18,7 +18,9 @@ namespace Arcus.Security.Core
     {
         private readonly SecretStoreSource[] _secretProviders;
         private readonly CriticalExceptionFilter[] _criticalExceptionFilters;
+#pragma warning disable CS0618 // Type or member is obsolete: options will be removed in v3.0.
         private readonly SecretStoreAuditingOptions _auditingOptions;
+#pragma warning restore CS0618 // Type or member is obsolete
         private readonly IDictionary<string, Lazy<ISecretProvider>> _groupedSecretStores;
         private readonly ILogger _logger;
 
@@ -32,9 +34,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/>, or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
         public CompositeSecretProvider(
-            IEnumerable<SecretStoreSource> secretProviderSources, 
+            IEnumerable<SecretStoreSource> secretProviderSources,
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
+#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0.
             SecretStoreAuditingOptions auditingOptions,
+#pragma warning restore CS0618 // Type or member is obsolete
             ILogger<CompositeSecretProvider> logger)
         {
             if (secretProviderSources is null)
@@ -61,7 +65,9 @@ namespace Arcus.Security.Core
 
             _secretProviders = sourcesArr;
             _criticalExceptionFilters = filtersArr;
+#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0.
             _auditingOptions = auditingOptions ?? new SecretStoreAuditingOptions();
+#pragma warning restore CS0618 // Type or member is obsolete
             _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
 
             _groupedSecretStores = CreateGroupedSecretProviders(sourcesArr, filtersArr, auditingOptions, logger);
@@ -78,9 +84,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/>, <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
         public CompositeSecretProvider(
-            IEnumerable<SecretStoreSource> secretProviderSources, 
+            IEnumerable<SecretStoreSource> secretProviderSources,
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
+#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0
             SecretStoreAuditingOptions auditingOptions)
+#pragma warning restore CS0618 // Type or member is obsolete
             : this(secretProviderSources, criticalExceptionFilters, auditingOptions, NullLogger<CompositeSecretProvider>.Instance)
         {
         }
@@ -131,7 +139,7 @@ namespace Arcus.Security.Core
             {
                 return concreteProvider;
             }
-            
+
             if (provider is CompositeSecretProvider)
             {
                 throw new InvalidOperationException(
@@ -317,7 +325,7 @@ namespace Arcus.Security.Core
                 throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
 
-            IEnumerable<Secret> secretValues = 
+            IEnumerable<Secret> secretValues =
                 await WithSecretStoreAsync(secretName, async source =>
                 {
                     if (source.Options.TryGetAllowedSecretVersions(secretName, out int allowedVersions))
@@ -356,7 +364,7 @@ namespace Arcus.Security.Core
                 throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
 
-            IEnumerable<string> secretValues = 
+            IEnumerable<string> secretValues =
                 await WithSecretStoreAsync(secretName, async source =>
                 {
                     if (source.Options.TryGetAllowedSecretVersions(secretName, out int allowedVersions))
@@ -402,7 +410,7 @@ namespace Arcus.Security.Core
                 throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to retrieve the secret in the secret store");
             }
 
-            IEnumerable<string> secretValues = 
+            IEnumerable<string> secretValues =
                 await WithSecretStoreAsync(secretName, async source =>
                 {
                     if (source.VersionedSecretProvider != null)
@@ -443,7 +451,7 @@ namespace Arcus.Security.Core
                 throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to retrieve the secret in the secret store");
             }
 
-            IEnumerable<Secret> secretValues = 
+            IEnumerable<Secret> secretValues =
                 await WithSecretStoreAsync(secretName, async source =>
                 {
                     if (source.VersionedSecretProvider != null)
@@ -481,7 +489,7 @@ namespace Arcus.Security.Core
 
             string secretValue = await WithSecretStoreAsync(
                 secretName, source => source.SecretProvider.GetRawSecretAsync(secretName));
-            
+
             return secretValue;
         }
 
@@ -605,8 +613,8 @@ namespace Arcus.Security.Core
         }
 
         private async Task<T> WithSecretStoreAsync<T>(
-            string secretName, 
-            Func<SecretStoreSource, Task<T>> callRegisteredProvider, 
+            string secretName,
+            Func<SecretStoreSource, Task<T>> callRegisteredProvider,
             string eventName = "Get Secret") where T : class
         {
             EnsureAnySecretProvidersConfigured(secretName);
@@ -692,12 +700,14 @@ namespace Arcus.Security.Core
         }
 
         private async Task<T> GetSecretFromProviderAsync<T>(
-            string secretName, 
-            SecretStoreSource source, 
+            string secretName,
+            SecretStoreSource source,
             Func<SecretStoreSource, Task<T>> callRegisteredProvider,
             string eventName) where T : class
         {
+#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0.
             LogSecurityEvent(source, secretName, eventName);
+#pragma warning restore CS0612 // Type or member is obsolete
 
             Task<T> resultAsync = callRegisteredProvider(source);
             if (resultAsync is null)
@@ -715,12 +725,15 @@ namespace Arcus.Security.Core
             Func<SecretStoreSource, T> callRegisteredProvider,
             string eventName)
         {
+#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0
             LogSecurityEvent(source, secretName, eventName);
+#pragma warning restore CS0612 // Type or member is obsolete
 
             T result = callRegisteredProvider(source);
             return result;
         }
 
+        [Obsolete]
         private void LogSecurityEvent(SecretStoreSource source, string secretName, string eventName)
         {
             if (_auditingOptions.EmitSecurityEvents)
@@ -788,8 +801,10 @@ namespace Arcus.Security.Core
 
         private static IDictionary<string, Lazy<ISecretProvider>> CreateGroupedSecretProviders(
             IEnumerable<SecretStoreSource> secretProviders,
+#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0.
             IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
             SecretStoreAuditingOptions auditingOptions,
+#pragma warning restore CS0618 // Type or member is obsolete
             ILogger<CompositeSecretProvider> logger)
         {
             return secretProviders
