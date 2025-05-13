@@ -32,6 +32,7 @@ resources:
 
 variables:
   - group: 'Build Configuration'
+  - group: 'MyGet'
   - template: ./variables/build.yml
   - template: ./variables/test.yml
 
