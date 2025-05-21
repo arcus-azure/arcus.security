@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using GuardNet;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -25,9 +24,15 @@ namespace Arcus.Security.Core.Providers
         /// </exception>
         public MutatedSecretNameSecretProvider(ISecretProvider implementation, Func<string, string> mutateSecretName, ILogger logger)
         {
-            Guard.NotNull(implementation, nameof(implementation), "Requires an secret provider instance to pass the mutated secret name to");
-            Guard.NotNull(mutateSecretName, nameof(mutateSecretName), 
-                "Requires an transformation function to mutate the incoming secret name to something that the actual secret provider can understand");
+            if (implementation is null)
+            {
+                throw new ArgumentNullException(nameof(implementation), "Requires a secret provider instance to pass the mutated");
+            }
+
+            if (mutateSecretName is null)
+            {
+                throw new ArgumentNullException(nameof(mutateSecretName), "Requires a transformation function to mutate the incoming secret name to something that the actual secret provider can understand");
+            }
 
             _mutateSecretName = mutateSecretName;
             _implementation = implementation;
@@ -50,7 +55,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<string> GetRawSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
 
             string secretValue = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
@@ -70,7 +78,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         public async Task<Secret> GetSecretAsync(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
 
             Secret secret = await SafeguardMutateSecretAsync(secretName, mutatedSecretName =>
             {
@@ -89,7 +100,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public string GetRawSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
 
             string secretValue = SafeguardMutateSecret(secretName, mutatedSecretName =>
             {
@@ -108,7 +122,10 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
         public Secret GetSecret(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
 
             Secret secret = SafeguardMutateSecret(secretName, mutatedSecretName =>
             {
@@ -127,8 +144,15 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">Thrown when the <paramref name="asyncFuncAfterMutation"/> is <c>null</c>.</exception>
         protected async Task SafeguardMutateSecretAsync(string secretName, Func<string, Task> asyncFuncAfterMutation)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
-            Guard.NotNull(asyncFuncAfterMutation, nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
+
+            if (asyncFuncAfterMutation is null)
+            {
+                throw new ArgumentNullException(nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
+            }
 
             await SafeguardMutateSecretAsync(secretName, async mutatedSecretName =>
             {
@@ -152,8 +176,15 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">Thrown when the <paramref name="asyncFuncAfterMutation"/> is <c>null</c>.</exception>
         protected async Task<T> SafeguardMutateSecretAsync<T>(string secretName, Func<string, Task<T>> asyncFuncAfterMutation)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
-            Guard.NotNull(asyncFuncAfterMutation, nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
+
+            if (asyncFuncAfterMutation is null)
+            {
+                throw new ArgumentNullException(nameof(asyncFuncAfterMutation), "Requires a function to run after the secret name mutation");
+            }
 
             string mutatedSecretName = MutateSecretName(secretName);
             Task<T> task = asyncFuncAfterMutation(mutatedSecretName);
@@ -190,8 +221,15 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">Thrown when the <paramref name="afterMutation"/> is <c>null</c>.</exception>
         protected T SafeguardMutateSecret<T>(string secretName, Func<string, T> afterMutation)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
-            Guard.NotNull(afterMutation, nameof(afterMutation), "Requires a function to run after the secret name mutation");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
+
+            if (afterMutation is null)
+            {
+                throw new ArgumentNullException(nameof(afterMutation), "Requires a function to run after the secret name mutation");
+            }
 
             string mutatedSecretName = MutateSecretName(secretName);
 
@@ -209,7 +247,10 @@ namespace Arcus.Security.Core.Providers
 
         private string MutateSecretName(string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
+            if (string.IsNullOrWhiteSpace(secretName))
+            {
+                throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
+            }
 
             try
             {

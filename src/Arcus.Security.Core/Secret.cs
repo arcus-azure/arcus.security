@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 
 namespace Arcus.Security.Core
 {
