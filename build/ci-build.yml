@@ -110,7 +110,6 @@ stages:
               path: '$(Build.SourcesDirectory)'
           - template: templates/run-integration-tests.yml
             parameters:
-              dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
               azureServiceConnection: '${{ parameters.azureServiceConnection }}'
 
   - stage: ReleaseToMyget
