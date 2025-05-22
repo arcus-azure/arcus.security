@@ -143,6 +143,3 @@ public void ConfigureServices(IServiceCollection services)
 
 When your application wants to access a secret, all it has to do is use `ISecretProvider` which will give you access to all the registered secret providers.
 
-## Using secret store within Azure Functions
-See [this page](./azure-functions.md) how the secret store can be used within Azure Functions.
-
