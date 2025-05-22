@@ -2,13 +2,6 @@ parameters:
   azureServiceConnection: ''
 
 steps:
-  - bash: |
-      if [ -z "$PROJECT_NAME" ]; then
-        echo "##vso[task.logissue type=error;]Missing template parameter \"dockerProjectName\""
-        echo "##vso[task.complete result=Failed;]"
-      fi
-    env:
-      PROJECT_NAME: ${{ parameters.dockerProjectName }}
   - task: AzureCLI@2
     displayName: 'Import secrets from Azure Key Vault'
     inputs:
