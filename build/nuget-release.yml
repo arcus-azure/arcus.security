@@ -6,6 +6,10 @@ pr: none
 parameters:
   - name: 'Package.Version'
     type: 'string'
+  - name: azureServiceConnection
+    displayName: 'Azure service connection'
+    type: string
+    default: 'Azure Codit-Arcus Service Principal'
 
 resources:
   repositories:
@@ -92,7 +96,7 @@ stages:
               path: '$(Build.SourcesDirectory)'
           - template: templates/run-integration-tests.yml
             parameters:
-              dockerProjectName: '$(Project).Tests.Runtimes.AzureFunctions'
+              azureServiceConnection: '${{ parameters.azureServiceConnection }}'
 
   - stage: Release
     displayName: 'Release to NuGet.org'

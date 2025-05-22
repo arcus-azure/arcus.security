@@ -1,15 +1,7 @@
 parameters:
-  dockerProjectName: ''
   azureServiceConnection: ''
 
 steps:
-  - bash: |
-      if [ -z "$PROJECT_NAME" ]; then
-        echo "##vso[task.logissue type=error;]Missing template parameter \"dockerProjectName\""
-        echo "##vso[task.complete result=Failed;]"
-      fi
-    env:
-      PROJECT_NAME: ${{ parameters.dockerProjectName }}
   - task: AzureCLI@2
     displayName: 'Import secrets from Azure Key Vault'
     inputs:
@@ -48,30 +40,8 @@ steps:
       packageType: 'sdk'
       version: '$(DotNet.Sdk.VersionBC)'
       includePreviewVersions: $(DotNet.Sdk.IncludePreviewVersions)
-  - task: Docker@1
-    displayName: 'Build Docker image from ${{ parameters.dockerProjectName }}'
-    inputs:
-      dockerFile: src/${{ parameters.dockerProjectName }}/Dockerfile
-      imageName: '${{ parameters.dockerProjectName }}:$(Build.BuildId)'
-      useDefaultContext: false
-      buildContext: src
-  - task: Docker@1
-    displayName: 'Run new  project Docker image from ${{ parameters.dockerProjectName }}'
-    inputs:
-      command: 'Run an image'
-      imageName: '${{ parameters.dockerProjectName }}:$(Build.BuildId)'
-      containerName: '${{ parameters.dockerProjectName }}'
-      ports: '$(Arcus.AzureFunctions.HttpPort):80'
   - template: test/run-integration-tests.yml@templates
     parameters:
       dotnetSdkVersion: '$(DotNet.Sdk.Version)'
       projectName: '$(Project).Tests.Integration'
       includePreviewVersions: $(DotNet.Sdk.IncludePreviewVersions)
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: |
-        docker logs ${{ parameters.dockerProjectName }}
-      failOnStderr: true
-    displayName: Show ${{ parameters.dockerProjectName }} logs
-    condition: always()
