@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Microsoft.Extensions.Configuration;
-using GuardNet;
 
 namespace Arcus.Security.Providers.AzureKeyVault.Configuration
 {
@@ -21,7 +20,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         {
             _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
         }
-        
+
         /// <summary>
         /// Attempts to find a value with the given key, returns true if one is found, false otherwise.
         /// </summary>
@@ -30,13 +29,13 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
         /// <returns>True if key has a value, false otherwise.</returns>
         public override bool TryGet(string key, out string value)
         {
-            Task<string> getSecretValueAsync = _secretProvider.GetRawSecretAsync(key);
-            if (getSecretValueAsync != null) 
+            Task<Secret> getSecretValueAsync = _secretProvider.GetSecretAsync(key);
+            if (getSecretValueAsync != null)
             {
-                string secretValue = getSecretValueAsync.ConfigureAwait(false).GetAwaiter().GetResult();
-                
-                value = secretValue;
-                return secretValue != null;
+                Secret secret = getSecretValueAsync.ConfigureAwait(false).GetAwaiter().GetResult();
+
+                value = secret.Value;
+                return secret.Value != null;
             }
 
             value = null;

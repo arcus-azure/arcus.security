@@ -57,9 +57,6 @@ public class OrderController : ControllerBase
     {
         // Get all secrets available.
         IEnumeration<Secret> secrets = await _secretProvider.GetSecretsAsync("MySecret");
-
-        // Get all secret values available.
-        IEnumeration<string> secretValues = await _secretProvider.GetRawSecretsAsync("MySecret");
     }
 }
 ```

@@ -21,6 +21,7 @@ namespace Arcus.Security.Core
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(ISecretProvider.GetSecretAsync) + " instead")]
         public static string GetRawSecret(this ISecretProvider secretProvider, string secretName)
         {
             Guard.NotNull(secretProvider, nameof(secretProvider), "Requires a secret provider to synchronously look up the secret");
@@ -71,6 +72,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
         public static async Task<IEnumerable<string>> GetRawSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
