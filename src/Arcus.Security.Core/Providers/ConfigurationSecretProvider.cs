@@ -1,9 +1,7 @@
-﻿using GuardNet;
-
-using Microsoft.Extensions.Configuration;
-
 using System;
 using System.Threading.Tasks;
+﻿using GuardNet;
+using Microsoft.Extensions.Configuration;
 
 namespace Arcus.Security.Core.Providers
 {
