@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Arcus.Security.Core.Caching.Configuration;
+
+using Microsoft.Extensions.Caching.Memory;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Arcus.Security.Core.Caching.Configuration;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Core.Caching
 {
@@ -89,6 +91,7 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         public Task<string> GetRawSecretAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -113,7 +116,7 @@ namespace Arcus.Security.Core.Caching
             {
                 throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
-            
+
             return GetSecretAsync(secretName, ignoreCache: false);
         }
 
@@ -126,13 +129,14 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
                 throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
-            
+
             Secret secret = await GetSecretAsync(secretName, ignoreCache);
             return secret?.Value;
         }
@@ -185,13 +189,14 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
                 throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
             }
-            
+
             if (amountOfVersions < 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to look up the versioned secrets");
@@ -223,7 +228,7 @@ namespace Arcus.Security.Core.Caching
 
             if (_secretProvider is IVersionedSecretProvider versionProvider)
             {
-                if (MemoryCache.TryGetValue(secretName, out Secret[] cachedSecrets) 
+                if (MemoryCache.TryGetValue(secretName, out Secret[] cachedSecrets)
                     && cachedSecrets.Length >= amountOfVersions)
                 {
                     return cachedSecrets.Take(amountOfVersions);
@@ -232,7 +237,7 @@ namespace Arcus.Security.Core.Caching
                 Task<IEnumerable<Secret>> getSecretsAsync = versionProvider.GetSecretsAsync(secretName, amountOfVersions);
                 IEnumerable<Secret> secrets = getSecretsAsync is null ? null : await getSecretsAsync;
                 Secret[] secretsArray = secrets.ToArray();
-                
+
                 MemoryCache.Set(secretName, secretsArray, CacheEntry);
                 return secretsArray;
             }
