@@ -1,9 +1,8 @@
-﻿using GuardNet;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+﻿using GuardNet;
 
 // ReSharper disable once CheckNamespace
 namespace Arcus.Security.Core

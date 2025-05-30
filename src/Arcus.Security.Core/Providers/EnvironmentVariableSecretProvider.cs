@@ -1,7 +1,6 @@
-﻿using GuardNet;
-
 using System;
 using System.Threading.Tasks;
+using GuardNet;
 
 namespace Arcus.Security.Core.Providers
 {
@@ -74,7 +73,7 @@ namespace Arcus.Security.Core.Providers
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the environment secret");
 
-            string secretValue = GetRawSecret(secretName);
+            string secretValue = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
             if (secretValue is null)
             {
                 return null;

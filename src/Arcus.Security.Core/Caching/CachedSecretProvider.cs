@@ -1,11 +1,9 @@
-﻿using Arcus.Security.Core.Caching.Configuration;
-
-using Microsoft.Extensions.Caching.Memory;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+﻿using Arcus.Security.Core.Caching.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Core.Caching
 {
