@@ -14,6 +14,7 @@ namespace Arcus.Security.Core
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         string GetRawSecret(string secretName);
 
         /// <summary>

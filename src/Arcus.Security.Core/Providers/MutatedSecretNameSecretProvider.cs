@@ -26,12 +26,12 @@ namespace Arcus.Security.Core.Providers
         public MutatedSecretNameSecretProvider(ISecretProvider implementation, Func<string, string> mutateSecretName, ILogger logger)
         {
             Guard.NotNull(implementation, nameof(implementation), "Requires an secret provider instance to pass the mutated secret name to");
-            Guard.NotNull(mutateSecretName, nameof(mutateSecretName), 
+            Guard.NotNull(mutateSecretName, nameof(mutateSecretName),
                 "Requires an transformation function to mutate the incoming secret name to something that the actual secret provider can understand");
 
             _mutateSecretName = mutateSecretName;
             _implementation = implementation;
-            
+
             Logger = logger ?? NullLogger<MutatedSecretNameSecretProvider>.Instance;
         }
 
@@ -48,6 +48,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
@@ -87,6 +88,7 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public string GetRawSecret(string secretName)
         {
             Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name when mutating secret names");
@@ -177,7 +179,7 @@ namespace Arcus.Security.Core.Providers
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Safeguards an asynchronous function that will run after the given <paramref name="secretName"/> is mutated.
         /// </summary>
         /// <typeparam name="T">The return type of the asynchronous function.</typeparam>

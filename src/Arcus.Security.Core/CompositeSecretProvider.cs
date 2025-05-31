@@ -265,6 +265,7 @@ namespace Arcus.Security.Core
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public string GetRawSecret(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -357,6 +358,7 @@ namespace Arcus.Security.Core
         /// <param name="secretName">The name of the secret.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
         internal async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -398,6 +400,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
         public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -480,6 +483,7 @@ namespace Arcus.Security.Core
         /// <exception cref="System.ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -524,6 +528,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="NotSupportedException">Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
             if (string.IsNullOrWhiteSpace(secretName))

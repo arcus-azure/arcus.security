@@ -16,14 +16,6 @@ string secretVersion = secret.Version;
 DateTimeOffset? expirationDate = secret.Expires;
 ```
 
-## Raw secrets
-In some scenarios you'd like to just get the secret value directly without any metadata.
-This is possible by calling the `...Raw...` variants on the `ISecretProvider` implementations.
-
-```csharp
-string secretValue = await secretProvider.GetRawSecretAsync("EventGrid-AuthKey");
-```
-
 ## Synchronous secrets
 In some scenarios you'd like to retrieve secrets synchronously. A common situation is when you want to register a dependent service into the dependency container that requires a secret, but since such a container only registers instances or synchronous functions, there is no easy way to retrieve a secret asynchronously.
 
@@ -38,18 +30,16 @@ services.AddSingleton(serviceProvider =>
     // #1 injecting the `ISyncSecretProvider`:
     var syncSecretProvider = serviceProvider.GetRequiredService<ISyncSecretProvider>();
     Secret secret = synSecretProvider.GetSecret("EventGrid-AuthKey");
-    string secretValue = syncSecretProvider.GetRawSecret("EventGrid-AuthKey");
 
     // #2 calling `GetSecret` or `GetRawSecret` extension on `ISecretProvider`:
     var secretProvider = serviceProvider.GetRequiredService<ISecretProvider>();
     Secret secret = secretProvider.GetSecret("EventGrid-AuthKey");
-    string secretProvider = secretProvider.GetRawSecret("EventGrid-AuthKey");
 
     return new MyDependentService(secretValue);
 });
 ```
 
-⚠ Make sure that you only call the `GetSecret` and `GetRawSecret` extension on `ISecretProvider` implementations that also implement the `ISyncSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can use this extension on any injected `ISecretProvider` but when no secret provider is registered that supports synchronous secret retrieval, a `NotSupportedException` will be thrown nonetheless.
+⚠ Make sure that you only call the `GetSecret` extension on `ISecretProvider` implementations that also implement the `ISyncSecretProvider` interface. The [Arcus secret store](../secret-store/index.md) automatically makes sure that you can use this extension on any injected `ISecretProvider` but when no secret provider is registered that supports synchronous secret retrieval, a `NotSupportedException` will be thrown nonetheless.
 
 # Caching Secrets
 Some secret providers recommend to cache secrets for a while to avoid hitting the service limitations.

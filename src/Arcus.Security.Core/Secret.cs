@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 
 namespace Arcus.Security.Core
 {
@@ -37,5 +36,13 @@ namespace Arcus.Security.Core
         /// Gets the expiration date of the secret.
         /// </summary>
         public DateTimeOffset? Expires { get; }
+
+        /// <summary>
+        /// Implicitly converts a <see cref="Secret"/> to a <see cref="string"/> representing the secret <see cref="Value"/>.
+        /// </summary>
+        public static implicit operator string(Secret secret)
+        {
+            return secret?.Value;
+        }
     }
 }
