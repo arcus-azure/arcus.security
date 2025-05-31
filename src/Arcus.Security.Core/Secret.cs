@@ -42,7 +42,7 @@ namespace Arcus.Security.Core
         /// </summary>
         public static implicit operator string(Secret secret)
         {
-            return secret.Value;
+            return secret?.Value;
         }
     }
 }
