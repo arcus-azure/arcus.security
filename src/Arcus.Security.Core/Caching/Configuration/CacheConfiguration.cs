@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 
 namespace Arcus.Security.Core.Caching.Configuration
 {
@@ -15,7 +14,11 @@ namespace Arcus.Security.Core.Caching.Configuration
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the cache duration is not a positive time duration.</exception>
         public CacheConfiguration(TimeSpan duration)
         {
-            Guard.NotLessThan(duration, TimeSpan.Zero, nameof(duration), "Requires a positive time duration in which the caching should take place");
+            if (duration < TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(duration), duration, "Requires a positive time duration in which the caching should take place");
+            }
+
             Duration = duration;
         }
 

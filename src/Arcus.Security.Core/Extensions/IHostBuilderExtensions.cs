@@ -1,5 +1,4 @@
 ﻿using Arcus.Security.Core;
-using GuardNet;
 using Microsoft.Extensions.Configuration;
 using System;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +20,15 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="hostBuilder"/> or <paramref name="configureSecretStores"/> is <c>null</c>.</exception>
         public static IHostBuilder ConfigureSecretStore(this IHostBuilder hostBuilder, Action<IConfiguration, SecretStoreBuilder> configureSecretStores)
         {
-            Guard.NotNull(hostBuilder, nameof(hostBuilder), "Requires a host builder to add the secret store");
-            Guard.NotNull(configureSecretStores, nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
+            if (hostBuilder is null)
+            {
+                throw new ArgumentNullException(nameof(hostBuilder), "Requires a host builder to add the secret store");
+            }
+
+            if (configureSecretStores is null)
+            {
+                throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
+            }
 
             return ConfigureSecretStore(hostBuilder, (context, config, secretStores) => configureSecretStores(config, secretStores));
         }
@@ -35,8 +41,15 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="hostBuilder"/> or <paramref name="configureSecretStores"/> is <c>null</c>.</exception>
         public static IHostBuilder ConfigureSecretStore(this IHostBuilder hostBuilder, Action<HostBuilderContext, IConfiguration, SecretStoreBuilder> configureSecretStores)
         {
-            Guard.NotNull(hostBuilder, nameof(hostBuilder), "Requires a host builder to add the secret store");
-            Guard.NotNull(configureSecretStores, nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
+            if (hostBuilder is null)
+            {
+                throw new ArgumentNullException(nameof(hostBuilder), "Requires a host builder to add the secret store");
+            }
+            
+            if (configureSecretStores is null)
+            {
+                throw new ArgumentNullException(nameof(configureSecretStores), "Requires a function to register the secret providers in the secret store");
+            }
             
             return hostBuilder.ConfigureServices((context, services) =>
             {

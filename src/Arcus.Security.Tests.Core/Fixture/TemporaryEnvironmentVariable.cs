@@ -1,5 +1,4 @@
 ﻿using System;
-using GuardNet;
 
 namespace Arcus.Security.Tests.Core.Fixture
 {
@@ -12,7 +11,11 @@ namespace Arcus.Security.Tests.Core.Fixture
 
         private TemporaryEnvironmentVariable(string name)
         {
-            Guard.NotNull(name, nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
             _name = name;
         }
 
@@ -23,7 +26,11 @@ namespace Arcus.Security.Tests.Core.Fixture
         /// <param name="value">The value of the environment variable.</param>
         public static TemporaryEnvironmentVariable Create(string name, string value)
         {
-            Guard.NotNull(name, nameof(name));
+            if (name is null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
             Environment.SetEnvironmentVariable(name, value);
 
             return new TemporaryEnvironmentVariable(name);
