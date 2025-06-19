@@ -54,7 +54,7 @@ namespace Arcus.Security.Core
         {
             if (secretProvider is null)
             {
-                throw new ArgumentNullException(nameof(secretProvider
+                throw new ArgumentNullException(nameof(secretProvider));
             }
 
             if (string.IsNullOrWhiteSpace(secretName))

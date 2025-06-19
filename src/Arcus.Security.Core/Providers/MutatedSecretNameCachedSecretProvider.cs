@@ -30,7 +30,7 @@ namespace Arcus.Security.Core.Providers
         {
             if (implementation is null)
             {
-                throw new ArgumentNullException(nameof(implementation), "Requires a secret provider instance to pass the mutated")
+                throw new ArgumentNullException(nameof(implementation), "Requires a secret provider instance to pass the mutated");
             }
 
             _implementation = implementation;
