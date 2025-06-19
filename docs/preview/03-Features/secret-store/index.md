@@ -12,8 +12,6 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
 
 Once register, you can fetch all secrets by using `ISecretProvider` which will get secrets from all the different registered secret providers.
 
-> :bulb: See [this section](./azure-functions.md) if you want to use the secret store functionality within Azure Functions.
-
 ![Arcus secret store integration example](/img/arcus-secret-store-diagram.png)
 
 ## Why would I use it?
@@ -142,7 +140,4 @@ public void ConfigureServices(IServiceCollection services)
 ```
 
 When your application wants to access a secret, all it has to do is use `ISecretProvider` which will give you access to all the registered secret providers.
-
-## Using secret store within Azure Functions
-See [this page](./azure-functions.md) how the secret store can be used within Azure Functions.
 
