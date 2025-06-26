@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
-using GuardNet;
 
 namespace Arcus.Security.Tests.Unit.Core.Stubs
 {
@@ -19,7 +18,11 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exception"/> is <c>null</c>.</exception>
         public SaboteurSecretProvider(Exception exception)
         {
-            Guard.NotNull(exception, nameof(exception), "Requires an specific exception to sabotage the secret retrieval");
+            if (exception is null)
+            {
+                throw new ArgumentNullException(nameof(exception), "Requires a specific exception to sabotage the secret retrieval");
+            }
+
             _exception = exception;
         }
 

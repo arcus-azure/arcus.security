@@ -1,6 +1,5 @@
 ﻿using System;
 using Arcus.Security.Core.Providers;
-using GuardNet;
 using Microsoft.Extensions.Configuration;
 
 // ReSharper disable once CheckNamespace
@@ -26,12 +25,9 @@ namespace Microsoft.Extensions.Hosting
             string prefix = null,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the environment secrets");
-            Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(EnvironmentVariableTarget), target),
-                $"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
-
             return AddEnvironmentVariables(builder, target, prefix, name: null, mutateSecretName: mutateSecretName);
         }
+
 
         /// <summary>
         /// Adds a secret source to the secret store of the application that gets its secrets from the environment.
@@ -50,9 +46,15 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the environment secrets");
-            Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(EnvironmentVariableTarget), target),
-                $"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder), "Requires a secret store builder to add the environment secrets");
+            }
+
+            if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
+            {
+                throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
+            }
 
             return builder.AddProvider(new EnvironmentVariableSecretProvider(target, prefix), options =>
             {
@@ -73,11 +75,9 @@ namespace Microsoft.Extensions.Hosting
             IConfiguration configuration,
             Func<string, string> mutateSecretName = null)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the configuration secrets");
-            Guard.NotNull(configuration, nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
-
             return AddConfiguration(builder, configuration, name: null, mutateSecretName: mutateSecretName);
         }
+
 
         /// <summary>
         /// Adds a secret source to the secret store of the application that gets its secrets from the <see cref="IConfiguration"/>.
@@ -93,8 +93,15 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            Guard.NotNull(builder, nameof(builder), "Requires a secret store builder to add the configuration secrets");
-            Guard.NotNull(configuration, nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder), "Requires a secret store builder to add the configuration secrets");
+            }
+
+            if (configuration is null)
+            {
+                throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
+            }
 
             return builder.AddProvider(new ConfigurationSecretProvider(configuration), options =>
             {

@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Arcus.Security.Providers.HashiCorp;
 using Arcus.Security.Tests.Integration.HashiCorp.Mounting;
 using Arcus.Testing;
-using GuardNet;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Vault;
@@ -43,10 +42,25 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
         private HashiCorpVaultTestServer(Process process, string rootToken, string listenAddress, ILogger logger)
         {
-            Guard.NotNull(process, nameof(process));
-            Guard.NotNullOrWhitespace(rootToken, nameof(rootToken));
-            Guard.NotNullOrWhitespace(listenAddress, nameof(listenAddress));
-            Guard.NotNull(logger, nameof(logger));
+            if (process is null)
+            {
+                throw new ArgumentNullException(nameof(process));
+            }
+
+            if (string.IsNullOrWhiteSpace(rootToken))
+            {
+                throw new ArgumentException(nameof(rootToken));
+            }
+
+            if (string.IsNullOrWhiteSpace(listenAddress))
+            {
+                throw new ArgumentException(nameof(listenAddress));
+            }
+
+            if (logger is null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
 
             _process = process;
             _rootToken = rootToken;
@@ -84,10 +98,15 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> or <paramref name="logger"/> is <c>null</c>.</exception>
         public static async Task<HashiCorpVaultTestServer> StartServerAsync(TestConfig configuration, ILogger logger)
         {
-            Guard.NotNull(logger, nameof(logger),
-                "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
-            Guard.NotNull(configuration, nameof(configuration),
-                "Requires a configuration instance to retrieve the HashiCorp Vault installation folder");
+            if (logger is null)
+            {
+                throw new ArgumentNullException(nameof(logger), "Requires a logger for logging diagnostic trace messages during the lifetime of the test server");
+            }
+
+            if (configuration is null)
+            {
+                throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the HashiCorp Vault installation folder");
+            }
 
             var rootToken = Guid.NewGuid().ToString();
             int port = GetRandomUnusedPort();
@@ -186,8 +205,15 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// </exception>
         public async Task MountKeyValueAsync(string path, VaultKeyValueSecretEngineVersion version)
         {
-            Guard.NotNullOrWhitespace(path, nameof(path), "Requires a path to mount the KeyValue secret engine to");
-            Guard.For<ArgumentException>(() => !Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), version), "Requires a KeyValue secret engine version that is either V1 or V2");
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Requires a path to mount the KeyValue secret engine to", nameof(path));
+            }
+
+            if (!Enum.IsDefined(typeof(VaultKeyValueSecretEngineVersion), version))
+            {
+                throw new ArgumentException("Requires a KeyValue secret engine version that is either V1 or V2", nameof(version));
+            }
 
             var content = new MountInfo
             {
@@ -211,11 +237,25 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="capabilities"/> is <c>null</c>.</exception>
         public async Task AddPolicyAsync(string name, string path, string[] capabilities)
         {
-            Guard.NotNullOrWhitespace(name, nameof(name), "Requires a name to identify the policy");
-            Guard.NotNullOrWhitespace(path, nameof(path), "Requires a path where the policy will be applicable");
-            Guard.NotNull(capabilities, nameof(capabilities), "Requires a set of capabilities that should be available in this policy");
-            Guard.NotAny(capabilities, nameof(capabilities), "Requires a set of capabilities that should be available in this policy");
-            Guard.For<ArgumentException>(() => capabilities.Any(String.IsNullOrWhiteSpace), "Requires all the capabilities of the policy to be filled out (not blank)");
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Requires a name to identify the policy", nameof(name));
+            }
+
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new ArgumentException("Requires a path where the policy will be applicable", nameof(path));
+            }
+
+            if (capabilities is null || !capabilities.Any())
+            {
+                throw new ArgumentException("Requires a set of capabilities that should be available in this policy", nameof(capabilities));
+            }
+
+            if (capabilities.Any(string.IsNullOrWhiteSpace))
+            {
+                throw new ArgumentException("Requires all the capabilities of the policy to be filled out (not blank)", nameof(capabilities));
+            }
 
             string joinedCapabilities = String.Join(", ", capabilities.Select(c => $"\"{c}\""));
             string rules = $"path \"{path}/*\" {{  capabilities = [ {joinedCapabilities} ]}}";
@@ -231,7 +271,10 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <exception cref="ArgumentException">Thrown when the <paramref name="type"/> is blank.</exception>
         public async Task EnableAuthenticationTypeAsync(string type, string description)
         {
-            Guard.NotNullOrWhitespace(type, nameof(type), "Requires an authentication type to enable the authentication");
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                throw new ArgumentException("Requires an authentication type to enable the authentication", nameof(type));
+            }
 
             await _systemEndpoint.EnableAuth(path: type, authType: type, description: description);
         }
@@ -246,9 +289,20 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <exception cref="ArgumentException">Thrown when the <paramref name="username"/>, <paramref name="password"/>, or <paramref name="policyName"/> is blank.</exception>
         public async Task AddUserPassUserAsync(string username, string password, string policyName)
         {
-            Guard.NotNullOrWhitespace(username, nameof(username));
-            Guard.NotNullOrWhitespace(password, nameof(password));
-            Guard.NotNullOrWhitespace(policyName, nameof(policyName));
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                throw new ArgumentException("Requires a non-blank user name", nameof(username));
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                throw new ArgumentException("Requires a non-blank password", nameof(password));
+            }
+
+            if (string.IsNullOrWhiteSpace(policyName))
+            {
+                throw new ArgumentException("Requires a non-blank policy name", nameof(policyName));
+            }
 
             await _authenticationEndpoint.Write($"/userpass/users/{username}", new UsersRequest
             {
@@ -292,9 +346,20 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
         protected PolicyResult RetryAction(Action action, int timeoutInSeconds = 30, int retryIntervalInSeconds = 1)
         {
-            Guard.NotNull(action, nameof(action), "Requires disposing function to be retried");
-            Guard.NotLessThan(timeoutInSeconds, 0, nameof(timeoutInSeconds), "Requires a timeout (in sec) greater than zero");
-            Guard.NotLessThan(retryIntervalInSeconds, 0, nameof(retryIntervalInSeconds), "Requires a retry interval (in sec) greater than zero");
+            if (action is null)
+            {
+                throw new ArgumentNullException(nameof(action), "Requires disposing function to be retried");
+            }
+
+            if (timeoutInSeconds < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(timeoutInSeconds), "Requires a timeout (in sec) greater than zero");
+            }
+
+            if (retryIntervalInSeconds < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(retryIntervalInSeconds), "Requires a retry interval (in sec) greater than zero");
+            }
 
             return Policy.Timeout(TimeSpan.FromSeconds(timeoutInSeconds))
                          .Wrap(Policy.Handle<Exception>()
