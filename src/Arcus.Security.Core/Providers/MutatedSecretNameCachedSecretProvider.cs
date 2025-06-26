@@ -50,6 +50,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -101,7 +102,7 @@ namespace Arcus.Security.Core.Providers
                 throw new ArgumentException("Requires a non-blank secret name when mutating secret names", nameof(secretName));
             }
 
-            await SafeguardMutateSecretAsync(secretName, async mutatedSecretName => 
+            await SafeguardMutateSecretAsync(secretName, async mutatedSecretName =>
             {
                 await _implementation.InvalidateSecretAsync(mutatedSecretName);
             });

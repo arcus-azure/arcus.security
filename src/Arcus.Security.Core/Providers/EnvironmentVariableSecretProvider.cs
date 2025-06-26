@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace Arcus.Security.Core.Providers
@@ -57,6 +57,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public Task<string> GetRawSecretAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -82,7 +83,7 @@ namespace Arcus.Security.Core.Providers
                 throw new ArgumentException("Requires a non-blank secret name to look up the environment secret", nameof(secretName));
             }
 
-            string secretValue = GetRawSecret(secretName);
+            string secretValue = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
             if (secretValue is null)
             {
                 return null;
@@ -98,6 +99,7 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         public string GetRawSecret(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))

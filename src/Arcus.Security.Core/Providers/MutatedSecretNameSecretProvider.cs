@@ -36,7 +36,7 @@ namespace Arcus.Security.Core.Providers
 
             _mutateSecretName = mutateSecretName;
             _implementation = implementation;
-            
+
             Logger = logger ?? NullLogger<MutatedSecretNameSecretProvider>.Instance;
         }
 
@@ -53,6 +53,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -98,6 +99,7 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public string GetRawSecret(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -208,7 +210,7 @@ namespace Arcus.Security.Core.Providers
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Safeguards an asynchronous function that will run after the given <paramref name="secretName"/> is mutated.
         /// </summary>
         /// <typeparam name="T">The return type of the asynchronous function.</typeparam>
