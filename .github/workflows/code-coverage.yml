@@ -25,7 +25,7 @@ jobs:
       uses: actions/checkout@v2
     - uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '10.0.x'
         dotnet-quality: 'preview'
 
     - name: Coverlet coverage unit test
