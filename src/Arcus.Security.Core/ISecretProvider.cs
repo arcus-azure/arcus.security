@@ -40,19 +40,28 @@ namespace Arcus.Security
     internal interface ISecretProvider
     {
         /// <summary>
-        /// Gets a stored secret by its name.
+        /// Gets the secret by its name from the registered provider.
         /// </summary>
-        /// <param name="secretName">The </param>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         Task<SecretResult> GetSecretAsync(string secretName)
         {
             return Task.FromResult(GetSecret(secretName));
         }
 
         /// <summary>
-        /// Gets a stored secret by its name.
+        /// Gets the secret by its name from the registered provider.
         /// </summary>
-        /// <param name="secretName"></param>
-        /// <returns></returns>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         SecretResult GetSecret(string secretName);
     }
 
