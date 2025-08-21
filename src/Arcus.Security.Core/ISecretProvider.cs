@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using GuardNet;
+
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.CommandLine")]
 
 namespace Arcus.Security.Core
 {
