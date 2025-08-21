@@ -5,11 +5,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Arcus.Security.Core 
+namespace Arcus.Security.Core
 {
     /// <summary>
     /// Represents an entry for an <see cref="ISecretProvider"/> implementation.
     /// </summary>
+#pragma warning disable S1133
+    [Obsolete("Will be implemented anew in v3.0 and made internal")]
+#pragma warning restore S1133
     public class SecretStoreSource
     {
         private readonly Func<IServiceProvider, ISecretProvider> _createSecretProvider;
@@ -27,7 +30,7 @@ namespace Arcus.Security.Core
             SecretProviderOptions options)
         {
             _createSecretProvider = createSecretProvider ?? throw new ArgumentNullException(nameof(createSecretProvider));
-            
+
             Options = options ?? new SecretProviderOptions();
         }
 
@@ -140,11 +143,11 @@ namespace Arcus.Security.Core
             }
             catch (Exception exception)
             {
-                ILogger logger = 
-                    serviceProvider.GetService<ILogger<SecretStoreBuilder>>() 
+                ILogger logger =
+                    serviceProvider.GetService<ILogger<SecretStoreBuilder>>()
                     ?? NullLogger<SecretStoreBuilder>.Instance;
-                
-                logger.LogError(exception, 
+
+                logger.LogError(exception,
                     "Failed to create an {Name} '{SecretProviderType}' using the provided lazy initialization in the secret store", Options?.Name, nameof(ISecretProvider));
 
                 throw;

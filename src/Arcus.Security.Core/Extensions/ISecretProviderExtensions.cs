@@ -20,7 +20,9 @@ namespace Arcus.Security.Core
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+#pragma warning disable S1133
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(ISecretProvider.GetSecretAsync) + " instead")]
+#pragma warning restore S1133
         public static string GetRawSecret(this ISecretProvider secretProvider, string secretName)
         {
             if (secretProvider is null)
@@ -85,7 +87,9 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+#pragma warning disable S1133
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
+#pragma warning restore S1133
         public static async Task<IEnumerable<string>> GetRawSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -115,6 +119,9 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+#pragma warning disable S1133
+        [Obsolete("Will be removed in v3.0 as secret versioning will be moved to concrete secret provider implementations")]
+#pragma warning restore S1133
         public static async Task<IEnumerable<Secret>> GetSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))

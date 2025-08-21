@@ -7,6 +7,9 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents the exposed functionality of the secret store.
     /// </summary>
+#pragma warning disable S1133
+    [Obsolete("Will be implemented anew in v3.0")]
+#pragma warning restore S1133
     public interface ISecretStore
     {
         /// <summary>

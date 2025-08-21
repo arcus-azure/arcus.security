@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-﻿using Arcus.Security.Core.Caching.Configuration;
+using Arcus.Security.Core.Caching.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Core.Caching
@@ -11,6 +11,9 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A <see cref="ISecretProvider"/> that will cache secrets in memory, to improve performance.
     /// </summary>
+#pragma warning disable S1133
+    [Obsolete("Will be removed in v3.0 as the secret caching will be configured on the secret store itself")]
+#pragma warning restore S1133
     public class CachedSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISyncSecretProvider
     {
         private readonly ISecretProvider _secretProvider;

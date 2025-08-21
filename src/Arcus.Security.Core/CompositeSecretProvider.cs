@@ -9,11 +9,14 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
+#pragma warning disable S1133
+
 namespace Arcus.Security.Core
 {
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation representing a series of <see cref="ISecretProvider"/> implementations.
     /// </summary>
+    [Obsolete("Will be implemented anew for v3.0")]
     internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISecretStore, ISyncSecretProvider
     {
         private readonly SecretStoreSource[] _secretProviders;
