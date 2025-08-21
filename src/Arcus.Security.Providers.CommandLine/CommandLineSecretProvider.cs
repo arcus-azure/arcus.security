@@ -22,7 +22,8 @@ namespace Arcus.Security.Providers.CommandLine
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configurationProvider"/> is <c>null</c>.</exception>
         public CommandLineSecretProvider(CommandLineConfigurationProvider configurationProvider)
         {
-            _configurationProvider = configurationProvider ?? throw new ArgumentNullException(nameof(configurationProvider));
+            ArgumentNullException.ThrowIfNull(configurationProvider);
+            _configurationProvider = configurationProvider;
         }
 
         /// <summary>
