@@ -7,6 +7,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// <see cref="ICachedSecretProvider"/> allows developers to build specific Secret key providers with caching.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 as the secret caching will be configured on the secret store itself")]
     public interface ICachedSecretProvider : ISecretProvider
     {
         /// <summary>

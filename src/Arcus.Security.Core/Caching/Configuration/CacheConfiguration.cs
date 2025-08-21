@@ -5,6 +5,9 @@ namespace Arcus.Security.Core.Caching.Configuration
     /// <summary>
     /// Default implementation of the collected configuration values to control the caching when interacting with Azure Key Vault.
     /// </summary>
+#pragma warning disable S1133
+    [Obsolete("Will be removed in v3.0 as the secret caching will be configured on the secret store itself")]
+#pragma warning restore S1133
     public class CacheConfiguration : ICacheConfiguration
     {
         /// <summary>

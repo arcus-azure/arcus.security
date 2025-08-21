@@ -42,6 +42,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The series of secret stores is directly publicly available, including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
         ///     Though, for almost all use-cases, the <see cref="AddProvider(ISecretProvider)"/> and the <see cref="AddProvider(Func{IServiceProvider,ISecretProvider},Action{SecretProviderOptions})"/> should be sufficient.
         /// </remarks>
+        [Obsolete("Will be removed in v3.0 as secret providers will be registered in the application services directly")]
         public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
 
         /// <summary>
@@ -97,11 +98,15 @@ namespace Microsoft.Extensions.Hosting
             // ReSharper disable once ConstantConditionalAccessQualifier - options can still be 'null' when consumer set it to 'null'.
             if (options?.MutateSecretName is null)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 SecretStoreSources.Add(new SecretStoreSource(secretProvider, options));
             }
             else
             {
+#pragma warning disable CS0612 // Type or member is obsolete
                 SecretStoreSources.Add(CreateMutatedSecretSource(serviceProvider => secretProvider, options));
+#pragma warning restore CS0612 // Type or member is obsolete
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             return this;
@@ -144,11 +149,17 @@ namespace Microsoft.Extensions.Hosting
             // ReSharper disable once ConstantConditionalAccessQualifier - options can still be 'null' when the consumer set it to 'null'.
             if (options?.MutateSecretName is null)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 SecretStoreSources.Add(new SecretStoreSource(createSecretProvider, options));
+#pragma warning restore CS0618 // Type or member is obsolete
             }
             else
             {
+#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0612 // Type or member is obsolete
                 SecretStoreSources.Add(CreateMutatedSecretSource(createSecretProvider, options));
+#pragma warning restore CS0612 // Type or member is obsolete
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             return this;
@@ -210,18 +221,23 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="InvalidOperationException">Thrown when one or more <see cref="ISecretProvider"/> was registered with the same name.</exception>
         internal void RegisterSecretStore()
         {
+#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0.
+#pragma warning disable CS0618 // Type or member is obsolete
+
             AddSecretStoreSources();
             AddCriticalExceptionFilters();
-#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0.
             AddAuditingOptions();
-#pragma warning restore CS0612 // Type or member is obsolete
 
             Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISyncSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0612 // Type or member is obsolete
         }
 
+        [Obsolete]
         private void AddSecretStoreSources()
         {
             foreach (SecretStoreSource source in SecretStoreSources)
@@ -263,6 +279,7 @@ namespace Microsoft.Extensions.Hosting
             Services.TryAddSingleton(AuditingOptions);
         }
 
+        [Obsolete]
         private static SecretStoreSource CreateMutatedSecretSource(
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             SecretProviderOptions options)
