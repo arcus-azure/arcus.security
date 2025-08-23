@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using Arcus.Security.Providers.DockerSecrets;
-using Microsoft.Extensions.Configuration.KeyPerFile;
-using Microsoft.Extensions.FileProviders;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -20,6 +18,9 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
+#pragma warning disable S1133
+        [Obsolete("Will be removed in v3.0 in favor of not using optional arguments, use the with the secret provider exposed options to mutate the secret name, or use the one without the optional argument for the default registration")]
+#pragma warning restore S1133
         public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath, Func<string, string> mutateSecretName = null)
         {
             return AddDockerSecrets(builder, directoryPath, name: null, mutateSecretName: mutateSecretName);
@@ -35,42 +36,18 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
         /// <exception cref="DirectoryNotFoundException">Thrown when the <paramref name="directoryPath"/> is not found on the system.</exception>
+#pragma warning disable S1133
+        [Obsolete("Will be removed in v3.0 in favor of exposing the secret provider options directly to configure the provider")]
+#pragma warning restore S1133
         public static SecretStoreBuilder AddDockerSecrets(
-            this SecretStoreBuilder builder, 
-            string directoryPath, 
+            this SecretStoreBuilder builder,
+            string directoryPath,
             string name,
             Func<string, string> mutateSecretName)
         {
-            if (builder is null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
+            ArgumentNullException.ThrowIfNull(builder);
 
-            if (string.IsNullOrWhiteSpace(directoryPath))
-            {
-                throw new ArgumentException("Requires a non-blank directory path inside the Docker container to locate the secrets", nameof(directoryPath));
-            }
-
-            if (!Path.IsPathRooted(directoryPath))
-            {
-                throw new ArgumentException("Requires an absolute directory path inside the Docker container to located the secrets", nameof(directoryPath));
-            }
-
-            if (!Directory.Exists(directoryPath))
-            {
-                throw new DirectoryNotFoundException($"The directory {directoryPath} which is configured as secretsDirectoryPath does not exist.");
-            }
-
-            var configuration = new KeyPerFileConfigurationSource
-            {
-                FileProvider = new PhysicalFileProvider(directoryPath),
-                Optional = false
-            };
-
-            var provider = new KeyPerFileConfigurationProvider(configuration);
-            provider.Load();
-            
-            return builder.AddProvider(new DockerSecretsSecretProvider(directoryPath), options =>
+            return builder.AddProvider(DockerSecretsSecretProvider.CreateAt(directoryPath), options =>
             {
                 options.Name = name;
                 options.MutateSecretName = mutateSecretName;
