@@ -11,6 +11,8 @@ using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.Kubernetes;
 using VaultSharp.V1.AuthMethods.UserPass;
 
+#pragma warning disable S1133
+
 namespace Arcus.Security.Providers.HashiCorp.Extensions
 {
     /// <summary>
@@ -37,9 +39,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     or the <paramref name="username"/> or <paramref name="password"/> is blank,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVaultWithUserPass(
             this SecretStoreBuilder builder,
             string vaultServerUriWithPort,
@@ -70,9 +70,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     or the <paramref name="username"/> or <paramref name="password"/> is blank,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVaultWithUserPass(
             this SecretStoreBuilder builder,
             string vaultServerUriWithPort,
@@ -106,9 +104,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     or the <paramref name="username"/> or <paramref name="password"/> is blank,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVaultWithUserPass(
             this SecretStoreBuilder builder,
             string vaultServerUriWithPort,
@@ -180,9 +176,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     or the <paramref name="jsonWebToken"/> is blank,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVaultWithKubernetes(
             this SecretStoreBuilder builder,
             string vaultServerUriWithPort,
@@ -219,9 +213,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     or the <paramref name="jsonWebToken"/> is blank,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVaultWithKubernetes(
             this SecretStoreBuilder builder,
             string vaultServerUriWithPort,
@@ -283,9 +275,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Thrown when the <paramref name="settings"/> doesn't have a valid Vault server URI or a missing authentication method,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVault(
             this SecretStoreBuilder builder,
             VaultClientSettings settings,
@@ -315,9 +305,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         ///     Thrown when the <paramref name="settings"/> doesn't have a valid Vault server URI or a missing authentication method,
         ///     or the <paramref name="secretPath"/> is blank.
         /// </exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of using new secret provider options")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVault(
             this SecretStoreBuilder builder,
             VaultClientSettings settings,
@@ -348,9 +336,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
         /// <param name="implementationFactory">The factory function to create an implementation of the <see cref="HashiCorpSecretProvider"/>.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 as inheriting secret providers will be removed as extension")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVault<TSecretProvider>(
             this SecretStoreBuilder builder,
             Func<IServiceProvider, TSecretProvider> implementationFactory)
@@ -373,9 +359,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <param name="name">The unique name to register this HashiCorp provider in the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 as inheriting secret providers will be removed as extension")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddHashiCorpVault<TSecretProvider>(
             this SecretStoreBuilder builder,
             Func<IServiceProvider, TSecretProvider> implementationFactory,
@@ -397,6 +381,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             });
         }
 
+        [Obsolete("Will be reimplemented in v3.0")]
         private static SecretStoreBuilder AddHashiCorpVault(
             SecretStoreBuilder builder,
             VaultClientSettings settings,
