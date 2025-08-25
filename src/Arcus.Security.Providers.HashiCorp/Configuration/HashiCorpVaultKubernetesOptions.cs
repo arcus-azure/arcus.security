@@ -6,6 +6,9 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
     /// <summary>
     /// Represents the available options to configure the <see cref="HashiCorpSecretProvider"/> when using the Kubernetes authentication.
     /// </summary>
+#pragma warning disable S1133
+    [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
+#pragma warning restore S1133
     public class HashiCorpVaultKubernetesOptions : HashiCorpVaultOptions
     {
         private string _kubernetesMountPoint = AuthMethodDefaultPaths.Kubernetes;
@@ -21,7 +24,7 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
             {
                 if (string.IsNullOrWhiteSpace(value))
                 {
-                    throw new ArgumentException("Requires a non-blank mount point for the Kubernetes authentication", nameof(value)); 
+                    throw new ArgumentException("Requires a non-blank mount point for the Kubernetes authentication", nameof(value));
                 }
 
                 _kubernetesMountPoint = value;
