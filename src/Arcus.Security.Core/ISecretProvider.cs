@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GuardNet;
 
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.DockerSecrets")]
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.CommandLine")]
 
 namespace Arcus.Security.Core
 {
