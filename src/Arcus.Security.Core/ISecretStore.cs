@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 
 namespace Arcus.Security.Core
@@ -54,5 +55,53 @@ namespace Arcus.Security.Core
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
         TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(string name) where TCachedSecretProvider : ICachedSecretProvider;
+    }
+}
+
+namespace Arcus.Security
+{
+    /// <summary>
+    /// Represents the central point of contact to retrieve secrets from registered <see cref="ISecretProvider"/>s in the user application.
+    /// </summary>
+    internal interface ISecretStore : ISecretProvider
+    {
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <typeparam name="TProvider">The concrete type of the secret provider implementation.</typeparam>
+        /// <param name="providerName">
+        ///     The name of the concrete secret provider implementation;
+        ///     uses the FQN (fully-qualified name) of the type in case none is provided.
+        /// </param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="providerName"/> is blank.</exception>
+        TProvider GetProvider<TProvider>(string providerName) where TProvider : ISecretProvider;
+
+        /// <summary>
+        /// Gets a stored secret by its name.
+        /// </summary>
+        /// <param name="secretName">The </param>
+        /// <param name="configureOptions"></param>
+        Task<SecretResult> GetSecretAsync(string secretName, Action<SecretOptions> configureOptions);
+
+        /// <summary>
+        /// Gets a stored secret by its name.
+        /// </summary>
+        /// <param name="secretName"></param>
+        /// <param name="configureOptions"></param>
+        /// <returns></returns>
+        SecretResult GetSecret(string secretName, Action<SecretOptions> configureOptions);
+    }
+
+    /// <summary>
+    /// Represents the options to manipulate the behavior of 
+    /// </summary>
+    public class SecretOptions
+    {
+        /// <summary>
+        /// Gets or sets a value indicating whether the secret retrieval is allowed to use a cached secret;
+        /// if <c>false</c>, the secret provider will always retrieve the fresh secret from the underlying store.
+        /// (Default: <c>true</c>)
+        /// </summary>
+        public bool UseCache { get; set; } = true;
     }
 }
