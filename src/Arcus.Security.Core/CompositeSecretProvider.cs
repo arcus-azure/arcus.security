@@ -385,7 +385,7 @@ namespace Arcus.Security
         public Secret GetSecret(string secretName)
         {
             SecretResult result = GetSecret(secretName, configureOptions: null);
-            return result.IsSuccess ? new Secret(result.Value) : throw NotFoundOrCritical(secretName, result);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
         }
 
         [Obsolete]
@@ -516,7 +516,7 @@ namespace Arcus.Security
         public async Task<Secret> GetSecretAsync(string secretName)
         {
             SecretResult result = await GetSecretAsync(secretName, configureOptions: null);
-            return result.IsSuccess ? new Secret(result.Value) : throw NotFoundOrCritical(secretName, result);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
@@ -550,7 +550,7 @@ namespace Arcus.Security
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
             SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
-            return result.IsSuccess ? new Secret(result.Value) : throw NotFoundOrCritical(secretName, result);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
