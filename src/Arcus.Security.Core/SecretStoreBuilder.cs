@@ -1,12 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using Arcus.Security;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Core.Providers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using ISecretProvider = Arcus.Security.Core.ISecretProvider;
+using ISecretStore = Arcus.Security.Core.ISecretStore;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable S1123
+#pragma warning disable S1133
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
@@ -16,9 +26,7 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
-#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0
-        private readonly ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
-#pragma warning restore CS0618 // Type or member is obsolete
+        [Obsolete] private readonly ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecretStoreBuilder"/> class.
@@ -27,7 +35,8 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="services"/> is <c>null</c>.</exception>
         public SecretStoreBuilder(IServiceCollection services)
         {
-            Services = services ?? throw new ArgumentNullException(nameof(services));
+            ArgumentNullException.ThrowIfNull(services);
+            Services = services;
         }
 
         /// <summary>
@@ -42,6 +51,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The series of secret stores is directly publicly available, including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
         ///     Though, for almost all use-cases, the <see cref="AddProvider(ISecretProvider)"/> and the <see cref="AddProvider(Func{IServiceProvider,ISecretProvider},Action{SecretProviderOptions})"/> should be sufficient.
         /// </remarks>
+        [Obsolete("Will be removed in v3.0 as secret providers are registered internally")]
         public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
 
         /// <summary>
@@ -52,13 +62,8 @@ namespace Microsoft.Extensions.Hosting
         ///     The series of exception filters is directly publicly available including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
         ///     Though, for almost all use-cases, the <see cref="AddCriticalException{TException}()"/> and <see cref="AddCriticalException{TException}(Func{TException,bool})"/> should be sufficient.
         /// </remarks>
+        [Obsolete("Will be removed in v3.0 as secret results are capturing failures")]
         public IList<CriticalExceptionFilter> CriticalExceptionFilters { get; } = new List<CriticalExceptionFilter>();
-
-        /// <summary>
-        /// Gets the configured options related to auditing during the lifetime of the secret store.
-        /// </summary>
-        [Obsolete("Will be removed in v3.0")]
-        internal SecretStoreAuditingOptions AuditingOptions { get; } = new SecretStoreAuditingOptions();
 
         /// <summary>
         /// Adds an <see cref="ISecretProvider"/> implementation to the secret store of the application.
@@ -86,23 +91,28 @@ namespace Microsoft.Extensions.Hosting
             ISecretProvider secretProvider,
             Action<SecretProviderOptions> configureOptions)
         {
-            if (secretProvider is null)
-            {
-                throw new ArgumentNullException(nameof(secretProvider));
-            }
+            ArgumentNullException.ThrowIfNull(secretProvider);
 
-            var options = new SecretProviderOptions();
-            configureOptions?.Invoke(options);
+            Services.AddSingleton(_ =>
+            {
+                var adapter = new DeprecatedSecretProviderAdapter(secretProvider);
 
-            // ReSharper disable once ConstantConditionalAccessQualifier - options can still be 'null' when consumer set it to 'null'.
-            if (options?.MutateSecretName is null)
-            {
-                SecretStoreSources.Add(new SecretStoreSource(secretProvider, options));
-            }
-            else
-            {
-                SecretStoreSources.Add(CreateMutatedSecretSource(serviceProvider => secretProvider, options));
-            }
+                var options = new SecretProviderRegistrationOptions(secretProvider.GetType());
+                var deprecatedOptions = new SecretProviderOptions();
+                configureOptions?.Invoke(deprecatedOptions);
+
+                if (!string.IsNullOrWhiteSpace(deprecatedOptions.Name))
+                {
+                    options.ProviderName = deprecatedOptions.Name;
+                }
+
+                if (deprecatedOptions.MutateSecretName != null)
+                {
+                    options.MapSecretName(deprecatedOptions.MutateSecretName);
+                }
+
+                return new SecretProviderRegistration(adapter, options);
+            });
 
             return this;
         }
@@ -117,7 +127,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
         public SecretStoreBuilder AddProvider(Func<IServiceProvider, ISecretProvider> createSecretProvider)
         {
-            return AddProvider(createSecretProvider ?? throw new ArgumentNullException(nameof(createSecretProvider)), configureOptions: null);
+            return AddProvider(createSecretProvider, configureOptions: null);
         }
 
         /// <summary>
@@ -133,25 +143,70 @@ namespace Microsoft.Extensions.Hosting
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             Action<SecretProviderOptions> configureOptions)
         {
-            if (createSecretProvider is null)
-            {
-                throw new ArgumentNullException(nameof(createSecretProvider));
-            }
+            ArgumentNullException.ThrowIfNull(createSecretProvider);
 
-            var options = new SecretProviderOptions();
-            configureOptions?.Invoke(options);
+            Services.AddSingleton(serviceProvider =>
+            {
+                var deprecated = createSecretProvider(serviceProvider);
+                if (deprecated is null)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot register secret provider in secret store as the implementation factory creating the provider returns 'null'");
+                }
 
-            // ReSharper disable once ConstantConditionalAccessQualifier - options can still be 'null' when the consumer set it to 'null'.
-            if (options?.MutateSecretName is null)
-            {
-                SecretStoreSources.Add(new SecretStoreSource(createSecretProvider, options));
-            }
-            else
-            {
-                SecretStoreSources.Add(CreateMutatedSecretSource(createSecretProvider, options));
-            }
+                var adapter = new DeprecatedSecretProviderAdapter(deprecated);
+
+                var options = new SecretProviderRegistrationOptions(deprecated.GetType());
+                var deprecatedOptions = new SecretProviderOptions();
+                configureOptions?.Invoke(deprecatedOptions);
+
+                if (!string.IsNullOrWhiteSpace(deprecatedOptions.Name))
+                {
+                    options.ProviderName = deprecatedOptions.Name;
+                }
+
+                if (deprecatedOptions.MutateSecretName != null)
+                {
+                    options.MapSecretName(deprecatedOptions.MutateSecretName);
+                }
+
+                return new SecretProviderRegistration(adapter, options);
+            });
 
             return this;
+        }
+
+        internal sealed class DeprecatedSecretProviderAdapter : Arcus.Security.ISecretProvider
+        {
+            internal DeprecatedSecretProviderAdapter(ISecretProvider deprecatedProvider)
+            {
+                DeprecatedProvider = deprecatedProvider;
+            }
+
+            internal ISecretProvider DeprecatedProvider { get; }
+
+            public SecretResult GetSecret(string secretName)
+            {
+                if (DeprecatedProvider is ISyncSecretProvider syncProvider)
+                {
+                    Secret secret = syncProvider.GetSecret(secretName);
+                    return secret is null
+                        ? SecretResult.NotFound($"could not find secret '{secretName}' in provider '{DeprecatedProvider.GetType().Name}'")
+                        : SecretResult.Success(secretName, secret.Value, secret.Version, secret.Expires ?? default);
+                }
+
+                throw new NotSupportedException(
+                    $"The deprecated secret provider '{DeprecatedProvider.GetType().Name}' does not support synchronous secret retrieval. " +
+                    $"Use the asynchronous '{nameof(Arcus.Security.ISecretProvider)}.{nameof(Arcus.Security.ISecretProvider.GetSecretAsync)}' instead.");
+            }
+
+            public async Task<SecretResult> GetSecretAsync(string secretName)
+            {
+                Secret secret = await DeprecatedProvider.GetSecretAsync(secretName);
+                return secret is null
+                    ? SecretResult.NotFound($"could not find secret '{secretName}' in provider '{DeprecatedProvider.GetType().Name}'")
+                    : SecretResult.Success(secretName, secret.Value, secret.Version, secret.Expires ?? default);
+            }
         }
 
         /// <summary>
@@ -210,76 +265,100 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="InvalidOperationException">Thrown when one or more <see cref="ISecretProvider"/> was registered with the same name.</exception>
         internal void RegisterSecretStore()
         {
-            AddSecretStoreSources();
-            AddCriticalExceptionFilters();
-#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0.
-            AddAuditingOptions();
-#pragma warning restore CS0612 // Type or member is obsolete
+            Services.TryAddSingleton<Arcus.Security.ISecretStore>(serviceProvider =>
+            {
+                var auditing = new SecretStoreAuditingOptions();
+                foreach (Action<SecretStoreAuditingOptions> configureAuditingOptions in _configureAuditingOptions)
+                {
+                    configureAuditingOptions(auditing);
+                }
 
-            Services.TryAddSingleton<ICachedSecretProvider, CompositeSecretProvider>();
+                var registrations = serviceProvider.GetServices<SecretProviderRegistration>().ToArray();
+                var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger("secret store") ?? NullLogger.Instance;
+
+                return new CompositeSecretProvider(registrations, CriticalExceptionFilters, new SecretStoreCaching(), auditing, logger);
+            });
+
+            Services.TryAddSingleton<ICachedSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISyncSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
         }
+    }
 
-        private void AddSecretStoreSources()
+    internal sealed class SecretProviderRegistration : IDisposable
+    {
+        internal SecretProviderRegistration(Arcus.Security.ISecretProvider provider, SecretProviderRegistrationOptions options)
         {
-            foreach (SecretStoreSource source in SecretStoreSources)
-            {
-                if (source is null)
-                {
-                    continue;
-                }
+            ArgumentNullException.ThrowIfNull(provider);
+            ArgumentNullException.ThrowIfNull(options);
+            Provider = provider;
+            Options = options;
+        }
 
-                Services.AddSingleton(serviceProvider =>
-                {
-                    source.EnsureSecretProviderCreated(serviceProvider);
-                    return source;
-                });
+        internal Arcus.Security.ISecretProvider Provider { get; }
+        internal SecretProviderRegistrationOptions Options { get; }
+
+        public void Dispose()
+        {
+            if (Provider is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Represents the available options on registering an <see cref="ISecretProvider"/> in the secret store.
+    /// </summary>
+    public class SecretProviderRegistrationOptions
+    {
+        private string _providerName;
+        private readonly Collection<Func<string, string>> _secretNameMutations = [];
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SecretProviderRegistrationOptions"/> class.
+        /// </summary>
+        /// <param name="providerType">
+        ///     The concrete type of the <see cref="ISecretProvider"/>
+        ///     -- its type name is used to provide a default for <see cref="ProviderName"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="providerType"/> is <c>null</c>.</exception>
+        public SecretProviderRegistrationOptions(Type providerType)
+        {
+            ArgumentNullException.ThrowIfNull(providerType);
+            ProviderName = providerType.Name;
+        }
+
+        internal Func<string, string> SecretNameMapper => name => _secretNameMutations.Aggregate(name, (current, mutate) => mutate(current));
+
+        /// <summary>
+        /// Gets or sets the identifiable name of the <see cref="ISecretProvider"/>,
+        /// which can be used to retrieve this specific provider from the secret store (via <see cref="ISecretStore.GetProvider{TProvider}(string)"/>).
+        /// </summary>
+        /// <remarks>
+        ///     Falls back on the type name of the <see cref="ISecretProvider"/> when none was provided during its registration.
+        /// </remarks>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="value"/> is blank.</exception>
+        public string ProviderName
+        {
+            get => _providerName;
+            set
+            {
+                ArgumentException.ThrowIfNullOrWhiteSpace(value);
+                _providerName = value;
             }
         }
 
-        private void AddCriticalExceptionFilters()
+        /// <summary>
+        /// Adds a function to mutate the secret name before it is used to retrieve the secret from the <see cref="ISecretProvider"/>.
+        /// </summary>
+        /// <param name="mutateSecretName">The function to mutate the secret name, (like: replacing dots with underscores).</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="mutateSecretName"/> is <c>null</c>.</exception>
+        public void MapSecretName(Func<string, string> mutateSecretName)
         {
-            foreach (CriticalExceptionFilter filter in CriticalExceptionFilters)
-            {
-                if (filter is null)
-                {
-                    continue;
-                }
-
-                Services.AddSingleton(filter);
-            }
-        }
-
-        [Obsolete]
-        private void AddAuditingOptions()
-        {
-            foreach (Action<SecretStoreAuditingOptions> configureAuditingOptions in _configureAuditingOptions)
-            {
-                configureAuditingOptions(AuditingOptions);
-            }
-
-            Services.TryAddSingleton(AuditingOptions);
-        }
-
-        private static SecretStoreSource CreateMutatedSecretSource(
-            Func<IServiceProvider, ISecretProvider> createSecretProvider,
-            SecretProviderOptions options)
-        {
-            return new SecretStoreSource(serviceProvider =>
-            {
-                ISecretProvider secretProvider = createSecretProvider(serviceProvider);
-                if (secretProvider is ICachedSecretProvider cachedSecretProvider)
-                {
-                    var logger = serviceProvider.GetService<ILogger<MutatedSecretNameCachedSecretProvider>>();
-                    return new MutatedSecretNameCachedSecretProvider(cachedSecretProvider, options.MutateSecretName, logger);
-                }
-                {
-                    var logger = serviceProvider.GetService<ILogger<MutatedSecretNameSecretProvider>>();
-                    return new MutatedSecretNameSecretProvider(secretProvider, options.MutateSecretName, logger);
-                }
-            }, options);
+            ArgumentNullException.ThrowIfNull(mutateSecretName);
+            _secretNameMutations.Add(mutateSecretName);
         }
     }
 }
