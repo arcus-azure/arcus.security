@@ -5,6 +5,7 @@ namespace Arcus.Security.Providers.AzureKeyVault.Configuration
     /// <summary>
     /// Default implementation of the collected configuration values required to interact with Azure Key Vault.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 as the vault URI can be passed directly to the registration")]
     public class KeyVaultConfiguration : IKeyVaultConfiguration
     {
         /// <summary>
