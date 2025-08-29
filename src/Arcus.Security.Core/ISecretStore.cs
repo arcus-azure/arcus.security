@@ -119,6 +119,28 @@ namespace Arcus.Security
     }
 
     /// <summary>
+    /// Extensions on the <see cref="ISecretStore"/> for easier usage.
+    /// </summary>
+    // ReSharper disable once InconsistentNaming
+    internal static class ISecretStoreExtensions
+    {
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="store">The registered secret store in the application.</param>
+        /// <param name="providerName">
+        ///     The name of the concrete secret provider implementation;
+        ///     uses the FQN (fully-qualified name) of the type in case none is provided.
+        /// </param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="providerName"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when no secret provider(s) was found with the provided <paramref name="providerName"/>.</exception>
+        public static ISecretProvider GetProvider(this ISecretStore store, string providerName)
+        {
+            return store.GetProvider<ISecretProvider>(providerName);
+        }
+    }
+
+    /// <summary>
     /// Represents the current user-configurable situation of an <see cref="ISecretStore"/> implementation,
     /// a.k.a. all extra options the user set during the secret store registration.
     /// </summary>
