@@ -7,7 +7,11 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the <see cref="IConfiguration"/>. It is recommended to only use this for development purposes.
     /// </summary>
-    public class ConfigurationSecretProvider : ISyncSecretProvider
+    public class ConfigurationSecretProvider :
+#pragma warning disable CS0612 // Type or member is obsolete
+        ISyncSecretProvider,
+#pragma warning restore CS0612 // Type or member is obsolete
+        Security.ISecretProvider
     {
         private readonly IConfiguration _configuration;
 
@@ -18,12 +22,27 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configuration"/> is <c>null</c>.</exception>
         public ConfigurationSecretProvider(IConfiguration configuration)
         {
-            if (configuration is null)
-            {
-                throw new ArgumentNullException(nameof(configuration), "Requires a configuration instance to retrieve the secrets from");
-            }
-
+            ArgumentNullException.ThrowIfNull(configuration);
             _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        SecretResult Security.ISecretProvider.GetSecret(string secretName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+
+            string secretValue = _configuration[secretName];
+            return secretValue is null
+                ? SecretResult.NotFound($"cannot find secret '{secretName}' in application configuration")
+                : SecretResult.Success(secretName, secretValue);
         }
 
         /// <summary>Retrieves the secret value, based on the given name</summary>
@@ -32,13 +51,9 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret configuration value", nameof(secretName));
-            }
-
             Secret secret = GetSecret(secretName);
             return Task.FromResult(secret);
         }
@@ -52,11 +67,6 @@ namespace Arcus.Security.Core.Providers
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret configuration value", nameof(secretName));
-            }
-
             string secretValue = GetRawSecret(secretName);
             return Task.FromResult(secretValue);
         }
@@ -68,20 +78,11 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public Secret GetSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret configuration value", nameof(secretName));
-            }
-
-            string secretValue = _configuration[secretName];
-            if (secretValue is null)
-            {
-                return null;
-            }
-
-            return new Secret(secretValue);
+            SecretResult result = ((Security.ISecretProvider) this).GetSecret(secretName);
+            return result.IsSuccess ? new Secret(result.Value) : null;
         }
 
         /// <summary>
@@ -94,13 +95,7 @@ namespace Arcus.Security.Core.Providers
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         public string GetRawSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret configuration value", nameof(secretName));
-            }
-            
-            string secretValue = _configuration[secretName];
-            return secretValue;
+            return GetSecret(secretName)?.Value;
         }
     }
 }
