@@ -26,6 +26,8 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public class SecretStoreBuilder
     {
+        private readonly DefaultSecretStoreContext _context = new();
+
         [Obsolete] private readonly ICollection<Action<SecretStoreAuditingOptions>> _configureAuditingOptions = new Collection<Action<SecretStoreAuditingOptions>>();
 
         /// <summary>
@@ -210,6 +212,91 @@ namespace Microsoft.Extensions.Hosting
         }
 
         /// <summary>
+        /// Adds an <see cref="Arcus.Security.ISecretProvider"/> implementation to the secret store of the application.
+        /// </summary>
+        /// <typeparam name="TProvider">The custom user-implemented <see cref="Arcus.Security.ISecretProvider"/> type to register in the secret store.</typeparam>
+        /// <param name="secretProvider">The provider which secrets are added to the secret store.</param>
+        /// <param name="configureOptions">The function to configure the registration of the <see cref="Arcus.Security.ISecretProvider"/> in the secret store.</param>
+        /// <returns>
+        ///     The extended secret store with the given <paramref name="secretProvider"/>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        internal SecretStoreBuilder AddProvider<TProvider>(TProvider secretProvider, Action<SecretProviderRegistrationOptions> configureOptions)
+            where TProvider : Arcus.Security.ISecretProvider
+        {
+            ArgumentNullException.ThrowIfNull(secretProvider);
+
+            return AddProvider((_, _) => secretProvider, configureOptions);
+        }
+
+        /// <summary>
+        /// Adds an <see cref="Arcus.Security.ISecretProvider"/> implementation to the secret store of the application.
+        /// </summary>
+        /// <typeparam name="TProvider">The custom user-implemented <see cref="Arcus.Security.ISecretProvider"/> type to register in the secret store.</typeparam>
+        /// <param name="implementationFactory">The function to create a provider which secrets are added to the secret store.</param>
+        /// <param name="configureOptions">The function to configure the registration of the <see cref="Arcus.Security.ISecretProvider"/> in the secret store.</param>
+        /// <returns>
+        ///     The extended secret store with the given <paramref name="implementationFactory"/> as lazy initialization.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
+        internal SecretStoreBuilder AddProvider<TProvider>(
+            Func<IServiceProvider, ISecretStoreContext, TProvider> implementationFactory,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+            where TProvider : Arcus.Security.ISecretProvider
+        {
+            ArgumentNullException.ThrowIfNull(implementationFactory);
+
+            Services.AddSingleton(serviceProvider =>
+            {
+                var options = new SecretProviderRegistrationOptions(typeof(TProvider));
+                configureOptions?.Invoke(options);
+
+                return new SecretProviderRegistration(implementationFactory(serviceProvider, _context), options);
+            });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an <see cref="Arcus.Security.ISecretProvider"/> implementation to the secret store of the application.
+        /// </summary>
+        /// <typeparam name="TProvider">The custom user-implemented <see cref="Arcus.Security.ISecretProvider"/> type to register in the secret store.</typeparam>
+        /// <typeparam name="TOptions">The custom user-implemented <see cref="SecretProviderOptions"/> to configure the <typeparamref name="TProvider"/>.</typeparam>
+        /// <param name="implementationFactory">The function to create a provider which secrets are added to the secret store.</param>
+        /// <param name="configureOptions">The function to configure the registration of the <see cref="Arcus.Security.ISecretProvider"/> in the secret store.</param>
+        /// <returns>
+        ///     The extended secret store with the given <paramref name="implementationFactory"/> as lazy initialization.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
+        internal SecretStoreBuilder AddProvider<TProvider, TOptions>(
+            Func<IServiceProvider, ISecretStoreContext, TOptions, TProvider> implementationFactory,
+            Action<TOptions> configureOptions)
+            where TProvider : Arcus.Security.ISecretProvider
+            where TOptions : SecretProviderRegistrationOptions, new()
+        {
+            ArgumentNullException.ThrowIfNull(implementationFactory);
+
+            Services.AddSingleton(serviceProvider =>
+            {
+                var options = new TOptions();
+                configureOptions?.Invoke(options);
+
+                return new SecretProviderRegistration(implementationFactory(serviceProvider, _context, options), options);
+            });
+
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the secret provider to use caching with a sliding expiration <paramref name="duration"/>.
+        /// </summary>
+        /// <param name="duration">The expiration time when the secret should be invalidated in the cache.</param>
+        internal void UseCaching(TimeSpan duration)
+        {
+            _context.Cache.SetDuration(duration);
+        }
+
+        /// <summary>
         /// Adds an exception of type <typeparamref name="TException"/> to the critical exceptions list
         /// which makes sure that the secret store handles all exceptions of type <typeparamref name="TException"/> differently.
         /// </summary>
@@ -276,13 +363,18 @@ namespace Microsoft.Extensions.Hosting
                 var registrations = serviceProvider.GetServices<SecretProviderRegistration>().ToArray();
                 var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger("secret store") ?? NullLogger.Instance;
 
-                return new CompositeSecretProvider(registrations, CriticalExceptionFilters, new SecretStoreCaching(), auditing, logger);
+                return new CompositeSecretProvider(registrations, CriticalExceptionFilters, _context.Cache, auditing, logger);
             });
 
             Services.TryAddSingleton<ICachedSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISyncSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+        }
+
+        internal sealed class DefaultSecretStoreContext : ISecretStoreContext
+        {
+            public SecretStoreCaching Cache { get; set; } = new();
         }
     }
 

@@ -155,12 +155,6 @@ namespace Arcus.Security
             return false;
         }
 
-        internal Task RefreshSecretAsync(string secretName, SecretResult result)
-        {
-            UpdateSecretInCache(secretName, result);
-            return Task.CompletedTask;
-        }
-
         internal void UpdateSecretInCache(string secretName, SecretResult result, SecretOptions options = null)
         {
             if (result.IsSuccess && (options is null || options.UseCache))
