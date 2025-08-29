@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using GuardNet;
 
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.CommandLine")]
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.AzureKeyVault")]
 
 namespace Arcus.Security.Core
 {
@@ -240,6 +244,75 @@ namespace Arcus.Security
         public override string ToString()
         {
             return IsSuccess ? $"[Success]: {Name}" : $"[Failure]: {FailureMessage} {FailureCause}";
+        }
+    }
+
+    /// <summary>
+    /// Represents the aggregated result of a secrets retrieval operation, which can either be successful or contain failure information.
+    /// </summary>
+    /// <remarks>
+    ///     Useful for when <see cref="ISecretProvider"/>s have to return multiple secrets at once, for example when working with versioned secrets.
+    /// </remarks>
+    public class SecretsResult : IEnumerable<SecretResult>
+    {
+        private readonly IReadOnlyCollection<SecretResult> _secrets;
+        private readonly string _failureMessage;
+        private readonly Exception _failureCause;
+
+        private SecretsResult(SecretResult[] secrets)
+        {
+            _secrets = secrets;
+            IsSuccess = secrets.All(secret => secret.IsSuccess);
+
+            (string FailureMessage, Exception FailureCause)[] failures =
+                secrets.Where(s => !s.IsSuccess).Select(s => (s.FailureMessage, s.FailureCause)).ToArray();
+
+            _failureMessage = string.Join(Environment.NewLine, failures.Select(f => f.FailureMessage));
+            _failureCause = failures.Length > 0 ? new AggregateException(failures.Select(f => f.FailureCause)) : null;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="SecretsResult"/> instance with the given collection of secrets.
+        /// </summary>
+        /// <param name="secrets">The sequence of secrets that were retrieved.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secrets"/> is <c>null</c>.</exception>
+        public static SecretsResult Create(IEnumerable<SecretResult> secrets)
+        {
+            ArgumentNullException.ThrowIfNull(secrets);
+            return new SecretsResult(secrets.ToArray());
+        }
+
+        /// <summary>
+        /// Gets the boolean flag indicating whether the secrets retrieval was successful or not.
+        /// </summary>
+        public bool IsSuccess { get; }
+
+        /// <summary>
+        /// Gets the exception that was thrown when the secret retrieval failed.
+        /// </summary>
+        public string FailureMessage => !IsSuccess ? _failureMessage : throw new InvalidOperationException("Cannot get failure message as the secrets retrieval was successful");
+
+        /// <summary>
+        /// Gets the exception that was thrown when the secret retrieval failed.
+        /// </summary>
+        public Exception FailureCause => !IsSuccess ? _failureCause : throw new InvalidOperationException("Cannot get failure cause as the secrets retrieval was successful");
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>An enumerator that can be used to iterate through the collection.</returns>
+        public IEnumerator<SecretResult> GetEnumerator()
+        {
+            return _secrets.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>An <see cref="IEnumerator" /> object that can be used to iterate through the collection.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

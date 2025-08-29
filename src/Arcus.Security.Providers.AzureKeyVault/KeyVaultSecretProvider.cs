@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Arcus.Observability.Telemetry.Core;
-using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Arcus.Security.Core;
+using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure;
 using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
@@ -20,10 +21,21 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
-    public class KeyVaultSecretProvider : IVersionedSecretProvider, ISyncSecretProvider
+    public class KeyVaultSecretProvider : IVersionedSecretProvider, ISyncSecretProvider, ISecretProvider
     {
         private readonly SecretClient _secretClient;
-        private readonly KeyVaultOptions _options;
+        private readonly ILogger _logger;
+
+        [Obsolete] private readonly KeyVaultOptions _options = new();
+
+        internal KeyVaultSecretProvider(SecretClient secretClient, ILogger<KeyVaultSecretProvider> logger)
+        {
+            ArgumentNullException.ThrowIfNull(secretClient);
+            _secretClient = secretClient;
+            _logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
+
+            VaultUri = secretClient.VaultUri.ToString();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KeyVaultSecretProvider"/> class.
@@ -32,8 +44,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="vaultConfiguration">Configuration related to the Azure Key Vault instance to use</param>
         /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using the secret client directly")]
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration)
-            : this(tokenCredential, vaultConfiguration, new KeyVaultOptions(), NullLogger<KeyVaultSecretProvider>.Instance)
+            : this(new SecretClient(vaultConfiguration?.VaultUri, tokenCredential), NullLogger<KeyVaultSecretProvider>.Instance)
         {
         }
 
@@ -46,35 +59,176 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="logger">The logger to write diagnostic trace messages during the interaction with the Azure Key Vault.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="tokenCredential"/> cannot be <c>null</c>.</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using the secret client directly")]
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
+            : this(new SecretClient(vaultConfiguration.VaultUri, tokenCredential), logger)
         {
-            if (vaultConfiguration is null)
-            {
-                throw new ArgumentNullException(nameof(vaultConfiguration));
-            }
-
-            if (tokenCredential is null)
-            {
-                throw new ArgumentNullException(nameof(tokenCredential));
-            }
-
-            VaultUri = $"{vaultConfiguration.VaultUri.Scheme}://{vaultConfiguration.VaultUri.Host}";
-
-            _secretClient = new SecretClient(vaultConfiguration.VaultUri, tokenCredential);
             _options = options;
-            
-            Logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
         }
 
         /// <summary>
         /// Gets the logger instance to write diagnostic trace messages during the interaction with the Azure Key Vault.
         /// </summary>
-        protected ILogger Logger { get; }
+        [Obsolete("Will be removed in v3.0 as inheriting secret providers is not supported anymore")]
+        protected ILogger Logger => _logger;
 
         /// <summary>
         ///     Gets the URI of the Azure Key Vault.
         /// </summary>
         public string VaultUri { get; }
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        SecretResult ISecretProvider.GetSecret(string secretName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+
+            return SuccessOrNotFoundAsync(secretName, name => Task.FromResult(_secretClient.GetSecret(name))).Result;
+        }
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        Task<SecretResult> ISecretProvider.GetSecretAsync(string secretName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+
+            return SuccessOrNotFoundAsync(secretName, name => _secretClient.GetSecretAsync(name));
+        }
+
+        /// <summary>
+        /// Retrieves all the <paramref name="amountOfVersions"/> of a secret, based on the <paramref name="secretName"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the secret.</param>
+        /// <param name="amountOfVersions">The amount of versions to return of the secret.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
+        public async Task<SecretsResult> GetVersionedSecretsAsync(string secretName, int amountOfVersions)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+            ArgumentOutOfRangeException.ThrowIfLessThan(amountOfVersions, 1);
+
+            (string[] secretVersions, RequestFailedException failureOnVersions) = await DetermineEnabledVersionsAsync(secretName);
+            if (secretVersions.Length is 0)
+            {
+                SecretResult result = SuccessOrNotFoundVersions(secretName, failureOnVersions);
+                return SecretsResult.Create([result]);
+            }
+
+            var secrets = new List<SecretResult>();
+            foreach (var secretVersion in secretVersions)
+            {
+                if (secrets.Count == amountOfVersions)
+                {
+                    break;
+                }
+
+                SecretResult result = await SuccessOrNotFoundAsync(secretName, name => _secretClient.GetSecretAsync(name, secretVersion));
+                secrets.Add(result);
+            }
+
+            return SecretsResult.Create(secrets);
+        }
+
+        private static SecretResult SuccessOrNotFoundVersions(string secretName, RequestFailedException failureOnVersions)
+        {
+            return failureOnVersions?.Status is (int) HttpStatusCode.NotFound
+                ? SecretResult.NotFound($"no enabled secret versions found for '{secretName}'", failureOnVersions)
+                : SecretResult.Interrupted($"enabled secret versions cannot be retrieved for '{secretName}'", failureOnVersions);
+        }
+
+        private async Task<(string[], RequestFailedException)> DetermineEnabledVersionsAsync(string secretName)
+        {
+            try
+            {
+                AsyncPageable<SecretProperties> properties = _secretClient.GetPropertiesOfSecretVersionsAsync(secretName);
+
+                var availableVersions = new Collection<SecretProperties>();
+                await foreach (SecretProperties property in properties)
+                {
+                    if (property.Enabled is true)
+                    {
+                        availableVersions.Add(property);
+                    }
+                }
+
+                return (availableVersions.OrderByDescending(version => version.CreatedOn)
+                                         .Select(version => version.Version)
+                                         .ToArray(), null);
+            }
+            catch (RequestFailedException ex)
+            {
+                return ([], ex);
+            }
+        }
+
+        /// <summary>
+        /// Stores a new version of an Azure Key Vault secret with the given <paramref name="secretValue"/>.
+        /// </summary>
+        /// <param name="secretName">The name of the Azure Key Vault secret.</param>
+        /// <param name="secretValue">The new value of the Azure Key Vault secret.</param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown when the <paramref name="secretName"/> or <paramref name="secretValue"/> is blank.
+        /// </exception>
+        public Task<SecretResult> SetSecretAsync(string secretName, string secretValue)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretValue);
+
+            return SuccessOrNotFoundAsync(secretName, name => _secretClient.SetSecretAsync(name, secretValue));
+        }
+
+        private async Task<SecretResult> SuccessOrNotFoundAsync(string secretName, Func<string, Task<Response<KeyVaultSecret>>> getSecretAsync)
+        {
+            try
+            {
+#pragma warning disable CS0612 // Type or member is obsolete
+                KeyVaultSecret secret = await TrackDependencyAsync(secretName, () => getSecretAsync(secretName));
+#pragma warning restore CS0612 // Type or member is obsolete
+
+                return SecretResult.Success(secret.Name, secret.Value, secret.Properties.Version, secret.Properties.ExpiresOn ?? default);
+            }
+            catch (RequestFailedException ex) when (ex.Status is (int) HttpStatusCode.NotFound)
+            {
+                return SecretResult.NotFound($"cannot find secret '{secretName}' in Azure Key Vault secrets", ex);
+            }
+        }
+
+        [Obsolete]
+        private async Task<TResult> TrackDependencyAsync<TResult>(
+            string secretName,
+            Func<Task<TResult>> secretOperationAsync)
+        {
+            bool isSuccessful = false;
+            using var measurement = DurationMeasurement.Start();
+            try
+            {
+                TResult result = await secretOperationAsync();
+                isSuccessful = true;
+
+                return result;
+            }
+            finally
+            {
+                if (_options.TrackDependency)
+                {
+                    Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement);
+                }
+            }
+        }
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
@@ -83,13 +237,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3.0 as raw secrets are not supported anymore")]
         public virtual string GetRawSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
-            }
-
             Secret secret = GetSecret(secretName);
             return secret?.Value;
         }
@@ -101,15 +251,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secrets results")]
         public virtual Secret GetSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
-            }
-
-            Secret secret = InteractWithKeyVault(secretName, client => client.GetSecret(secretName));
-            return secret;
+            SecretResult result = ((ISecretProvider) this).GetSecret(secretName);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : null;
         }
 
         /// <summary>
@@ -120,13 +266,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0 as raw secrets are not supported anymore")]
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
-            }
-
             Secret secret = await GetSecretAsync(secretName);
             return secret?.Value;
         }
@@ -139,19 +281,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
-            }
-
-            Logger.LogTrace("Getting a secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
-            Secret secret = await InteractWithKeyVaultAsync(
-                secretName, client => client.GetSecretAsync(secretName));
-            Logger.LogTrace("Got secret from Azure Key Vault {VaultUri}", VaultUri);
-            
-            return secret;
+            SecretResult result = await ((ISecretProvider) this).GetSecretAsync(secretName);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : null;
         }
 
         /// <summary>
@@ -165,66 +299,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentException">The <paramref name="secretValue"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretValue"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0, use the " + nameof(SetSecretAsync) + " instead that uses secret results")]
         public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
-            }
-            
-            if (string.IsNullOrWhiteSpace(secretValue))
-            {
-                throw new ArgumentException("Requires a non-blank secret value to store a secret in Azure Key Vault", nameof(secretValue));
-            }
-
-            Logger.LogTrace("Storing secret {SecretName} from Azure Key Vault {VaultUri}...", secretName, VaultUri);
-            Secret secret = await InteractWithKeyVaultAsync(
-                secretName, client => client.SetSecretAsync(secretName, secretValue));
-            Logger.LogTrace("Got secret {SecretName} (version: {SecretVersion}) from Azure Key Vault {VaultUri}", secretName, secret.Version, VaultUri);
-           
-            return secret;
-        }
-
-        private async Task<Secret> InteractWithKeyVaultAsync(
-            string secretName,
-            Func<SecretClient, Task<Response<KeyVaultSecret>>> interactWithClient)
-        {
-            return await InteractWithKeyVaultAsync(
-                secretName,
-                async client =>
-                {
-                    KeyVaultSecret sdkSecret = await interactWithClient(client);
-                    if (sdkSecret is null)
-                    {
-                        return null;
-                    }
-
-                    return new Secret(
-                        sdkSecret.Value,
-                        sdkSecret.Properties.Version,
-                        sdkSecret.Properties.ExpiresOn);
-                });
-        }
-
-        private Secret InteractWithKeyVault(
-            string secretName,
-            Func<SecretClient, Response<KeyVaultSecret>> interactWithNewClient)
-        {
-            return InteractWithKeyVault(
-                secretName,
-                client =>
-                {
-                    KeyVaultSecret sdkSecret = interactWithNewClient(client);
-                    if (sdkSecret is null)
-                    {
-                        return null;
-                    }
-
-                    return new Secret(
-                        sdkSecret.Value,
-                        sdkSecret.Properties.Version,
-                        sdkSecret.Properties.ExpiresOn);
-                });
+            SecretResult result = await SetSecretAsync(secretName, secretValue);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : null;
         }
 
         /// <summary>
@@ -235,18 +314,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results " + nameof(GetVersionedSecretsAsync))]
         public virtual async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
-            }
-
-            if (amountOfVersions < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
-            }
-
             IEnumerable<Secret> secrets = await GetSecretsAsync(secretName, amountOfVersions);
             return secrets.Select(secret => secret.Value);
         }
@@ -259,117 +329,22 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results " + nameof(GetVersionedSecretsAsync))]
         public virtual async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
+            SecretsResult result = await GetVersionedSecretsAsync(secretName, amountOfVersions);
+            if (result.IsSuccess)
             {
-                throw new ArgumentException("Requires a non-blank secret name to request a secret in Azure Key Vault", nameof(secretName));
+                return result.Select(s => new Secret(s.Value, s.Version, s.Expiration));
             }
 
-            if (amountOfVersions < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to make the secret a versioned secret in the secret store");
-            }
-
-            string[] versions = await DetermineVersionsAsync(secretName);
-            var secrets = new Collection<Secret>();
-            
-            foreach (string version in versions)
-            {
-                if (secrets.Count == amountOfVersions)
-                {
-                    break;
-                }
-
-                Secret secret = await InteractWithKeyVaultAsync(
-                    secretName, client => client.GetSecretAsync(secretName, version));
-
-                secrets.Add(new Secret(secret.Value, secret.Version, secret.Expires));
-            }
-
-            return secrets;
-        }
-
-        private async Task<string[]> DetermineVersionsAsync(string secretName)
-        {
-            return await InteractWithKeyVaultAsync(secretName, async client =>
-            {
-                AsyncPageable<SecretProperties> properties = client.GetPropertiesOfSecretVersionsAsync(secretName);
-                
-                var versions = new Collection<SecretProperties>();
-                await foreach (SecretProperties property in properties)
-                {
-                    if (property.Enabled is true)
-                    {
-                        versions.Add(property); 
-                    }
-                }
-
-                return versions.OrderByDescending(version => version.CreatedOn)
-                               .Select(version => version.Version)
-                               .ToArray();
-            });
-        }
-
-        private async Task<TResponse> InteractWithKeyVaultAsync<TResponse>(
-            string secretName,
-            Func<SecretClient, Task<TResponse>> interactWithNewClient)
-        {
-            var isSuccessful = false;
-            using (DurationMeasurement measurement = DurationMeasurement.Start())
-            { 
-                try
-                {
-                    TResponse response = await ThrottleTooManyRequestsAsync(secretName, async () =>
-                    {
-                        SecretClient client = GetSecretClient();
-                        return await interactWithNewClient(client);
-                    });
-
-                    isSuccessful = true;
-                    return response;
-                }
-                finally
-                {
-                    if (_options.TrackDependency)
-                    {
-                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement);
-                    }
-                }
-            }
-        }
-
-        private TResponse InteractWithKeyVault<TResponse>(
-            string secretName,
-            Func<SecretClient, TResponse> interactWithNewClient)
-        {
-            var isSuccessful = false;
-            using (DurationMeasurement measurement = DurationMeasurement.Start())
-            { 
-                try
-                {
-                    TResponse response = ThrottleTooManyRequests(secretName, () =>
-                    {
-                        SecretClient client = GetSecretClient();
-                        return interactWithNewClient(client);
-                    });
-
-                    isSuccessful = true;
-                    return response;
-                }
-                finally
-                {
-                    if (_options.TrackDependency)
-                    {
-                        Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement);
-                    }
-                }
-            }
+            throw result.FailureCause ?? new SecretNotFoundException(secretName);
         }
 
         /// <summary>
         /// Gets the configured Key Vault client.
         /// </summary>
+        [Obsolete("Will be removed in v3.0 as inheriting secret providers is not supported anymore")]
         protected SecretClient GetSecretClient()
         {
             return _secretClient;
@@ -382,6 +357,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns>
         ///     The resulting secret bundle of the <paramref name="secretOperation"/>.
         /// </returns>
+        [Obsolete("Will be removed in v3.0 as inheriting secret providers is not supported anymore")]
         protected static Task<Response<KeyVaultSecret>> ThrottleTooManyRequestsAsync(Func<Task<Response<KeyVaultSecret>>> secretOperation)
         {
             if (secretOperation is null)
@@ -393,28 +369,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
                     .ExecuteAsync(secretOperation);
         }
 
-        private async Task<TResponse> ThrottleTooManyRequestsAsync<TResponse>(string secretName, Func<Task<TResponse>> secretOperation)
-        {
-            try
-            {
-                AsyncRetryPolicy policy = 
-                    GetExponentialBackOffRetryAsyncPolicy<Exception>(
-                        exception => exception is RequestFailedException { Status: 429 });
-
-                return await policy.ExecuteAsync(secretOperation);
-            }
-            catch (RequestFailedException requestFailedException)
-            {
-                if (requestFailedException.Status == 404)
-                {
-                    throw new SecretNotFoundException(secretName, requestFailedException);
-                }
-
-                throw;
-            }
-        }
-
-        private static AsyncRetryPolicy GetExponentialBackOffRetryAsyncPolicy<TException>(Func<TException, bool> exceptionPredicate) 
+        [Obsolete("Will be removed in v3.0")]
+        private static AsyncRetryPolicy GetExponentialBackOffRetryAsyncPolicy<TException>(Func<TException, bool> exceptionPredicate)
             where TException : Exception
         {
             /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
@@ -435,6 +391,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <returns>
         ///     The resulting secret bundle of the <paramref name="secretOperation"/>.
         /// </returns>
+        [Obsolete("Will be removed in v3.0 as inheriting secret providers is not supported anymore")]
         protected static Response<KeyVaultSecret> ThrottleTooManyRequests(Func<Response<KeyVaultSecret>> secretOperation)
         {
             if (secretOperation is null)
@@ -446,30 +403,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
                 .Execute(secretOperation);
         }
 
-        private static TResponse ThrottleTooManyRequests<TResponse>(string secretName, Func<TResponse> secretOperation)
-        {
-            try
-            {
-                RetryPolicy retryPolicy = GetExponentialBackOffRetrySyncPolicy<Exception>(exception =>
-                {
-                    return exception is RequestFailedException newClientException && newClientException.Status == 429;
-                });
-
-                TResponse response = retryPolicy.Execute(secretOperation);
-                return response;
-            }
-            catch (RequestFailedException requestFailedException)
-            {
-                if (requestFailedException.Status == 404)
-                {
-                    throw new SecretNotFoundException(secretName, requestFailedException);
-                }
-
-                throw;
-            }
-        }
-
-        private static RetryPolicy GetExponentialBackOffRetrySyncPolicy<TException>(Func<TException, bool> exceptionPredicate) 
+        [Obsolete("Will be removed in v3.0")]
+        private static RetryPolicy GetExponentialBackOffRetrySyncPolicy<TException>(Func<TException, bool> exceptionPredicate)
             where TException : Exception
         {
             /* Client-side throttling using exponential back-off when Key Vault service limit exceeds:
