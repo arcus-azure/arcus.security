@@ -255,7 +255,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual Secret GetSecret(string secretName)
         {
             SecretResult result = ((ISecretProvider) this).GetSecret(secretName);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : null;
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw DetermineFinalException(secretName, result);
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
             SecretResult result = await ((ISecretProvider) this).GetSecretAsync(secretName);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw result.FailureCause ?? new SecretNotFoundException(secretName);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw DetermineFinalException(secretName, result);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
             SecretResult result = await SetSecretAsync(secretName, secretValue);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw result.FailureCause ?? new SecretNotFoundException(secretName);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw DetermineFinalException(secretName, result);
         }
 
         /// <summary>
@@ -339,6 +339,16 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
 
             throw result.FailureCause ?? new SecretNotFoundException(secretName);
+        }
+
+        private static Exception DetermineFinalException(string secretName, SecretResult result)
+        {
+            if (result.FailureCause is null or RequestFailedException { Status: (int) HttpStatusCode.NotFound })
+            {
+                return new SecretNotFoundException(secretName);
+            }
+
+            return result.FailureCause;
         }
 
         /// <summary>
