@@ -285,7 +285,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
             SecretResult result = await ((ISecretProvider) this).GetSecretAsync(secretName);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : null;
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw result.FailureCause ?? new SecretNotFoundException(secretName);
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         public virtual async Task<Secret> StoreSecretAsync(string secretName, string secretValue)
         {
             SecretResult result = await SetSecretAsync(secretName, secretValue);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : null;
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw result.FailureCause ?? new SecretNotFoundException(secretName);
         }
 
         /// <summary>
