@@ -6,9 +6,7 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
     /// <summary>
     /// Represents the available options to configure the <see cref="HashiCorpSecretProvider"/> when using the UserPass authentication.
     /// </summary>
-#pragma warning disable S1133
     [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-#pragma warning restore S1133
     public class HashiCorpVaultUserPassOptions : HashiCorpVaultOptions
     {
         private string _userPassMountPoint = AuthMethodDefaultPaths.UserPass;

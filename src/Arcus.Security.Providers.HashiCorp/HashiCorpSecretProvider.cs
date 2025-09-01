@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using VaultSharp;
 using VaultSharp.V1.Commons;
-#pragma warning disable S1133
 
 namespace Arcus.Security.Providers.HashiCorp
 {
