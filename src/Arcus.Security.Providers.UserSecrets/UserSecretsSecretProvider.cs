@@ -5,7 +5,6 @@ using Arcus.Security.Core;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using Microsoft.Extensions.FileProviders;
-#pragma warning disable S1133
 
 namespace Arcus.Security.Providers.UserSecrets
 {
