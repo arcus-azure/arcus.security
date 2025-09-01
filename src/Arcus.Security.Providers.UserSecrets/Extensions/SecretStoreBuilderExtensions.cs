@@ -31,6 +31,8 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="assembly">The assembly with the <see cref="UserSecretsIdAttribute" />.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="assembly"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the passed <paramref name="assembly"/> has no User Secrets attribute defined.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly)
         {
             ArgumentNullException.ThrowIfNull(assembly);
@@ -53,6 +55,8 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="userSecretsId">The user secrets ID.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="userSecretsId"/> is blank.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, string userSecretsId)
         {
             return builder.AddProvider(UserSecretsSecretProvider.CreateFor(userSecretsId));
