@@ -16,7 +16,6 @@ using ISecretStore = Arcus.Security.Core.ISecretStore;
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable CS0612 // Type or member is obsolete
 #pragma warning disable S1123
-#pragma warning disable S1133
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.Hosting
