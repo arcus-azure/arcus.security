@@ -19,7 +19,11 @@ namespace Arcus.Security.Providers.HashiCorp
     ///     See more information on HashiCorp Vault: <a href="https://www.vaultproject.io/docs" />.
     /// </para>
     /// </summary>
-    public class HashiCorpSecretProvider : Core.ISecretProvider, ISecretProvider
+    public class HashiCorpSecretProvider :
+#pragma warning disable CS0612
+        Core.ISecretProvider,
+#pragma warning restore CS0612
+        ISecretProvider
     {
         /// <summary>
         /// Gets the name to identity the dependency call to the HashiCorp Vault.
