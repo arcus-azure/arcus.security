@@ -34,7 +34,9 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretPath"/> is blank.</exception>
         public static SecretStoreBuilder AddHashiCorpVault(this SecretStoreBuilder builder, VaultClientSettings settings, string secretPath)
         {
-            return AddHashiCorpVault(builder, settings, secretPath, configureOptions: null);
+#pragma warning disable CS0618 // Type or member is obsolete
+            return builder.AddHashiCorpVault(settings, secretPath, configureOptions: null, name: null, mutateSecretName: null);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         /// <summary>
@@ -308,33 +310,6 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
                 secretProviderOptions.Name = name;
                 secretProviderOptions.MutateSecretName = mutateSecretName;
             });
-        }
-
-        /// <summary>
-        /// <para>
-        ///     Adds the secrets of a HashiCorp Vault KeyValue engine to the secret store.
-        /// </para>
-        /// <para>
-        ///     See more information on HashiCorp: <a href="https://www.vaultproject.io/docs" />.
-        /// </para>
-        /// </summary>
-        /// <param name="builder">The builder to add the HashiCorp secrets from the KeyValue Vault to.</param>
-        /// <param name="settings"></param>
-        /// <param name="secretPath">The secret path where the secret provider should look for secrets.</param>
-        /// <exception cref="ArgumentNullException">
-        ///     Thrown when the <paramref name="builder"/>, <paramref name="settings"/> or <paramref name="secretPath"/> is <c>null</c>.
-        /// </exception>
-        /// <exception cref="ArgumentException">
-        ///     Thrown when the <paramref name="settings"/> doesn't have a valid Vault server URI or a missing authentication method,
-        ///     or the <paramref name="secretPath"/> is blank.
-        /// </exception>
-        [Obsolete("Will be removed in v3.0 in favor of consolidating HashiCorp Vault authentication mechanisms")]
-        public static SecretStoreBuilder AddHashiCorpVault(
-            this SecretStoreBuilder builder,
-            VaultClientSettings settings,
-            string secretPath)
-        {
-            return AddHashiCorpVault(builder, settings, secretPath, configureOptions: null, name: null, mutateSecretName: null);
         }
 
         /// <summary>
