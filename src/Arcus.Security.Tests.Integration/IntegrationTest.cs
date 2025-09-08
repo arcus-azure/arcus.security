@@ -1,4 +1,5 @@
 ﻿using System;
+using Arcus.Security.Tests.Integration.Serilog;
 using Arcus.Testing;
 using Serilog;
 using Serilog.Core;
@@ -19,7 +20,7 @@ namespace Arcus.Security.Tests.Integration
             InMemoryLogSink = new InMemoryLogSink();
 
             var configuration = new LoggerConfiguration()
-                .WriteTo.XunitTestLogging(testOutput)
+                .WriteTo.Sink(new XunitLogEventSink(testOutput))
                 .WriteTo.Sink(InMemoryLogSink);
 
             SerilogLogger = configuration.CreateLogger();
