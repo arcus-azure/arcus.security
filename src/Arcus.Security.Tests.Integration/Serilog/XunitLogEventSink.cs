@@ -19,10 +19,7 @@ namespace Arcus.Security.Tests.Integration.Serilog
         /// <exception cref="ArgumentNullException">Thrown when the outputWriter is null.</exception>
         public XunitLogEventSink(ITestOutputHelper outputWriter)
         {
-            if (outputWriter == null)
-            {
-                throw new ArgumentNullException("outputWriter");
-            }
+            ArgumentNullException.ThrowIfNull(outputWriter);
 
             _outputWriter = outputWriter;
         }
