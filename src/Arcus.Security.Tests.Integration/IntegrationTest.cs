@@ -1,9 +1,8 @@
 ﻿using System;
 using Arcus.Testing;
 using Serilog;
-using Serilog.Configuration;
 using Serilog.Core;
-using Xunit.Abstractions;
+using Xunit;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Arcus.Security.Tests.Integration
@@ -20,8 +19,8 @@ namespace Arcus.Security.Tests.Integration
             InMemoryLogSink = new InMemoryLogSink();
 
             var configuration = new LoggerConfiguration()
-                .WriteTo.XunitTestLogging(testOutput)
-                .WriteTo.Sink(InMemoryLogSink);
+                .WriteTo.Sink(InMemoryLogSink)
+                .WriteTo.XunitTestLogging(testOutput);
 
             SerilogLogger = configuration.CreateLogger();
         }

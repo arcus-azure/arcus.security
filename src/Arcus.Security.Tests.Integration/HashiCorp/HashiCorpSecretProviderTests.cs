@@ -12,7 +12,6 @@ using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp
 {

@@ -47,12 +47,12 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             // Act
             builder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddProvider(serviceProvider => throw new TestClassException("Some failure"));
+                stores.AddProvider(serviceProvider => throw new TestPipelineException("Some failure"));
             });
 
             // Assert
             IHost host = builder.Build();
-            Assert.Throws<TestClassException>(() => host.Services.GetService<ISecretProvider>());
+            Assert.Throws<TestPipelineException>(() => host.Services.GetService<ISecretProvider>());
         }
 
         [Fact]
