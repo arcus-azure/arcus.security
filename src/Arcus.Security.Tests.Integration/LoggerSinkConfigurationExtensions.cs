@@ -5,23 +5,9 @@ using Xunit;
 
 namespace Arcus.Security.Tests.Integration
 {
+    // TODO: This class is copied from old Arcus.Testing, and should be replaced with a more appropriate one before complete the issue.
     public static class LoggerSinkConfigurationExtensions
     {
-        //
-        // Summary:
-        //     Adds the Arcus.Testing.XunitLogEventSink to the Serilog configuration to delegate
-        //     Serilog log messages to the xUnit test outputWriter.
-        //
-        // Parameters:
-        //   config:
-        //     The Serilog sink configuration where the xUnit test logging will be added.
-        //
-        //   outputWriter:
-        //     The xUnit test output writer to write custom test output.
-        //
-        // Exceptions:
-        //   T:System.ArgumentNullException:
-        //     Thrown when the config or outputWriter is null.
         public static LoggerConfiguration XunitTestLogging(this LoggerSinkConfiguration config, ITestOutputHelper outputWriter)
         {
             if (config == null)

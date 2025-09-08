@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Arcus.Security.Tests.Integration
 {
+    // TODO: This class is copied from old Arcus.Testing, and should be replaced with a more appropriate one before complete the issue.
     public class XunitLogEventSink : ILogEventSink
     {
         private readonly ITestOutputHelper _outputWriter;

@@ -19,8 +19,8 @@ namespace Arcus.Security.Tests.Integration
             InMemoryLogSink = new InMemoryLogSink();
 
             var configuration = new LoggerConfiguration()
-                .WriteTo.Sink(InMemoryLogSink)
-                .WriteTo.XunitTestLogging(testOutput);
+                .WriteTo.XunitTestLogging(testOutput)
+                .WriteTo.Sink(InMemoryLogSink);
 
             SerilogLogger = configuration.CreateLogger();
         }
