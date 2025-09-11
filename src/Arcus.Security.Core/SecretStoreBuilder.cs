@@ -421,7 +421,16 @@ namespace Microsoft.Extensions.Hosting
             ProviderName = providerType.Name;
         }
 
-        internal Func<string, string> SecretNameMapper => name => _secretNameMutations.Aggregate(name, (current, mutate) => mutate(current));
+        internal Func<string, (string mapped, string description)> SecretNameMapper => name =>
+        {
+            if (_secretNameMutations.Count is 0)
+            {
+                return (name, $"'{name}'");
+            }
+
+            var mapped = _secretNameMutations.Aggregate(name, (current, mutate) => mutate(current));
+            return (mapped, $"'{mapped}' (mapped from={name})");
+        };
 
         /// <summary>
         /// Gets or sets the identifiable name of the <see cref="ISecretProvider"/>,

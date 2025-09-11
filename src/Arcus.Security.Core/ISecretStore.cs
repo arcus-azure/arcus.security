@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 
 namespace Arcus.Security.Core
@@ -166,21 +167,27 @@ namespace Arcus.Security
             _cacheEntry = new MemoryCacheEntryOptions().SetSlidingExpiration(duration);
         }
 
-        internal bool TryGetCachedSecret(string secretName, SecretOptions secretOptions, out SecretResult secret)
+        internal bool TryGetCachedSecret(string secretName, SecretOptions secretOptions, ILogger logger, out SecretResult secret)
         {
-            if (secretOptions.UseCache)
+            if (secretOptions.UseCache && _cache.TryGetValue(secretName, out secret))
             {
-                return _cache.TryGetValue(secretName, out secret);
+                logger.LogSecretFoundInCache(secretName, _cacheEntry.SlidingExpiration);
+                return true;
             }
 
             secret = null;
             return false;
         }
 
-        internal void UpdateSecretInCache(string secretName, SecretResult result, SecretOptions options = null)
+        internal void UpdateSecretInCache(string secretName, SecretResult result, ILogger logger, SecretOptions options = null)
         {
             if (result.IsSuccess && (options is null || options.UseCache))
             {
+                if (_cache is not NullMemoryCache)
+                {
+                    logger.LogSecretRefreshInCache(secretName, _cacheEntry.SlidingExpiration);
+                }
+
                 _cache.Set(secretName, result, _cacheEntry);
             }
         }

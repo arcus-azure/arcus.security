@@ -9,6 +9,7 @@ using Arcus.Security.Core.Caching.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using static Arcus.Security.CompositeSecretProviderLoggerExtensions;
 
 #pragma warning disable CS0612 // Type or member is obsolete
 #pragma warning disable CS0618 // Type or member is obsolete: options will be removed in v3.0.
@@ -151,41 +152,50 @@ namespace Arcus.Security
             var options = new SecretOptions();
             configureOptions?.Invoke(options);
 
-            var failures = new Collection<(string providerName, SecretResult)>();
+            if (_registrations.Count is 0)
+            {
+                _logger.LogSecretMissingFromStore(secretName);
+                return SecretResult.NotFound(NoProvidersRegistered);
+            }
+
+            _logger.LogSecretLookup(secretName);
+            if (Cache.TryGetCachedSecret(secretName, options, _logger, out SecretResult cached))
+            {
+                return cached;
+            }
+
+            var failures = new Collection<SecretResult>();
             foreach (SecretProviderRegistration source in _registrations)
             {
+                LogSecurityEvent(source, secretName, "Get Secret");
+
                 string providerName = source.Options.ProviderName;
+                (string mapped, string secretNameDescription) = source.Options.SecretNameMapper(secretName);
                 try
                 {
-                    var mapped = source.Options.SecretNameMapper(secretName);
-                    if (Cache.TryGetCachedSecret(secretName, options, out SecretResult cached))
-                    {
-                        return cached;
-                    }
-
-                    LogSecurityEvent(source, secretName, "Get Secret");
-
                     SecretResult result = await getSecretAsync(source.Provider, mapped);
                     if (result is null)
                     {
-                        _logger.LogWarning("Secret store could not found secret '{SecretName}' in secret provider '{ProviderName}' as it returned 'null' upon querying provider", secretName, providerName);
+                        _logger.LogSecretMissingFromProviderReturnsNull(secretNameDescription, providerName);
                         continue;
                     }
 
                     if (result.IsSuccess)
                     {
-                        _logger.LogDebug("Secret store found secret '{SecretName}' in secret provider '{ProviderName}'", secretName, providerName);
-                        Cache.UpdateSecretInCache(secretName, result, options);
+                        _logger.LogSecretFoundInProvider(secretNameDescription, providerName);
+                        _logger.LogSecretFoundInStore(secretNameDescription, providerName, failures);
+
+                        Cache.UpdateSecretInCache(secretName, result, _logger, options);
                         return result;
                     }
 
-                    _logger.LogDebug("Secret store could not found secret '{SecretName}' in secret provider '{ProviderName}'", secretName, providerName);
-                    failures.Add((providerName, result));
+                    _logger.LogSecretMissingFromProviderFailure(providerName, result);
+                    failures.Add(result);
                 }
                 catch (Exception exception)
                 {
-                    failures.Add((providerName, SecretResult.Interrupted($"Secret provider '{providerName}' failed to query secret '{secretName}' due to an unexpected failure", exception)));
-                    _logger.LogWarning(exception, "Secret store failed to query secret '{SecretName}' in secret provider '{ProviderName}' due to an exception while querying for the secret", secretName, providerName);
+                    failures.Add(SecretResult.Interrupted(ExceptionDuringLookup, exception));
+                    _logger.LogSecretMissingFromProviderException(exception, secretNameDescription, providerName);
                 }
             }
 
@@ -193,18 +203,14 @@ namespace Arcus.Security
             return finalFailure;
         }
 
-
-        private SecretResult CreateFinalFailureSecretResult(string secretName, Collection<(string providerName, SecretResult result)> failures)
+        private SecretResult CreateFinalFailureSecretResult(string secretName, Collection<SecretResult> failures)
         {
-            string messages = failures.Count == 0
-                ? "No secret providers were registered in the secret store"
-                : string.Concat(failures.Select(failure => $"{Environment.NewLine}\t- ({failure.providerName}): {failure.result.Failure} {failure.result.FailureMessage}"));
-
-            var failureMessage = $"No registered secret provider could found secret '{secretName}': {messages}";
-            var failureCauses = failures.Where(f => f.result.FailureCause != null).Select(f => f.result.FailureCause).ToArray();
+            var failureMessage = $"Secret store could not found secret '{secretName}' in registered providers";
+            var failureCauses = failures.Where(f => f.FailureCause != null).Select(f => f.FailureCause).ToArray();
 
             if (failureCauses.Length <= 0)
             {
+                _logger.LogSecretMissingFromStore(secretName, failures);
                 return SecretResult.NotFound(failureMessage);
             }
 
@@ -212,12 +218,14 @@ namespace Arcus.Security
                 ? failureCauses[0]
                 : new AggregateException(failureCauses);
 
-            _logger.LogError(failureCause, failureMessage);
+            _logger.LogSecretMissingFromStore(failureCause, secretName, failures);
 
-            return failures.Any(f => f.result.Failure is SecretFailure.Interrupted)
+            return failures.Any(f => f.Failure is SecretFailure.Interrupted)
                 ? SecretResult.Interrupted(failureMessage, failureCause)
                 : SecretResult.NotFound(failureMessage, failureCause);
         }
+
+        #region Deprecated code
 
         /// <summary>
         /// Gets the cache-configuration for this instance.
@@ -561,5 +569,76 @@ namespace Arcus.Security
         {
             await Cache.InvalidateSecretAsync(secretName);
         }
+        #endregion
+    }
+
+    internal static partial class CompositeSecretProviderLoggerExtensions
+    {
+        internal const string NoProvidersRegistered = "no providers registered in application services",
+                              ExceptionDuringLookup = "exception thrown upon querying provider";
+
+        internal static void LogSecretFoundInStore(this ILogger logger, string secretName, string providerName, IReadOnlyCollection<SecretResult> previousFailures)
+        {
+            string skippedProvidersDescription = previousFailures.Count switch
+            {
+                0 => "no other provider",
+                1 => "1 other provider",
+                _ => $"{previousFailures.Count} other providers"
+            };
+
+            LogSecretFoundInStore(logger, secretName, providerName, skippedProvidersDescription);
+        }
+
+        [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in provider '{ProviderName}' | skipped by {SkippedProvidersDescription}")]
+        internal static partial void LogSecretFoundInStore(this ILogger logger, string secretName, string providerName, string skippedProvidersDescription);
+
+        [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in cache (sliding expiration={CacheDuration:t}) | skipped all providers")]
+        internal static partial void LogSecretFoundInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Found in] '{ProviderName}'")]
+        internal static partial void LogSecretFoundInProvider(this ILogger logger, string secretName, string providerName);
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned 'null' upon querying provider")]
+        internal static partial void LogSecretMissingFromProviderReturnsNull(this ILogger logger, string secretName, string providerName);
+
+        internal static void LogSecretMissingFromProviderFailure(this ILogger logger, string providerName, SecretResult result)
+        {
+            LogSecretMissingFromProviderFailure(logger, result.FailureCause, result.Name, providerName, result.Failure, result.FailureMessage);
+        }
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned {Failure} {ErrorMessage}")]
+        internal static partial void LogSecretMissingFromProviderFailure(this ILogger logger, Exception exception, string secretName, string providerName, SecretFailure failure, string errorMessage)
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ " + ExceptionDuringLookup)]
+        internal static partial void LogSecretMissingFromProviderException(this ILogger logger, Exception exception, string secretName, string providerName);
+
+        internal static void LogSecretMissingFromStore(this ILogger logger, string secretName, IReadOnlyCollection<SecretResult> failures)
+        {
+            LogSecretMissingFromStore(logger, exception: null, secretName, failures);
+        }
+
+        internal static void LogSecretMissingFromStore(this ILogger logger, Exception exception, string secretName, IReadOnlyCollection<SecretResult> failures)
+        {
+            string providersDescription =
+                failures.Count is 1
+                    ? "single provider failed to provide secret"
+                    : $"all {failures.Count} providers failed to provide secret";
+
+            LogSecretMissingFromStore(logger, exception, secretName, providersDescription);
+        }
+
+        internal static void LogSecretMissingFromStore(this ILogger logger, string secretName)
+        {
+            LogSecretMissingFromStore(logger, exception: null, secretName, NoProvidersRegistered);
+        }
+
+        [LoggerMessage(LogLevel.Error, "Secret {SecretName} [Missing from] secret store => ✗ {ProvidersDescription}")]
+        internal static partial void LogSecretMissingFromStore(this ILogger logger, Exception exception, string secretName, string providersDescription);
+
+        [LoggerMessage(LogLevel.Trace, "[Secret store] looking up secret '{SecretName}' in registered providers")]
+        internal static partial void LogSecretLookup(this ILogger logger, string secretName);
+
+        [LoggerMessage(LogLevel.Trace, "[Secret store] refresh secret '{SecretName}' in cache (sliding expiration={CacheDuration:t})")]
+        internal static partial void LogSecretRefreshInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
     }
 }
