@@ -607,7 +607,7 @@ namespace Arcus.Security
         }
 
         [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned {Failure} {ErrorMessage}")]
-        internal static partial void LogSecretMissingFromProviderFailure(this ILogger logger, Exception exception, string secretName, string providerName, SecretFailure failure, string errorMessage)
+        internal static partial void LogSecretMissingFromProviderFailure(this ILogger logger, Exception exception, string secretName, string providerName, SecretFailure failure, string errorMessage);
 
         [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ " + ExceptionDuringLookup)]
         internal static partial void LogSecretMissingFromProviderException(this ILogger logger, Exception exception, string secretName, string providerName);
