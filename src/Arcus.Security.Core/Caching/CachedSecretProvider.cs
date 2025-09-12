@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-﻿using Arcus.Security.Core.Caching.Configuration;
+using Arcus.Security.Core.Caching.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Arcus.Security.Core.Caching
@@ -62,7 +62,9 @@ namespace Arcus.Security.Core.Caching
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
         public CachedSecretProvider(ISecretProvider secretProvider) :
+#pragma warning disable CS0618 // Type or member is obsolete
             this(secretProvider, CacheConfiguration.Default, new MemoryCache(new MemoryCacheOptions()))
+#pragma warning restore CS0618 // Type or member is obsolete
         {
         }
 
