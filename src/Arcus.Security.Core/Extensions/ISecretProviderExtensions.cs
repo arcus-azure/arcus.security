@@ -115,6 +115,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0 as versioned secrets will be handled on the concrete secret providers themselves")]
         public static async Task<IEnumerable<Secret>> GetSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
