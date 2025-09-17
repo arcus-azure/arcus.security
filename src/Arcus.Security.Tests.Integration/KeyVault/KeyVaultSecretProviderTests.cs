@@ -3,7 +3,6 @@ using Arcus.Security.Core;
 using Arcus.Security.Tests.Integration.KeyVault.Fixture;
 using Arcus.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.KeyVault
 {

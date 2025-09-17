@@ -6,7 +6,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Arcus.Security.Providers.DockerSecrets;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Arcus.Security.Tests.Integration.DockerSecrets
 {
