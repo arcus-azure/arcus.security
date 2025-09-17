@@ -14,7 +14,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 [assembly: UserSecretsId(SecretStoreBuilderExtensionsTests.TestSecretsId)]
 
