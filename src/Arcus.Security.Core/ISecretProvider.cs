@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using GuardNet;
 
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.HashiCorp")]
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.UserSecrets")]
@@ -106,7 +105,7 @@ namespace Arcus.Security
 
         private SecretResult(SecretFailure failure, string failureMessage, Exception failureCause)
         {
-            Guard.NotNullOrWhitespace(failureMessage, nameof(failureMessage));
+            ArgumentException.ThrowIfNullOrWhiteSpace(failureMessage);
 
             _failure = failure;
             _failureMessage = failureMessage;
@@ -117,8 +116,8 @@ namespace Arcus.Security
 
         private SecretResult(string secretName, string secretValue, string secretVersion, DateTimeOffset expirationDate)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretValue));
-            Guard.NotNullOrWhitespace(secretValue, nameof(secretValue));
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretValue);
 
             _secretName = secretName;
             _secretValue = secretValue;
