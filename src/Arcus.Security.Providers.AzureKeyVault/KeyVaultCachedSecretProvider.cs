@@ -10,6 +10,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// <summary>
     /// Represents an <see cref="KeyVaultSecretProvider"/> instance with additional specific caching operations.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 as caching will be handled by the secret store itself")]
     public class KeyVaultCachedSecretProvider : CachedSecretProvider
     {
         private readonly KeyVaultSecretProvider _secretProvider;
@@ -23,7 +24,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">
         ///     Thrown when the <paramref name="secretProvider"/>, <paramref name="cacheConfiguration"/>, or <paramref name="memoryCache"/> is <c>null</c>.
         /// </exception>
-        public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider, ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache) 
+        public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider, ICacheConfiguration cacheConfiguration, IMemoryCache memoryCache)
             : base(secretProvider, cacheConfiguration, memoryCache)
         {
             _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
@@ -36,7 +37,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <param name="secretProvider">The inner Azure Key Vault secret provider to retrieve secrets.</param>
         /// <param name="cacheConfiguration">The custom caching configuration that defines how the cache works.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> or the <paramref name="cacheConfiguration"/> is <c>null</c>.</exception>
-        public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider, ICacheConfiguration cacheConfiguration) 
+        public KeyVaultCachedSecretProvider(KeyVaultSecretProvider secretProvider, ICacheConfiguration cacheConfiguration)
             : base(secretProvider, cacheConfiguration)
         {
             _secretProvider = secretProvider ?? throw new ArgumentNullException(nameof(secretProvider));
@@ -74,7 +75,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
 
             Secret secret = await _secretProvider.StoreSecretAsync(secretName, secretValue);
-            MemoryCache.Set(secretName, new [] { secret }, CacheEntry);
+            MemoryCache.Set(secretName, new[] { secret }, CacheEntry);
 
             return secret;
         }
