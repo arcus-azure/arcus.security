@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Authentication;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
-using Arcus.Security.Tests.Unit.Core.Stubs;
 using Arcus.Testing;
 using Arcus.Testing.Security.Providers.InMemory;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +22,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             string secretKey1 = "MySecret1";
             string secretValue1 = $"secret-{Guid.NewGuid()}";
             var stubProvider1 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey1] = secretValue1 });
-            
+
             string secretKey2 = "MySecret2";
             string secretValue2 = $"secret-{Guid.NewGuid()}";
             var stubProvider2 = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey2] = secretValue2 });
@@ -108,78 +106,6 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
         }
 
         [Fact]
-        public async Task AddSecretStore_WithMultipleSpecificCriticalExceptions_ThrowsAggregateExceptionWithAllThrownCriticalExceptionsWhenThrownInSecretProvider()
-        {
-            // Arrange
-            var stubProvider1 = new SaboteurSecretProvider(new CryptographicException("Some cryptographic failure"));
-            var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("Some authentication failure"));
-
-            var services = new ServiceCollection();
-
-            // Act
-            services.AddSecretStore(stores =>
-            {
-                stores.AddCriticalException<CryptographicException>()
-                      .AddCriticalException<AuthenticationException>()
-                      .AddProvider(stubProvider1)
-                      .AddProvider(stubProvider2);
-            });
-
-            // Assert
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-            var provider = serviceProvider.GetRequiredService<ISecretProvider>();
-
-            var exception = await Assert.ThrowsAsync<AggregateException>(() => provider.GetSecretAsync("some secret name"));
-            Assert.Collection(exception.InnerExceptions, 
-                ex => Assert.IsType<CryptographicException>(ex),
-                ex => Assert.IsType<AuthenticationException>(ex));
-        }
-
-        [Fact]
-        public async Task AddSecretStore_WithSpecificCriticalExceptionFilter_ThrowsSpecificCriticalExceptionThatMatchesFilter()
-        {
-            // Arrange
-            const string expectedMessage = "This is a specific message";
-            var stubProvider1 = new SaboteurSecretProvider(new AuthenticationException(expectedMessage));
-            var stubProvider2 = new SaboteurSecretProvider(new AuthenticationException("This is a different message"));
-
-            var services = new ServiceCollection();
-
-            // Act
-            services.AddSecretStore(stores =>
-            {
-                stores.AddCriticalException<AuthenticationException>(ex => ex.Message == expectedMessage)
-                      .AddProvider(stubProvider1)
-                      .AddProvider(stubProvider2);
-            });
-
-            // Assert
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-            var provider = serviceProvider.GetRequiredService<ISecretProvider>();
-
-            var exception = await Assert.ThrowsAsync<AuthenticationException>(() => provider.GetRawSecretAsync("some secret name"));
-            Assert.Equal(expectedMessage, exception.Message);
-        }
-
-        [Fact]
-        public async Task AddSecretStore_WithoutFoundCachedProvider_ThrowsException()
-        {
-            // Arrange
-            const string secretKey = "MySecret";
-            var stubProvider = new InMemorySecretProvider(new Dictionary<string, string> { [secretKey] = $"secret-{Guid.NewGuid()}" });
-
-            var services = new ServiceCollection();
-
-            // Act
-            services.AddSecretStore(stores => stores.AddProvider(stubProvider));
-
-            // Assert
-            IServiceProvider serviceProvider = services.BuildServiceProvider();
-            var provider = serviceProvider.GetRequiredService<ICachedSecretProvider>();
-            await Assert.ThrowsAsync<NotSupportedException>(() => provider.InvalidateSecretAsync(secretKey));
-        }
-
-        [Fact]
         public async Task AddSecretStore_WithLogger_UsesLogger()
         {
             // Arrange
@@ -237,7 +163,7 @@ namespace Arcus.Security.Tests.Unit.Core.Extensions
             IServiceProvider provider = services.BuildServiceProvider();
             Assert.ThrowsAny<InvalidOperationException>(() => provider.GetRequiredService<ISecretProvider>());
         }
-        
+
         [Fact]
         public void AddSecretStore_WithoutConfigureSecretStoresFunction_Fails()
         {

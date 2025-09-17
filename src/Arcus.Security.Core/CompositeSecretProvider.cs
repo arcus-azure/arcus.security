@@ -3,105 +3,229 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Arcus.Security.Core;
 using Arcus.Security.Core.Caching;
 using Arcus.Security.Core.Caching.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using static Arcus.Security.CompositeSecretProviderLoggerExtensions;
 
-namespace Arcus.Security.Core
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete: options will be removed in v3.0.
+
+namespace Arcus.Security
 {
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation representing a series of <see cref="ISecretProvider"/> implementations.
     /// </summary>
-    internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISecretStore, ISyncSecretProvider
+    internal class CompositeSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, Core.ISecretStore, ISyncSecretProvider, ISecretStore
     {
-        private readonly SecretStoreSource[] _secretProviders;
-        private readonly CriticalExceptionFilter[] _criticalExceptionFilters;
-#pragma warning disable CS0618 // Type or member is obsolete: options will be removed in v3.0.
-        private readonly SecretStoreAuditingOptions _auditingOptions;
-#pragma warning restore CS0618 // Type or member is obsolete
-        private readonly IDictionary<string, Lazy<ISecretProvider>> _groupedSecretStores;
+        private readonly IReadOnlyCollection<SecretProviderRegistration> _registrations;
+        private readonly Dictionary<string, Lazy<ISecretProvider>> _secretProviderByName;
         private readonly ILogger _logger;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CompositeSecretProvider"/> class.
-        /// </summary>
-        /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
-        /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
-        /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
-        /// <param name="logger">The logger instance to write diagnostic messages during the retrieval of secrets via the registered <paramref name="secretProviderSources"/>.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/>, or <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
-        public CompositeSecretProvider(
-            IEnumerable<SecretStoreSource> secretProviderSources,
-            IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
-#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0.
-            SecretStoreAuditingOptions auditingOptions,
-#pragma warning restore CS0618 // Type or member is obsolete
-            ILogger<CompositeSecretProvider> logger)
+        [Obsolete] private readonly IReadOnlyCollection<CriticalExceptionFilter> _criticalExceptionFilters;
+        [Obsolete] private readonly SecretStoreAuditingOptions _auditing;
+
+        internal CompositeSecretProvider(
+            IEnumerable<SecretProviderRegistration> providerRegistrations,
+            IEnumerable<CriticalExceptionFilter> exceptionFilters,
+            SecretStoreCaching caching,
+            SecretStoreAuditingOptions auditing,
+            ILogger logger)
         {
-            if (secretProviderSources is null)
-            {
-                throw new ArgumentNullException(nameof(secretProviderSources));
-            }
+            ArgumentNullException.ThrowIfNull(providerRegistrations);
+            ArgumentNullException.ThrowIfNull(exceptionFilters);
+            ArgumentNullException.ThrowIfNull(auditing);
+            ArgumentNullException.ThrowIfNull(caching);
 
-            if (criticalExceptionFilters is null)
-            {
-                throw new InvalidOperationException(nameof(criticalExceptionFilters));
-            }
+            _registrations = providerRegistrations.ToArray();
+            _criticalExceptionFilters = exceptionFilters.ToArray();
+            _auditing = auditing;
+            _logger = logger ?? NullLogger.Instance;
 
-            SecretStoreSource[] sourcesArr = secretProviderSources.ToArray();
-            CriticalExceptionFilter[] filtersArr = criticalExceptionFilters.ToArray();
-            if (sourcesArr.Any(s => s is null))
-            {
-                throw new ArgumentException("One or more secret sources are 'null'", nameof(secretProviderSources));
-            }
+            _secretProviderByName =
+                _registrations.GroupBy(r => r.Options.ProviderName)
+                              .ToDictionary(g => g.Key, g => new Lazy<ISecretProvider>(() => g.Count() is 1 ? g.Single().Provider : new CompositeSecretProvider(g, _criticalExceptionFilters, caching, _auditing, _logger)));
 
-            if (filtersArr.Any(f => f is null))
-            {
-                throw new ArgumentException("One or more exception filters are 'null'", nameof(criticalExceptionFilters));
-            }
-
-            _secretProviders = sourcesArr;
-            _criticalExceptionFilters = filtersArr;
-#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0.
-            _auditingOptions = auditingOptions ?? new SecretStoreAuditingOptions();
-#pragma warning restore CS0618 // Type or member is obsolete
-            _logger = logger ?? NullLogger<CompositeSecretProvider>.Instance;
-
-            _groupedSecretStores = CreateGroupedSecretProviders(sourcesArr, filtersArr, auditingOptions, logger);
-            HasCachedSecretProviders = sourcesArr.Any(provider => provider.CachedSecretProvider != null);
-            HasSyncSecretProviders = sourcesArr.Any(provider => provider.SyncSecretProvider != null);
+            Cache = caching;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CompositeSecretProvider"/> class.
+        /// Gets the service to interact with the possible configured cache on the secret store.
         /// </summary>
-        /// <param name="secretProviderSources">The sequence of all available registered secret provider registrations.</param>
-        /// <param name="criticalExceptionFilters">The sequence of all available registered critical exception filters.</param>
-        /// <param name="auditingOptions">The customized options to configure the auditing of the secret store.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProviderSources"/>, <paramref name="criticalExceptionFilters"/> or <paramref name="auditingOptions"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretProviderSources"/> or <paramref name="criticalExceptionFilters"/> contains any <c>null</c> values.</exception>
-        public CompositeSecretProvider(
-            IEnumerable<SecretStoreSource> secretProviderSources,
-            IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
-#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0
-            SecretStoreAuditingOptions auditingOptions)
-#pragma warning restore CS0618 // Type or member is obsolete
-            : this(secretProviderSources, criticalExceptionFilters, auditingOptions, NullLogger<CompositeSecretProvider>.Instance)
+        public SecretStoreCaching Cache { get; }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <typeparam name="TProvider">The concrete type of the secret provider implementation.</typeparam>
+        /// <param name="providerName">
+        ///     The name of the concrete secret provider implementation;
+        ///     uses the FQN (fully-qualified name) of the type in case none is provided.
+        /// </param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="providerName"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when no secret provider(s) was found with the provided <paramref name="providerName"/>.</exception>
+        /// <exception cref="InvalidCastException">Thrown when the found secret provider can't be cast to the provided <typeparamref name="TProvider"/>.</exception>
+        TProvider ISecretStore.GetProvider<TProvider>(string providerName)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(providerName);
+
+            if (_secretProviderByName.TryGetValue(providerName, out var provider))
+            {
+                if (provider.Value is TProvider concreteProvider)
+                {
+                    return concreteProvider;
+                }
+
+                throw new InvalidCastException(
+                    $"Cannot cast the secret provider '{providerName}' to type '{typeof(TProvider).Name}' because more than a single provider was registered with this name, " +
+                    $"please unique names during secret provider registration in the secret store when you want to retrieve their concrete type afterwards, " +
+                    $"otherwise use 'ISecretProvider subset = store.GetProvider(\"{providerName}\")' to retrieve a subset of secret providers with the same name");
+            }
+
+            throw new KeyNotFoundException(
+                $"Cannot find secret provider with name '{providerName}' in the secret store: {Environment.NewLine}" +
+                _secretProviderByName.Keys.Select(k => $"- {k}{Environment.NewLine}").Aggregate((x, y) => x + y) +
+                $"please make sure that you choose one of these names or register the secret provider(s) with another name using 'options => options.ProviderName = \"{providerName}\"'");
         }
 
         /// <summary>
-        /// Gets the flag indicating whether or not this secret store has any <see cref="ICachedSecretProvider"/> registrations.
+        /// Gets the secret by its name from the registered provider.
         /// </summary>
-        private bool HasCachedSecretProviders { get; }
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        SecretResult ISecretProvider.GetSecret(string secretName) => GetSecret(secretName, configureOptions: null);
 
         /// <summary>
-        /// Gets the flag indicating whether or not this secret store has any <see cref="ISyncSecretProvider"/> registrations.
+        /// Gets the secret by its name from the registered provider.
         /// </summary>
-        private bool HasSyncSecretProviders { get; }
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        Task<SecretResult> ISecretProvider.GetSecretAsync(string secretName) => GetSecretAsync(secretName, configureOptions: null);
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <param name="configureOptions">The function to configure the optional options that manipulate the secret retrieval.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        public SecretResult GetSecret(string secretName, Action<SecretOptions> configureOptions)
+        {
+            return GetSecretCoreAsync(secretName, (provider, name) => Task.FromResult(provider.GetSecret(name)), configureOptions).Result;
+        }
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <param name="configureOptions">The function to configure the optional options that manipulate the secret retrieval.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        public Task<SecretResult> GetSecretAsync(string secretName, Action<SecretOptions> configureOptions)
+        {
+            return GetSecretCoreAsync(secretName, (provider, name) => provider.GetSecretAsync(name), configureOptions);
+        }
+
+        private async Task<SecretResult> GetSecretCoreAsync(
+           string secretName,
+           Func<ISecretProvider, string, Task<SecretResult>> getSecretAsync,
+           Action<SecretOptions> configureOptions)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+            var options = new SecretOptions();
+            configureOptions?.Invoke(options);
+
+            if (_registrations.Count is 0)
+            {
+                _logger.LogSecretMissingFromStore(secretName);
+                return SecretResult.NotFound(NoProvidersRegistered);
+            }
+
+            _logger.LogSecretLookup(secretName);
+            if (Cache.TryGetCachedSecret(secretName, options, _logger, out SecretResult cached))
+            {
+                return cached;
+            }
+
+            var failures = new Collection<SecretResult>();
+            foreach (SecretProviderRegistration source in _registrations)
+            {
+                LogSecurityEvent(source, secretName, "Get Secret");
+
+                string providerName = source.Options.ProviderName;
+                (string mapped, string secretNameDescription) = source.Options.SecretNameMapper(secretName);
+                try
+                {
+                    SecretResult result = await getSecretAsync(source.Provider, mapped);
+                    if (result is null)
+                    {
+                        _logger.LogSecretMissingFromProviderReturnsNull(secretNameDescription, providerName);
+                        continue;
+                    }
+
+                    if (result.IsSuccess)
+                    {
+                        _logger.LogSecretFoundInProvider(secretNameDescription, providerName);
+                        _logger.LogSecretFoundInStore(secretNameDescription, providerName, failures);
+
+                        Cache.UpdateSecretInCache(secretName, result, _logger, options);
+                        return result;
+                    }
+
+                    _logger.LogSecretMissingFromProviderFailure(providerName, result);
+                    failures.Add(result);
+                }
+                catch (Exception exception)
+                {
+                    failures.Add(SecretResult.Interrupted(ExceptionDuringLookup, exception));
+                    _logger.LogSecretMissingFromProviderException(exception, secretNameDescription, providerName);
+                }
+            }
+
+            SecretResult finalFailure = CreateFinalFailureSecretResult(secretName, failures);
+            return finalFailure;
+        }
+
+        private SecretResult CreateFinalFailureSecretResult(string secretName, Collection<SecretResult> failures)
+        {
+            var failureMessage = $"Secret store could not found secret '{secretName}' in registered providers";
+            var failureCauses = failures.Where(f => f.FailureCause != null).Select(f => f.FailureCause).ToArray();
+
+            if (failureCauses.Length <= 0)
+            {
+                _logger.LogSecretMissingFromStore(secretName, failures);
+                return SecretResult.NotFound(failureMessage);
+            }
+
+            var failureCause = failureCauses.Length == 1
+                ? failureCauses[0]
+                : new AggregateException(failureCauses);
+
+            _logger.LogSecretMissingFromStore(failureCause, secretName, failures);
+
+            return failures.Any(f => f.Failure is SecretFailure.Interrupted)
+                ? SecretResult.Interrupted(failureMessage, failureCause)
+                : SecretResult.NotFound(failureMessage, failureCause);
+        }
+
+        #region Deprecated code
 
         /// <summary>
         /// Gets the cache-configuration for this instance.
@@ -113,6 +237,7 @@ namespace Arcus.Security.Core
         /// <exception cref="NotSupportedException">
         ///     Thrown every time because the <see cref="CompositeSecretProvider"/> cannot determine the caching configuration from the different registered <see cref="ICachedSecretProvider"/>s.
         /// </exception>
+        [Obsolete("Will be removed in v3.0 as caching will be handled by the secret store itself")]
         public ICacheConfiguration Configuration =>
             throw new NotSupportedException(
                 "Getting the cache configuration directly from the secret store is not supported, "
@@ -127,29 +252,26 @@ namespace Arcus.Security.Core
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ISecretProvider"/> cannot be cast to the specific <typeparamref name="TSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ISecretProvider"/> were registered with the same name.</exception>
-        public TSecretProvider GetProvider<TSecretProvider>(string name) where TSecretProvider : ISecretProvider
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface")]
+        public TSecretProvider GetProvider<TSecretProvider>(string name) where TSecretProvider : Core.ISecretProvider
         {
-            if (string.IsNullOrWhiteSpace(name))
+            var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
+            if (provider is CompositeSecretProvider and TSecretProvider typed)
             {
-                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+                return typed;
             }
 
-            ISecretProvider provider = GetProvider(name);
-            if (provider is TSecretProvider concreteProvider)
+            if (provider is SecretStoreBuilder.DeprecatedSecretProviderAdapter { DeprecatedProvider: TSecretProvider deprecated })
             {
-                return concreteProvider;
+                return deprecated;
             }
 
-            if (provider is CompositeSecretProvider)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot cast registered {nameof(ISecretProvider)} with name '{name}' to type '{typeof(TSecretProvider).Name}' " +
-                    $"because multiple secret providers were registered with the name '{name}', " +
-                    $"use the non-generic '{nameof(GetProvider)}' to retrieve them");
-            }
+            throw new InvalidOperationException(
+                $"[warning]: the deprecated 'Arcus.Security.Core.ISecretStore' is used here to retrieve a secret provider." +
+                $"Cannot cast the secret provider '{name}' to type '{nameof(Core.ISecretProvider)}' because more than a single provider was registered with this name, " +
+                $"please unique names during secret provider registration in the secret store when you want to retrieve their concrete type afterwards, " +
+                $"otherwise use 'ISecretProvider subset = store.GetProvider(\"{name}\")' to retrieve a subset of secret providers with the same name");
 
-            throw new InvalidCastException(
-                $"Cannot cast registered {nameof(ISecretProvider)} with name '{name}' to type '{typeof(TSecretProvider).Name}'");
         }
 
         /// <summary>
@@ -158,15 +280,25 @@ namespace Arcus.Security.Core
         /// <param name="name">The name that was used to register the <see cref="ISecretProvider"/> in the secret store.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
-        public ISecretProvider GetProvider(string name)
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface")]
+        public Core.ISecretProvider GetProvider(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
+            if (provider is CompositeSecretProvider subset)
             {
-                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+                return subset;
             }
 
-            ISecretProvider subset = GetSingleOrSubsetSecretProvider(name);
-            return subset;
+            if (provider is SecretStoreBuilder.DeprecatedSecretProviderAdapter deprecated)
+            {
+                return deprecated.DeprecatedProvider;
+            }
+
+            throw new InvalidOperationException(
+                $"[warning]: the deprecated 'Arcus.Security.Core.ISecretStore' is used here to retrieve a secret provider." +
+                $"Cannot cast the secret provider '{name}' to type '{nameof(Core.ISecretProvider)}' because more than a single provider was registered with this name, " +
+                $"please unique names during secret provider registration in the secret store when you want to retrieve their concrete type afterwards, " +
+                $"otherwise use 'ISecretProvider subset = store.GetProvider(\"{name}\")' to retrieve a subset of secret providers with the same name");
         }
 
         /// <summary>
@@ -182,35 +314,25 @@ namespace Arcus.Security.Core
         /// </exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
+        [Obsolete("Will be removed in v3.0 as caching is handled by the secret store itself")]
         public TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(string name) where TCachedSecretProvider : ICachedSecretProvider
         {
-            if (string.IsNullOrWhiteSpace(name))
+            var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
+            if (provider is CompositeSecretProvider and TCachedSecretProvider typed)
             {
-                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+                return typed;
             }
 
-            if (!HasCachedSecretProviders)
+            if (provider is SecretStoreBuilder.DeprecatedSecretProviderAdapter { DeprecatedProvider: TCachedSecretProvider cachedProvider })
             {
-                throw new NotSupportedException(
-                    $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
+                return cachedProvider;
             }
 
-            ICachedSecretProvider provider = GetCachedProvider(name);
-            if (provider is TCachedSecretProvider concreteProvider)
-            {
-                return concreteProvider;
-            }
-
-            if (provider is CompositeSecretProvider)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot cast registered {nameof(ICachedSecretProvider)} with name '{name}' to type '{typeof(TCachedSecretProvider).Name}' " +
-                    $"because multiple secret providers were registered with the name '{name}', " +
-                    $"use the non-generic '{nameof(GetCachedProvider)}' to retrieve them");
-            }
-
-            throw new InvalidCastException(
-                $"Cannot cast registered {nameof(ICachedSecretProvider)} with name '{name}' to type '{typeof(TCachedSecretProvider).Name}'");
+            throw new InvalidOperationException(
+                $"[warning]: the deprecated 'Arcus.Security.Core.ISecretStore' is used here to retrieve a secret provider." +
+                $"Cannot cast the secret provider '{name}' to type '{typeof(TCachedSecretProvider).Name}' because more than a single provider was registered with this name, " +
+                $"please unique names during secret provider registration in the secret store when you want to retrieve their concrete type afterwards, " +
+                $"otherwise use 'ISecretProvider subset = store.GetProvider(\"{name}\")' to retrieve a subset of secret providers with the same name");
         }
 
         /// <summary>
@@ -223,39 +345,25 @@ namespace Arcus.Security.Core
         ///     Thrown when their was either none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
         ///     or there was an <see cref="ISecretProvider"/> registered but not with caching.
         /// </exception>
+        [Obsolete("Will be removed in v3.0 as caching is handled via the secret store itself")]
         public ICachedSecretProvider GetCachedProvider(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
+            if (provider is CompositeSecretProvider subset)
             {
-                throw new ArgumentException("Requires a non-blank name to retrieve the registered named secret provider", nameof(name));
+                return subset;
             }
 
-            if (!HasCachedSecretProviders)
+            if (provider is SecretStoreBuilder.DeprecatedSecretProviderAdapter { DeprecatedProvider: ICachedSecretProvider cachedProvider })
             {
-                throw new NotSupportedException(
-                    $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
+                return cachedProvider;
             }
 
-            ISecretProvider source = GetSingleOrSubsetSecretProvider(name);
-            if (source is ICachedSecretProvider cachedSource)
-            {
-                return cachedSource;
-            }
-
-            throw new NotSupportedException(
-                $"Found a registered {nameof(ISecretProvider)} with the name '{name}' in the secret store, but was not configured for caching. "
-                + $"Please use the {nameof(GetProvider)} instead or configure the registered provider with caching");
-        }
-
-        private ISecretProvider GetSingleOrSubsetSecretProvider(string name)
-        {
-            if (_groupedSecretStores.TryGetValue(name, out Lazy<ISecretProvider> subsetSecretStore))
-            {
-                return subsetSecretStore.Value;
-            }
-
-            throw new KeyNotFoundException(
-                $"Could not retrieve the named {nameof(ISecretProvider)} because no secret provider was registered with the name '{name}'");
+            throw new InvalidOperationException(
+                $"[warning]: the deprecated 'Arcus.Security.Core.ISecretStore' is used here to retrieve a secret provider." +
+                $"Cannot cast the secret provider '{name}' to type '{nameof(ICachedSecretProvider)}' because more than a single provider was registered with this name, " +
+                $"please unique names during secret provider registration in the secret store when you want to retrieve their concrete type afterwards, " +
+                $"otherwise use 'ISecretProvider subset = store.GetProvider(\"{name}\")' to retrieve a subset of secret providers with the same name");
         }
 
         /// <summary>
@@ -268,22 +376,8 @@ namespace Arcus.Security.Core
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public string GetRawSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            return WithSecretStore(secretName, source =>
-            {
-                if (source.SyncSecretProvider != null)
-                {
-                    string secretValue = source.SyncSecretProvider.GetRawSecret(secretName);
-                    return secretValue;
-                }
-
-                _logger.LogTrace("Cannot get secret '{SecretName}' via synchronous '{MethodName}' because the registered secret provider '{SecretProviderName}' does not implement '{Interface}'", secretName, nameof(GetSecret), source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(ISyncSecretProvider));
-                return null;
-            });
+            SecretResult result = GetSecret(secretName, configureOptions: null);
+            return result.IsSuccess ? result.Value : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
@@ -293,24 +387,52 @@ namespace Arcus.Security.Core
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public Secret GetSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
+            SecretResult result = GetSecret(secretName, configureOptions: null);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
+        }
+
+        [Obsolete]
+        private Exception NotFoundOrCritical(string secretName, SecretResult result)
+        {
+            if (result.FailureCause != null && IsCriticalException(result.FailureCause))
             {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
+                return result.FailureCause;
             }
 
-            return WithSecretStore(secretName, source =>
-            {
-                if (source.SyncSecretProvider != null)
-                {
-                    Secret secret = source.SyncSecretProvider.GetSecret(secretName);
-                    return secret;
-                }
+            return new SecretNotFoundException(secretName);
+        }
 
-                _logger.LogTrace("Cannot get secret '{SecretName}' via synchronous '{MethodName}' because the registered secret provider '{SecretProviderName}' does not implement '{Interface}'", secretName, nameof(GetSecret), source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(ISyncSecretProvider));
-                return null;
+        [Obsolete]
+        private bool IsCriticalException(Exception exceptionCandidate)
+        {
+            return _criticalExceptionFilters.Count > 0 && _criticalExceptionFilters.Any(filter =>
+            {
+                try
+                {
+                    return filter.IsCritical(exceptionCandidate);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogWarning(exception, "Failed to determining critical exception for exception type '{ExceptionType}'", filter.ExceptionType.Name);
+                    return false;
+                }
             });
+        }
+
+        [Obsolete]
+        private void LogSecurityEvent(SecretProviderRegistration source, string secretName, string eventName)
+        {
+            if (_auditing.EmitSecurityEvents)
+            {
+                _logger.LogSecurityEvent(eventName, new Dictionary<string, object>
+                {
+                    ["SecretName"] = secretName,
+                    ["SecretProvider"] = source.Options.ProviderName
+                });
+            }
         }
 
         /// <summary>
@@ -319,37 +441,12 @@ namespace Arcus.Security.Core
         /// <param name="secretName">The name of the secret.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        internal async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName)
+        [Obsolete("Will be removed in v3.0 as versioned secrets will be moved to concrete implementations")]
+        internal Task<IEnumerable<Secret>> GetSecretsAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            IEnumerable<Secret> secretValues =
-                await WithSecretStoreAsync(secretName, async source =>
-                {
-                    if (source.Options.TryGetAllowedSecretVersions(secretName, out int allowedVersions))
-                    {
-                        if (source.VersionedSecretProvider != null)
-                        {
-                            IEnumerable<Secret> secrets = await source.VersionedSecretProvider.GetSecretsAsync(secretName, allowedVersions);
-                            return secrets.ToArray();
-                        }
-
-                        _logger.LogTrace("Cannot get all the allowed versions of secret '{SecretName}' because the registered secret provider '{SecretProviderName}' does not implement '{SecretVersionsProviderName}'", secretName, source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(IVersionedSecretProvider));
-                    }
-
-                    Secret secret = await source.SecretProvider.GetSecretAsync(secretName);
-                    if (secret is null)
-                    {
-                        return null;
-                    }
-
-                    return new[] { secret };
-                });
-
-            return secretValues.ToArray();
+            throw new NotSupportedException(
+                "Secret store does not support versioned secrets anymore directly on the secret store, " +
+                "please retrieve the concrete implementation of your secret provider and call versioned secrets-functionality directly on the provider instead");
         }
 
         /// <summary>
@@ -359,37 +456,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
-        internal async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName)
+        internal Task<IEnumerable<string>> GetRawSecretsAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            IEnumerable<string> secretValues =
-                await WithSecretStoreAsync(secretName, async source =>
-                {
-                    if (source.Options.TryGetAllowedSecretVersions(secretName, out int allowedVersions))
-                    {
-                        if (source.VersionedSecretProvider != null)
-                        {
-                            IEnumerable<string> secretValues = await source.VersionedSecretProvider.GetRawSecretsAsync(secretName, allowedVersions);
-                            return secretValues.ToArray();
-                        }
-
-                        _logger.LogTrace("Cannot get all the allowed versions of secret '{SecretName}' because the registered secret provider '{SecretProviderName}' does not implement '{SecretVersionsProviderName}'", secretName, source.Options?.Name ?? source.SecretProvider.GetType().Name, nameof(IVersionedSecretProvider));
-                    }
-
-                    string secretValue = await source.SecretProvider.GetRawSecretAsync(secretName);
-                    if (secretValue is null)
-                    {
-                        return null;
-                    }
-
-                    return new[] { secretValue };
-                });
-
-            return secretValues.ToArray();
+            throw new NotSupportedException(
+                "Secret store does not support versioned secrets anymore directly on the secret store, " +
+                "please retrieve the concrete implementation of your secret provider and call versioned secrets-functionality directly on the provider instead");
         }
 
         /// <summary>
@@ -401,37 +472,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
-        public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
+        public Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            if (amountOfVersions < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to retrieve the secret in the secret store");
-            }
-
-            IEnumerable<string> secretValues =
-                await WithSecretStoreAsync(secretName, async source =>
-                {
-                    if (source.VersionedSecretProvider != null)
-                    {
-                        IEnumerable<string> secretValues = await source.VersionedSecretProvider.GetRawSecretsAsync(secretName, amountOfVersions);
-                        return secretValues.ToArray();
-                    }
-
-                    string secretValue = await source.SecretProvider.GetRawSecretAsync(secretName);
-                    if (secretValue is null)
-                    {
-                        return null;
-                    }
-
-                    return new[] { secretValue };
-                });
-
-            return secretValues.ToArray();
+            throw new NotSupportedException(
+                "Secret store does not support versioned secrets anymore directly on the secret store, " +
+                "please retrieve the concrete implementation of your secret provider and call versioned secrets-functionality directly on the provider instead");
         }
 
         /// <summary>
@@ -442,37 +487,12 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        public async Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
+        [Obsolete("Will be removed in v3.0 as versioned secrets will be moved to concrete implementations")]
+        public Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            if (amountOfVersions < 1)
-            {
-                throw new ArgumentOutOfRangeException(nameof(amountOfVersions), amountOfVersions, "Requires at least 1 secret version to retrieve the secret in the secret store");
-            }
-
-            IEnumerable<Secret> secretValues =
-                await WithSecretStoreAsync(secretName, async source =>
-                {
-                    if (source.VersionedSecretProvider != null)
-                    {
-                        IEnumerable<Secret> secrets = await source.VersionedSecretProvider.GetSecretsAsync(secretName, amountOfVersions);
-                        return secrets.ToArray();
-                    }
-
-                    Secret secret = await source.SecretProvider.GetSecretAsync(secretName);
-                    if (secret is null)
-                    {
-                        return null;
-                    }
-
-                    return new[] { secret };
-                });
-
-            return secretValues.ToArray();
+            throw new NotSupportedException(
+                "Secret store does not support versioned secrets anymore directly on the secret store, " +
+                "please retrieve the concrete implementation of your secret provider and call versioned secrets-functionality directly on the provider instead");
         }
 
         /// <summary>
@@ -486,15 +506,8 @@ namespace Arcus.Security.Core
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            string secretValue = await WithSecretStoreAsync(
-                secretName, source => source.SecretProvider.GetRawSecretAsync(secretName));
-
-            return secretValue;
+            SecretResult result = await GetSecretAsync(secretName, configureOptions: null);
+            return result.IsSuccess ? result.Value : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
@@ -505,17 +518,11 @@ namespace Arcus.Security.Core
         /// <exception cref="System.ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public async Task<Secret> GetSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            Secret secret = await WithSecretStoreAsync(
-                secretName, source => source.SecretProvider.GetSecretAsync(secretName));
-
-            return secret;
+            SecretResult result = await GetSecretAsync(secretName, configureOptions: null);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
@@ -531,15 +538,8 @@ namespace Arcus.Security.Core
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            string secretValue = await WithCachedSecretStoreAsync(
-                secretName, source => source.CachedSecretProvider.GetRawSecretAsync(secretName, ignoreCache));
-
-            return secretValue;
+            SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
+            return result.IsSuccess ? result.Value : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
@@ -552,17 +552,11 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="NotSupportedException">Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            Secret secret = await WithCachedSecretStoreAsync(
-                secretName, source => source.CachedSecretProvider.GetSecretAsync(secretName, ignoreCache));
-
-            return secret;
+            SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
+            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
         }
 
         /// <summary>
@@ -570,264 +564,81 @@ namespace Arcus.Security.Core
         /// so the next time <see cref="CachedSecretProvider.GetSecretAsync(string)"/> is called, a new version of the secret will be added back to the cache.
         /// </summary>
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
+        [Obsolete("Will be removed in v3.0 as invalidating secrets should happen via the " + nameof(ISecretStoreContext))]
         public async Task InvalidateSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the secret", nameof(secretName));
-            }
-
-            await WithCachedSecretStoreAsync(secretName, async source =>
-            {
-                Task invalidateSecretAsync = source.CachedSecretProvider.InvalidateSecretAsync(secretName);
-                if (invalidateSecretAsync is null)
-                {
-                    return null;
-                }
-
-                await invalidateSecretAsync;
-                return "ignored result";
-            }, eventName: "Invalidate Secret");
+            await Cache.InvalidateSecretAsync(secretName);
         }
+        #endregion
+    }
 
-        private async Task<T> WithCachedSecretStoreAsync<T>(
-            string secretName,
-            Func<SecretStoreSource, Task<T>> callRegisteredProvider,
-            string eventName = "Get Secret") where T : class
+    internal static partial class CompositeSecretProviderLoggerExtensions
+    {
+        internal const string NoProvidersRegistered = "no providers registered in application services",
+                              ExceptionDuringLookup = "exception thrown upon querying provider";
+
+        internal static void LogSecretFoundInStore(this ILogger logger, string secretName, string providerName, IReadOnlyCollection<SecretResult> previousFailures)
         {
-            if (!HasCachedSecretProviders)
+            string skippedProvidersDescription = previousFailures.Count switch
             {
-                throw new NotSupportedException(
-                    $"Cannot use cached secret store operation because none of the secret providers in the secret store were registered as cached secret providers ({nameof(ICachedSecretProvider)})");
-            }
-            return await WithSecretStoreAsync(secretName, async source =>
-            {
-                if (source.CachedSecretProvider is null)
-                {
-                    return null;
-                }
+                0 => "no other provider",
+                1 => "1 other provider",
+                _ => $"{previousFailures.Count} other providers"
+            };
 
-                Task<T> registeredProvider = callRegisteredProvider(source);
-                if (registeredProvider is null)
-                {
-                    return null;
-                }
-
-                return await registeredProvider;
-            }, eventName);
+            LogSecretFoundInStore(logger, secretName, providerName, skippedProvidersDescription);
         }
 
-        private async Task<T> WithSecretStoreAsync<T>(
-            string secretName,
-            Func<SecretStoreSource, Task<T>> callRegisteredProvider,
-            string eventName = "Get Secret") where T : class
+        [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in provider '{ProviderName}' | skipped by {SkippedProvidersDescription}")]
+        internal static partial void LogSecretFoundInStore(this ILogger logger, string secretName, string providerName, string skippedProvidersDescription);
+
+        [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in cache (sliding expiration={CacheDuration:t}) | skipped all providers")]
+        internal static partial void LogSecretFoundInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Found in] '{ProviderName}'")]
+        internal static partial void LogSecretFoundInProvider(this ILogger logger, string secretName, string providerName);
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned 'null' upon querying provider")]
+        internal static partial void LogSecretMissingFromProviderReturnsNull(this ILogger logger, string secretName, string providerName);
+
+        internal static void LogSecretMissingFromProviderFailure(this ILogger logger, string providerName, SecretResult result)
         {
-            EnsureAnySecretProvidersConfigured(secretName);
-
-            var criticalExceptions = new Collection<Exception>();
-            foreach (SecretStoreSource source in _secretProviders)
-            {
-                try
-                {
-                    T result = await GetSecretFromProviderAsync(secretName, source, callRegisteredProvider, eventName);
-                    if (result is null)
-                    {
-                        continue;
-                    }
-
-                    LogPossibleCriticalExceptions(secretName, criticalExceptions);
-                    return result;
-                }
-                catch (Exception exception) when (IsCriticalException(exception))
-                {
-                    _logger.LogError(exception, "Exception of type '{ExceptionType}' is considered an critical exception", exception.GetType().Name);
-                    criticalExceptions.Add(exception);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.SecretProvider.GetType(), secretName);
-                }
-            }
-
-            throw DetermineSecretStoreException(secretName, criticalExceptions);
+            LogSecretMissingFromProviderFailure(logger, result.FailureCause, result.Name, providerName, result.Failure, result.FailureMessage);
         }
 
-        private T WithSecretStore<T>(
-            string secretName,
-            Func<SecretStoreSource, T> callRegisteredProvider,
-            string eventName = "Get Secret") where T : class
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned {Failure} {ErrorMessage}")]
+        internal static partial void LogSecretMissingFromProviderFailure(this ILogger logger, Exception exception, string secretName, string providerName, SecretFailure failure, string errorMessage);
+
+        [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ " + ExceptionDuringLookup)]
+        internal static partial void LogSecretMissingFromProviderException(this ILogger logger, Exception exception, string secretName, string providerName);
+
+        internal static void LogSecretMissingFromStore(this ILogger logger, string secretName, IReadOnlyCollection<SecretResult> failures)
         {
-            if (!HasSyncSecretProviders)
-            {
-                throw new NotSupportedException(
-                    $"Cannot use synchronous secret store operation because none of the secret providers in the secret store were registered as synchronous secret providers ({nameof(ISyncSecretProvider)})");
-            }
-
-            var criticalExceptions = new Collection<Exception>();
-            foreach (SecretStoreSource source in _secretProviders)
-            {
-                try
-                {
-                    T result = GetSecretFromProvider(secretName, source, callRegisteredProvider, eventName);
-                    if (result is null)
-                    {
-                        continue;
-                    }
-
-                    LogPossibleCriticalExceptions(secretName, criticalExceptions);
-                    return result;
-                }
-                catch (Exception exception) when (IsCriticalException(exception))
-                {
-                    _logger.LogError(exception, "Exception of type '{ExceptionType}' is considered an critical exception", exception.GetType().Name);
-                    criticalExceptions.Add(exception);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogTrace(exception, "Secret provider '{Type}' doesn't contain secret with name {SecretName}", source.SecretProvider.GetType(), secretName);
-                }
-            }
-
-            throw DetermineSecretStoreException(secretName, criticalExceptions);
+            LogSecretMissingFromStore(logger, exception: null, secretName, failures);
         }
 
-        private void EnsureAnySecretProvidersConfigured(string secretName)
+        internal static void LogSecretMissingFromStore(this ILogger logger, Exception exception, string secretName, IReadOnlyCollection<SecretResult> failures)
         {
-            if (!_secretProviders.Any())
-            {
-                _logger.LogError(
-                    "No secret providers are configured in the secret store to retrieve the secret from, please configure at least one secret provider with the '{Extension}' extension in the startup of your application",
-                    nameof(IHostBuilderExtensions.ConfigureSecretStore));
+            string providersDescription =
+                failures.Count is 1
+                    ? "single provider failed to provide secret"
+                    : $"all {failures.Count} providers failed to provide secret";
 
-                var noRegisteredException = new KeyNotFoundException("No secret providers are configured to retrieve the secret from");
-                throw new SecretNotFoundException(secretName, noRegisteredException);
-            }
+            LogSecretMissingFromStore(logger, exception, secretName, providersDescription);
         }
 
-        private async Task<T> GetSecretFromProviderAsync<T>(
-            string secretName,
-            SecretStoreSource source,
-            Func<SecretStoreSource, Task<T>> callRegisteredProvider,
-            string eventName) where T : class
+        internal static void LogSecretMissingFromStore(this ILogger logger, string secretName)
         {
-#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0.
-            LogSecurityEvent(source, secretName, eventName);
-#pragma warning restore CS0612 // Type or member is obsolete
-
-            Task<T> resultAsync = callRegisteredProvider(source);
-            if (resultAsync is null)
-            {
-                return null;
-            }
-
-            T result = await resultAsync;
-            return result;
+            LogSecretMissingFromStore(logger, exception: null, secretName, NoProvidersRegistered);
         }
 
-        private T GetSecretFromProvider<T>(
-            string secretName,
-            SecretStoreSource source,
-            Func<SecretStoreSource, T> callRegisteredProvider,
-            string eventName)
-        {
-#pragma warning disable CS0612 // Type or member is obsolete: will be removed in v3.0
-            LogSecurityEvent(source, secretName, eventName);
-#pragma warning restore CS0612 // Type or member is obsolete
+        [LoggerMessage(LogLevel.Error, "Secret {SecretName} [Missing from] secret store => ✗ {ProvidersDescription}")]
+        internal static partial void LogSecretMissingFromStore(this ILogger logger, Exception exception, string secretName, string providersDescription);
 
-            T result = callRegisteredProvider(source);
-            return result;
-        }
+        [LoggerMessage(LogLevel.Trace, "[Secret store] looking up secret '{SecretName}' in registered providers")]
+        internal static partial void LogSecretLookup(this ILogger logger, string secretName);
 
-        [Obsolete]
-        private void LogSecurityEvent(SecretStoreSource source, string secretName, string eventName)
-        {
-            if (_auditingOptions.EmitSecurityEvents)
-            {
-                _logger.LogSecurityEvent(eventName, new Dictionary<string, object>
-                {
-                    ["SecretName"] = secretName,
-                    ["SecretProvider"] = source.Options?.Name ?? source.SecretProvider.GetType().Name
-                });
-            }
-        }
-
-        private void LogPossibleCriticalExceptions(string secretName, IReadOnlyCollection<Exception> criticalExceptions)
-        {
-            if (criticalExceptions.Any())
-            {
-                _logger.LogWarning("Found secret with name '{SecretName}' but at the cost of {ExceptionCount} critical exceptions", secretName, criticalExceptions.Count());
-
-                foreach (Exception criticalException in criticalExceptions)
-                {
-                    _logger.LogWarning(criticalException, "Critical exception thrown during retrieval of secret with name '{SecretName}'", secretName);
-                }
-            }
-
-            _logger.LogTrace("Found secret with name '{SecretName}'", secretName);
-        }
-
-        private bool IsCriticalException(Exception exceptionCandidate)
-        {
-            return _criticalExceptionFilters.Any(filter =>
-            {
-                try
-                {
-                    return filter.IsCritical(exceptionCandidate);
-                }
-                catch (Exception exception)
-                {
-                    _logger.LogWarning(exception, "Failed to determining critical exception for exception type '{ExceptionType}'", filter.ExceptionType.Name);
-                    return false;
-                }
-            });
-        }
-
-        private Exception DetermineSecretStoreException(string secretName, IReadOnlyCollection<Exception> criticalExceptions)
-        {
-            if (!criticalExceptions.Any())
-            {
-                _logger.LogError(
-                    "None of the configured {Count} configured secret providers was able to retrieve the requested secret with name '{SecretName}'",
-                    _secretProviders.Count(), secretName);
-
-                var noneFoundException = new KeyNotFoundException($"None of the {_secretProviders.Count()} configured secret providers was able to retrieve the requested secret with name '{secretName}'");
-                return new SecretNotFoundException(secretName, noneFoundException);
-            }
-
-            if (criticalExceptions.Count() == 1)
-            {
-                return criticalExceptions.First();
-            }
-
-            return new AggregateException(
-                $"None of the configured secret providers was able to retrieve the secret with name '{secretName}' while {criticalExceptions.Count()} critical exceptions were thrown",
-                criticalExceptions);
-        }
-
-        private static IDictionary<string, Lazy<ISecretProvider>> CreateGroupedSecretProviders(
-            IEnumerable<SecretStoreSource> secretProviders,
-#pragma warning disable CS0618 // Type or member is obsolete: will be removed in v3.0.
-            IEnumerable<CriticalExceptionFilter> criticalExceptionFilters,
-            SecretStoreAuditingOptions auditingOptions,
-#pragma warning restore CS0618 // Type or member is obsolete
-            ILogger<CompositeSecretProvider> logger)
-        {
-            return secretProviders
-                   .Where(source => source.Options.Name != null)
-                   .GroupBy(source => source.Options.Name)
-                   .ToDictionary(group => group.Key, group =>
-                   {
-                       return new Lazy<ISecretProvider>(() =>
-                       {
-                           if (group.Count() == 1)
-                           {
-                               SecretStoreSource source = group.First();
-                               return source.CachedSecretProvider ?? source.SecretProvider;
-                           }
-
-                           return new CompositeSecretProvider(group, criticalExceptionFilters, auditingOptions, logger);
-                       });
-                   });
-        }
+        [LoggerMessage(LogLevel.Trace, "[Secret store] refresh secret '{SecretName}' in cache (sliding expiration={CacheDuration:t})")]
+        internal static partial void LogSecretRefreshInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
     }
 }

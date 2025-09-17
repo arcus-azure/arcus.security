@@ -19,11 +19,16 @@ namespace Arcus.Security.Providers.HashiCorp
     ///     See more information on HashiCorp Vault: <a href="https://www.vaultproject.io/docs" />.
     /// </para>
     /// </summary>
-    public class HashiCorpSecretProvider : ISecretProvider
+    public class HashiCorpSecretProvider :
+#pragma warning disable CS0612
+        Core.ISecretProvider,
+#pragma warning restore CS0612
+        ISecretProvider
     {
         /// <summary>
         /// Gets the name to identity the dependency call to the HashiCorp Vault.
         /// </summary>
+        [Obsolete("Will be removed in v3.0 as the hard-link with Arcus.Observability will be removed")]
         protected const string DependencyName = "HashiCorp Vault";
 
         /// <summary>
@@ -45,56 +50,71 @@ namespace Arcus.Security.Providers.HashiCorp
             HashiCorpVaultOptions options,
             ILogger<HashiCorpSecretProvider> logger)
         {
-            if (settings is null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+            ArgumentNullException.ThrowIfNull(settings);
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretPath);
 
-            if (settings.AuthMethodInfo is null)
-            {
-                throw new ArgumentNullException(nameof(settings), "Requires a authentication method to connect to the HashiCorp Vault");
-            }
-
-            if (string.IsNullOrWhiteSpace(secretPath))
-            {
-                throw new ArgumentException("Requires a path where the HashiCorp Vault KeyValue secret engine should look for secrets", nameof(secretPath));
-            }
-
-            if (string.IsNullOrWhiteSpace(settings.VaultServerUriWithPort))
-            {
-                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
-            }
-
-            if (!Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute))
-            {
-                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
-            }
-
-            Options = options;
             SecretPath = secretPath;
             VaultClient = new VaultClient(settings);
+            Options = options ?? new HashiCorpVaultOptions();
             Logger = logger ?? NullLogger<HashiCorpSecretProvider>.Instance;
         }
-        
+
         /// <summary>
         /// Gets the user-configurable options to configure and change the behavior of the HashiCorp KeyValue Vault.
         /// </summary>
         protected HashiCorpVaultOptions Options { get; }
-        
+
         /// <summary>
         /// Gets the HashiCorp secret path available in the KeyValue engine where this secret provider should look for secrets.
         /// </summary>
         protected string SecretPath { get; }
-        
+
         /// <summary>
         /// Gets the client to interact with the HashiCorp KeyValue Vault, based on the user-provided <see cref="VaultClientSettings"/>.
         /// </summary>
         protected IVaultClient VaultClient { get; }
-        
+
         /// <summary>
         /// Gets the logger instance to write diagnostic messages and track HashiCorp Vault dependencies.
         /// </summary>
         protected ILogger Logger { get; }
+
+        /// <summary>
+        /// Not supported: secrets stored in a HashiCorp Vault can solely be retrieved asynchronously.
+        /// </summary>
+        /// <exception cref="NotSupportedException">Thrown always.</exception>
+        public SecretResult GetSecret(string secretName)
+        {
+            throw new NotSupportedException(
+                "[Arcus] cannot retrieve secrets synchronously from a HashiCorp Vault, " +
+                "please solely use asynchronous secret retrievals");
+        }
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        async Task<SecretResult> ISecretProvider.GetSecretAsync(string secretName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+
+#pragma warning disable CS0618 // Type or member is obsolete: will be re-implemented once at v3.0.
+            SecretData secret = await GetTrackedSecretAsync(secretName);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            if (secret.Data.TryGetValue(secretName, out object value) && value != null)
+            {
+                var version = secret.Metadata?.Version.ToString();
+                return SecretResult.Success(secretName, value.ToString(), version, default);
+            }
+
+            return SecretResult.NotFound($"cannot find secret '{secretName}' in HashiCorp Vault");
+        }
 
         /// <summary>
         /// Retrieves the secret value, based on the given name
@@ -102,6 +122,7 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 as 'raw secrets' are not supported anymore")]
         public virtual async Task<string> GetRawSecretAsync(string secretName)
         {
             Secret secret = await GetSecretAsync(secretName);
@@ -114,17 +135,11 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <param name="secretName">The name of the secret key</param>
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public virtual async Task<Secret> GetSecretAsync(string secretName)
         {
-            SecretData result = await GetTrackedSecretAsync(secretName);
-
-            if (result.Data.TryGetValue(secretName, out object value) && value != null)
-            {
-                var version = result.Metadata?.Version.ToString();
-                return new Secret(value.ToString(), version);
-            }
-
-            return null;
+            SecretResult result = await ((ISecretProvider) this).GetSecretAsync(secretName);
+            return result.IsSuccess ? new Secret(result.Value, result.Version) : null;
         }
 
         /// <summary>
@@ -139,6 +154,7 @@ namespace Arcus.Security.Providers.HashiCorp
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown when the <see cref="Options"/>'s <see cref="HashiCorpVaultOptions.KeyValueVersion"/> represents an unknown secret engine version.
         /// </exception>
+        [Obsolete("Will be removed in v3.0 as the hard-link with Arcus.Observability will be removed")]
         protected async Task<SecretData> GetTrackedSecretAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -160,22 +176,24 @@ namespace Arcus.Security.Providers.HashiCorp
                     Logger.LogTrace("Getting a secret {SecretName} from HashiCorp Vault {VaultUri}...", secretName, VaultClient.Settings.VaultServerUriWithPort);
                     SecretData result = await ReadSecretDataAsync();
                     Logger.LogTrace("Secret '{SecretName}' was successfully retrieved from HashiCorp Vault {VaultUri}", secretName, VaultClient.Settings.VaultServerUriWithPort);
-                    
+
                     isSuccessful = true;
                     return result;
                 }
                 catch (Exception exception)
                 {
-                    Logger.LogError(exception, "Secret '{SecretName}' was not successfully retrieved from HashiCorp Vault {VaultUri}, cause: {Message}", 
+                    Logger.LogError(exception, "Secret '{SecretName}' was not successfully retrieved from HashiCorp Vault {VaultUri}, cause: {Message}",
                         secretName, VaultClient.Settings.VaultServerUriWithPort, exception.Message);
 
                     throw;
                 }
                 finally
                 {
+#pragma warning disable CS0618 // Type or member is obsolete
                     if (Options.TrackDependency)
+#pragma warning restore CS0618 // Type or member is obsolete
                     {
-                        Logger.LogDependency(DependencyName, secretName, VaultClient.Settings.VaultServerUriWithPort, isSuccessful, measurement, context); 
+                        Logger.LogDependency(DependencyName, secretName, VaultClient.Settings.VaultServerUriWithPort, isSuccessful, measurement, context);
                     }
                 }
             }
@@ -192,15 +210,15 @@ namespace Arcus.Security.Providers.HashiCorp
             switch (Options.KeyValueVersion)
             {
                 case VaultKeyValueSecretEngineVersion.V1:
-                    Secret<Dictionary<string, object>> secretV1 = 
+                    Secret<Dictionary<string, object>> secretV1 =
                         await VaultClient.V1.Secrets.KeyValue.V1.ReadSecretAsync(SecretPath, mountPoint: Options.KeyValueMountPoint);
                     return new SecretData { Data = secretV1.Data };
-                
+
                 case VaultKeyValueSecretEngineVersion.V2:
-                    Secret<SecretData> secretV2 = 
+                    Secret<SecretData> secretV2 =
                         await VaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(SecretPath, mountPoint: Options.KeyValueMountPoint);
                     return secretV2.Data;
-                
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(Options), Options.KeyValueVersion, "Unknown HashiCorp Vault KeyValue secret engine version");
             }

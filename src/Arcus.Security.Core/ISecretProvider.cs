@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.HashiCorp")]
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.UserSecrets")]
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.DockerSecrets")]
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.CommandLine")]
