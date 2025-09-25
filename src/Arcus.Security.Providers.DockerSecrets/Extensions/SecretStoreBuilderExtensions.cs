@@ -35,6 +35,7 @@ namespace Microsoft.Extensions.Hosting
             string directoryPath,
             Action<SecretProviderRegistrationOptions> configureOptions)
         {
+            ArgumentNullException.ThrowIfNull(builder);
             return builder.AddProvider(DockerSecretsSecretProvider.CreateAt(directoryPath), configureOptions);
         }
     }
