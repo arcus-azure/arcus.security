@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Hosting;
 using VaultSharp.V1.SecretsEngines;
 
 namespace Arcus.Security.Providers.HashiCorp.Configuration
@@ -6,10 +7,17 @@ namespace Arcus.Security.Providers.HashiCorp.Configuration
     /// <summary>
     /// Represents the available options to configure the <see cref="HashiCorpSecretProvider"/>.
     /// </summary>
-    public class HashiCorpVaultOptions
+    public class HashiCorpVaultOptions : SecretProviderRegistrationOptions
     {
         private string _keyValueMountPoint = SecretsEngineMountPoints.Defaults.KeyValueV2;
         private VaultKeyValueSecretEngineVersion _engineVersion = VaultKeyValueSecretEngineVersion.V2;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HashiCorpVaultOptions"/> class.
+        /// </summary>
+        public HashiCorpVaultOptions() : base(typeof(HashiCorpSecretProvider))
+        {
+        }
 
         /// <summary>
         /// Gets or sets the point where HashiCorp Vault KeyVault secret engine is mounted.
