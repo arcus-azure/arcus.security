@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using GuardNet;
 
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.HashiCorp")]
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.UserSecrets")]
+[assembly: InternalsVisibleTo("Arcus.Security.Providers.DockerSecrets")]
 [assembly: InternalsVisibleTo("Arcus.Security.Providers.CommandLine")]
 
 namespace Arcus.Security.Core
@@ -99,7 +101,7 @@ namespace Arcus.Security
 
         private SecretResult(SecretFailure failure, string failureMessage, Exception failureCause)
         {
-            Guard.NotNullOrWhitespace(failureMessage, nameof(failureMessage));
+            ArgumentException.ThrowIfNullOrWhiteSpace(failureMessage);
 
             _failure = failure;
             _failureMessage = failureMessage;
@@ -110,8 +112,8 @@ namespace Arcus.Security
 
         private SecretResult(string secretName, string secretValue, string secretVersion, DateTimeOffset expirationDate)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretValue));
-            Guard.NotNullOrWhitespace(secretValue, nameof(secretValue));
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretValue);
 
             _secretName = secretName;
             _secretValue = secretValue;
