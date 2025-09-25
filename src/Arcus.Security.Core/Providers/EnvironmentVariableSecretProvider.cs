@@ -1,8 +1,43 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Core.Providers
 {
+    /// <summary>
+    /// Represents the available options to configure the registration of the <see cref="EnvironmentVariableSecretProvider"/>
+    /// </summary>
+    public class EnvironmentVariableSecretProviderOptions : SecretProviderRegistrationOptions
+    {
+        private string _prefix;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvironmentVariableSecretProviderOptions"/> class.
+        /// </summary>
+        public EnvironmentVariableSecretProviderOptions() : base(typeof(EnvironmentVariableSecretProvider))
+        {
+        }
+
+        /// <summary>
+        /// Gets or sets the prefix which will be prepended to the secret name when retrieving environment secret variables.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="value"/> is blank.</exception>
+        public string Prefix
+        {
+            get => _prefix;
+            set
+            {
+                ArgumentException.ThrowIfNullOrWhiteSpace(value);
+                _prefix = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the target on which the environment secret variables should be retrieved.
+        /// </summary>
+        public EnvironmentVariableTarget Target { get; set; } = EnvironmentVariableTarget.Process;
+    }
+
     /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the environment.
     /// </summary>
@@ -23,6 +58,7 @@ namespace Arcus.Security.Core.Providers
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
         /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of internal constructor")]
         public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget, string prefix = null)
         {
             if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
@@ -32,6 +68,14 @@ namespace Arcus.Security.Core.Providers
 
             _prefix = prefix ?? string.Empty;
             _target = target;
+        }
+
+        internal EnvironmentVariableSecretProvider(EnvironmentVariableSecretProviderOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(options);
+
+            _prefix = options.Prefix;
+            _target = options.Target;
         }
 
         /// <summary>

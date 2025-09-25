@@ -10,15 +10,26 @@ namespace Microsoft.Extensions.Hosting
     /// </summary>
     public static class SecretStoreBuilderExtensions
     {
+        /// <summary>
+        /// Adds a secret source to the secret store of the application that gets its secrets from the environment (target: <see cref="EnvironmentVariableTarget.Process"/>).
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddEnvironmentVariables(this SecretStoreBuilder builder)
+        {
+            return AddEnvironmentVariables(builder, configureOptions: null);
+        }
 
         /// <summary>
         /// Adds a secret source to the secret store of the application that gets its secrets from the environment (target: <see cref="EnvironmentVariableTarget.Process"/>).
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
-        public static SecretStoreBuilder AddEnvironmentVariables(this SecretStoreBuilder builder)
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddEnvironmentVariables(this SecretStoreBuilder builder, Action<EnvironmentVariableSecretProviderOptions> configureOptions)
         {
             ArgumentNullException.ThrowIfNull(builder);
-            return builder.AddProvider(new EnvironmentVariableSecretProvider());
+            return builder.AddProvider((_, _, options) => new EnvironmentVariableSecretProvider(options), configureOptions);
         }
 
         /// <summary>
@@ -26,10 +37,26 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="configuration"/> is <c>null</c>.</exception>
         public static SecretStoreBuilder AddConfiguration(this SecretStoreBuilder builder, IConfiguration configuration)
         {
+            return AddConfiguration(builder, configuration, configureOptions: null);
+        }
+
+        /// <summary>
+        /// Adds a secret source to the secret store of the application that gets its secrets from the <see cref="IConfiguration"/>.
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="configuration">The configuration of the application, containing secrets.</param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="configuration"/> is <c>null</c>.</exception>
+        public static SecretStoreBuilder AddConfiguration(
+            this SecretStoreBuilder builder,
+            IConfiguration configuration,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+        {
             ArgumentNullException.ThrowIfNull(builder);
-            return builder.AddProvider(new ConfigurationSecretProvider(configuration));
+            return builder.AddProvider(new ConfigurationSecretProvider(configuration), configureOptions);
         }
     }
 
@@ -76,17 +103,28 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            ArgumentNullException.ThrowIfNull(builder);
-
             if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
             {
                 throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'");
             }
 
-            return builder.AddProvider(new EnvironmentVariableSecretProvider(target, prefix), options =>
+            return builder.AddEnvironmentVariables(options =>
             {
-                options.Name = name;
-                options.MutateSecretName = mutateSecretName;
+                options.Target = target;
+                if (!string.IsNullOrWhiteSpace(prefix))
+                {
+                    options.Prefix = prefix;
+                }
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
 
@@ -122,13 +160,17 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            ArgumentNullException.ThrowIfNull(builder);
-            ArgumentNullException.ThrowIfNull(configuration);
-
-            return builder.AddProvider(new ConfigurationSecretProvider(configuration), options =>
+            return builder.AddConfiguration(configuration, options =>
             {
-                options.Name = name;
-                options.MutateSecretName = mutateSecretName;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
     }
