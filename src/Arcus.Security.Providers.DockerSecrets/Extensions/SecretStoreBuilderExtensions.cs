@@ -17,7 +17,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="directoryPath">The path inside the container where the Docker secrets are located.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
-        internal static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath)
+        public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath)
         {
             return AddDockerSecrets(builder, directoryPath, configureOptions: null);
         }
@@ -30,7 +30,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
-        internal static SecretStoreBuilder AddDockerSecrets(
+        public static SecretStoreBuilder AddDockerSecrets(
             this SecretStoreBuilder builder,
             string directoryPath,
             Action<SecretProviderRegistrationOptions> configureOptions)
@@ -80,7 +80,11 @@ namespace Microsoft.Extensions.Hosting
 
             return builder.AddDockerSecrets(directoryPath, options =>
             {
-                options.ProviderName = name;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
                 options.MapSecretName(mutateSecretName);
             });
         }
