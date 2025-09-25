@@ -27,7 +27,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="arguments">The command line arguments that will be considered secrets.</param>
         /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="arguments"/> is <c>null</c>.</exception>
-        internal static SecretStoreBuilder AddCommandLine(this SecretStoreBuilder builder, string[] arguments, Action<SecretProviderRegistrationOptions> configureOptions)
+        public static SecretStoreBuilder AddCommandLine(this SecretStoreBuilder builder, string[] arguments, Action<SecretProviderRegistrationOptions> configureOptions)
         {
             ArgumentNullException.ThrowIfNull(builder);
             return builder.AddProvider(CommandLineSecretProvider.CreateFor(arguments), configureOptions);
@@ -78,8 +78,15 @@ namespace Microsoft.Extensions.Hosting
         {
             return builder.AddCommandLine(arguments, options =>
             {
-                options.ProviderName = name;
-                options.MapSecretName(mutateSecretName);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
     }
