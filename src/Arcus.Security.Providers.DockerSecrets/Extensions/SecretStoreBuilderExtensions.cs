@@ -85,7 +85,10 @@ namespace Microsoft.Extensions.Hosting
                     options.ProviderName = name;
                 }
 
-                options.MapSecretName(mutateSecretName);
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
     }
