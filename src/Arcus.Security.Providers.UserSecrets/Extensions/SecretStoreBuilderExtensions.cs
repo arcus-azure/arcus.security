@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using Arcus.Security.Core;
 using Arcus.Security.Providers.UserSecrets;
 using Microsoft.Extensions.Configuration.UserSecrets;
 
@@ -20,6 +19,19 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="builder">The builder to create the secret store.</param>
         public static SecretStoreBuilder AddUserSecrets<T>(this SecretStoreBuilder builder) where T : class
         {
+            return AddUserSecrets<T>(builder, configureOptions: null);
+        }
+
+        /// <summary>
+        /// <para>Adds the user secrets secret source with specified user secrets ID.</para>
+        /// <para>A user secrets ID is unique value used to store and identify a collection of secrets.</para>
+        /// </summary>
+        /// <typeparam name="T">The type from the assembly to search for an instance of <see cref="UserSecretsIdAttribute"/>.</typeparam>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        public static SecretStoreBuilder AddUserSecrets<T>(this SecretStoreBuilder builder, Action<SecretProviderRegistrationOptions> configureOptions)
+            where T : class
+        {
             Assembly assembly = typeof(T).GetTypeInfo().Assembly;
             return AddUserSecrets(builder, assembly);
         }
@@ -35,6 +47,24 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="InvalidOperationException">Thrown when the passed <paramref name="assembly"/> has no User Secrets attribute defined.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly)
         {
+            return AddUserSecrets(builder, assembly, configureOptions: null);
+        }
+
+        /// <summary>
+        /// <para>Adds the user secrets secret source. This searches <paramref name="assembly"/> for an instance
+        /// of <see cref="UserSecretsIdAttribute"/>, which specifies a user secrets ID.</para>
+        /// <para>A user secrets ID is unique value used to store and identify a collection of secrets.</para>
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="assembly">The assembly with the <see cref="UserSecretsIdAttribute" />.</param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or the <paramref name="assembly"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when the passed <paramref name="assembly"/> has no User Secrets attribute defined.</exception>
+        public static SecretStoreBuilder AddUserSecrets(
+            this SecretStoreBuilder builder,
+            Assembly assembly,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+        {
             ArgumentNullException.ThrowIfNull(assembly);
 
             var attribute = assembly.GetCustomAttribute<UserSecretsIdAttribute>();
@@ -46,7 +76,7 @@ namespace Microsoft.Extensions.Hosting
                     + $"Check that the project for '{assemblyName}' has set the 'UserSecretsId' build property.");
             }
 
-            return AddUserSecrets(builder, attribute.UserSecretsId);
+            return AddUserSecrets(builder, attribute.UserSecretsId, configureOptions);
         }
 
         /// <summary>
@@ -59,7 +89,25 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentException">Thrown when the <paramref name="userSecretsId"/> is blank.</exception>
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, string userSecretsId)
         {
-            return builder.AddProvider(UserSecretsSecretProvider.CreateFor(userSecretsId));
+            return AddUserSecrets(builder, userSecretsId, configureOptions: null);
+        }
+
+        /// <summary>
+        /// <para>Adds the user secrets secret source with specified user secrets ID.</para>
+        /// <para>A user secrets ID is unique value used to store and identify a collection of secrets.</para>
+        /// </summary>
+        /// <param name="builder">The builder to create the secret store.</param>
+        /// <param name="userSecretsId">The user secrets ID.</param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="userSecretsId"/> is blank.</exception>
+        public static SecretStoreBuilder AddUserSecrets(
+            this SecretStoreBuilder builder,
+            string userSecretsId,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            return builder.AddProvider(UserSecretsSecretProvider.CreateFor(userSecretsId), configureOptions);
         }
     }
 
@@ -82,7 +130,7 @@ namespace Microsoft.Extensions.Hosting
             this SecretStoreBuilder builder,
             Func<string, string> mutateSecretName = null) where T : class
         {
-            return AddUserSecrets<T>(builder, options => options.MutateSecretName = mutateSecretName);
+            return AddUserSecrets<T>(builder, name: null, mutateSecretName);
         }
 
         /// <summary>
@@ -101,19 +149,8 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName) where T : class
         {
-            return AddUserSecrets<T>(builder, options =>
-            {
-                options.Name = name;
-                options.MutateSecretName = mutateSecretName;
-            });
-        }
-
-        private static SecretStoreBuilder AddUserSecrets<T>(
-            SecretStoreBuilder builder,
-            Action<SecretProviderOptions> configureOptions)
-        {
             Assembly assembly = typeof(T).GetTypeInfo().Assembly;
-            return AddUserSecrets(builder, assembly, configureOptions);
+            return AddUserSecrets(builder, assembly, name, mutateSecretName);
         }
 
         /// <summary>
@@ -129,7 +166,7 @@ namespace Microsoft.Extensions.Hosting
         [Obsolete("Will be removed in v3.0 in favor of exposing the secret provider options directly")]
         public static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, Func<string, string> mutateSecretName = null)
         {
-            return AddUserSecrets(builder, assembly, options => options.MutateSecretName = mutateSecretName);
+            return AddUserSecrets(builder, assembly, name: null, mutateSecretName);
         }
 
         /// <summary>
@@ -150,25 +187,7 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            return AddUserSecrets(builder, assembly, options =>
-            {
-                options.Name = name;
-                options.MutateSecretName = mutateSecretName;
-            });
-        }
-
-        private static SecretStoreBuilder AddUserSecrets(this SecretStoreBuilder builder, Assembly assembly, Action<SecretProviderOptions> configureOptions)
-        {
-            string userSecretsId = GetUserSecretsIdFromTypeAssembly(assembly);
-            return builder.AddProvider(UserSecretsSecretProvider.CreateFor(userSecretsId), configureOptions);
-        }
-
-        private static string GetUserSecretsIdFromTypeAssembly(Assembly assembly)
-        {
-            if (assembly is null)
-            {
-                throw new ArgumentNullException(nameof(assembly));
-            }
+            ArgumentNullException.ThrowIfNull(assembly);
 
             var attribute = assembly.GetCustomAttribute<UserSecretsIdAttribute>();
             if (attribute is null)
@@ -179,7 +198,7 @@ namespace Microsoft.Extensions.Hosting
                     + $"Check that the project for '{assemblyName}' has set the 'UserSecretsId' build property.");
             }
 
-            return attribute.UserSecretsId;
+            return AddUserSecrets(builder, attribute.UserSecretsId, name, mutateSecretName);
         }
 
         /// <summary>
@@ -214,10 +233,17 @@ namespace Microsoft.Extensions.Hosting
             string name,
             Func<string, string> mutateSecretName)
         {
-            return builder.AddProvider(UserSecretsSecretProvider.CreateFor(userSecretsId), options =>
+            return builder.AddUserSecrets(userSecretsId, options =>
             {
-                options.Name = name;
-                options.MutateSecretName = mutateSecretName;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
     }
