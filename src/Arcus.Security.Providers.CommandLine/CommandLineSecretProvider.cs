@@ -26,6 +26,14 @@ namespace Arcus.Security.Providers.CommandLine
             _configurationProvider = configurationProvider;
         }
 
+        internal static CommandLineSecretProvider CreateFor(string[] arguments)
+        {
+            var configProvider = new CommandLineConfigurationProvider(arguments);
+            configProvider.Load();
+
+            return new CommandLineSecretProvider(configProvider);
+        }
+
         /// <summary>
         /// Gets the secret by its name from the registered provider.
         /// </summary>
