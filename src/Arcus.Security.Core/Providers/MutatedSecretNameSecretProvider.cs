@@ -8,6 +8,7 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// Represents an <see cref="ISecretProvider"/> that can mutate the secret name provided before looking up the secret.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of moving secret name mutation solely in secret provider registration options")]
     public class MutatedSecretNameSecretProvider : ISyncSecretProvider
     {
         private readonly Func<string, string> _mutateSecretName;

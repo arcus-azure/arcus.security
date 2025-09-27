@@ -7,6 +7,7 @@ namespace Arcus.Security.Core
     /// so the <see cref="CompositeSecretProvider"/> is able to collect all the available exception filters
     /// and determine whether or not a critical exception was thrown during interacting with the secret sources.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of using secret results to determine secret retrieval failures")]
     public class CriticalExceptionFilter
     {
         private readonly Func<Exception, bool> _exceptionFilter;

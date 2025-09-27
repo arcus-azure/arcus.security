@@ -59,14 +59,12 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             ArgumentNullException.ThrowIfNull(settings);
             ArgumentException.ThrowIfNullOrWhiteSpace(secretPath);
 
-            var options = new HashiCorpVaultOptions();
-            configureOptions?.Invoke(options);
-
-            return builder.AddProvider(serviceProvider =>
+            return builder.AddProvider((serviceProvider, _, options) =>
             {
                 var logger = serviceProvider.GetService<ILogger<HashiCorpSecretProvider>>();
                 return new HashiCorpSecretProvider(settings, secretPath, options, logger);
-            });
+
+            }, configureOptions);
         }
     }
 
