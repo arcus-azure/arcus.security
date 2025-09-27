@@ -683,13 +683,14 @@ namespace Microsoft.Extensions.Hosting
             ArgumentNullException.ThrowIfNull(builder);
             ArgumentNullException.ThrowIfNull(implementationFactory);
 
-            return builder.AddProvider(serviceProvider =>
+            return builder.AddProvider((serviceProvider, _) =>
             {
                 SecretClient client = implementationFactory(serviceProvider);
                 var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
 
                 return new KeyVaultSecretProvider(client, logger);
-            });
+
+            }, configureOptions: null);
         }
     }
 }
