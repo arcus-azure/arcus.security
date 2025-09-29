@@ -20,7 +20,7 @@ namespace Arcus.Security.Core
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(ISecretProvider.GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(Arcus.Security.ISecretProvider.GetSecretAsync) + " instead")]
         public static string GetRawSecret(this ISecretProvider secretProvider, string secretName)
         {
             if (secretProvider is null)
@@ -51,6 +51,7 @@ namespace Arcus.Security.Core
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using a new secret provider interface 'Arcus.Security.ISecretProvider'")]
         public static Secret GetSecret(this ISecretProvider secretProvider, string secretName)
         {
             if (secretProvider is null)

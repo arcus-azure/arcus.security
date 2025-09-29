@@ -11,7 +11,11 @@ namespace Arcus.Security.Providers.CommandLine
     /// <summary>
     /// Represents an <see cref="ISecretProvider"/> implementation that provides the command line arguments as secrets to the secret store.
     /// </summary>
-    public class CommandLineSecretProvider : ISyncSecretProvider, ISecretProvider
+    public class CommandLineSecretProvider :
+#pragma warning disable CS0618 // Type or member is obsolete
+        ISyncSecretProvider,
+#pragma warning restore CS0618 // Type or member is obsolete
+        ISecretProvider
     {
         private readonly CommandLineConfigurationProvider _configurationProvider;
 

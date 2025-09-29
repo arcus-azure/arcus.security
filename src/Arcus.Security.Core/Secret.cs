@@ -5,6 +5,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents the secret returned from the <see cref="ISecretProvider"/> implementation.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of using secret results")]
     public class Secret
     {
         /// <summary>
@@ -24,7 +25,7 @@ namespace Arcus.Security.Core
         /// <summary>
         /// Gets the secret value.
         /// </summary>
-        public string Value { get;}
+        public string Value { get; }
 
         /// <summary>
         /// Gets the optional version of the secret.

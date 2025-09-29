@@ -301,6 +301,7 @@ namespace Microsoft.Extensions.Hosting
         /// which makes sure that the secret store handles all exceptions of type <typeparamref name="TException"/> differently.
         /// </summary>
         /// <typeparam name="TException">The type of the <see cref="Exception"/> to add as critical exception.</typeparam>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public SecretStoreBuilder AddCriticalException<TException>() where TException : Exception
         {
             CriticalExceptionFilters.Add(new CriticalExceptionFilter(typeof(TException), exception => exception is TException));
@@ -314,6 +315,7 @@ namespace Microsoft.Extensions.Hosting
         /// <typeparam name="TException">The type of the <see cref="Exception"/> to add as critical exception.</typeparam>
         /// <param name="exceptionFilter">The filter that makes sure that only specific <typeparamref name="TException"/>'s are considered critical exceptions.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exceptionFilter"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public SecretStoreBuilder AddCriticalException<TException>(Func<TException, bool> exceptionFilter) where TException : Exception
         {
             if (exceptionFilter is null)
