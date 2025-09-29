@@ -73,6 +73,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'")]
         public SecretStoreBuilder AddProvider(ISecretProvider secretProvider)
         {
             return AddProvider(secretProvider ?? throw new ArgumentNullException(nameof(secretProvider)), configureOptions: null);
@@ -87,6 +88,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'")]
         public SecretStoreBuilder AddProvider(
             ISecretProvider secretProvider,
             Action<SecretProviderOptions> configureOptions)
@@ -140,6 +142,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="createSecretProvider"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'")]
         public SecretStoreBuilder AddProvider(
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             Action<SecretProviderOptions> configureOptions)
