@@ -240,10 +240,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             var provider = host.Services.GetRequiredService<ISecretProvider>();
             Assert.Throws<SecretNotFoundException>(() => (Secret) provider.GetSecret(TestSecretName));
             Assert.Throws<SecretNotFoundException>(() => provider.GetRawSecret(TestSecretName));
-            await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
-            {
-                Secret _ = await provider.GetSecretAsync(TestSecretName);
-            });
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await provider.GetSecretAsync(TestSecretName); });
             await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
