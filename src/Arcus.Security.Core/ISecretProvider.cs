@@ -98,19 +98,21 @@ namespace Arcus.Security
     /// </summary>
     public class SecretResult
     {
-        private readonly string _secretName, _secretValue, _secretVersion, _failureMessage;
+        private readonly string _secretValue, _secretVersion, _failureMessage;
         private readonly SecretFailure _failure;
         private readonly DateTimeOffset? _expirationDate;
         private readonly Exception _failureCause;
 
-        private SecretResult(SecretFailure failure, string failureMessage, Exception failureCause)
+        private SecretResult(string secretName, SecretFailure failure, string failureMessage, Exception failureCause)
         {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
             ArgumentException.ThrowIfNullOrWhiteSpace(failureMessage);
 
             _failure = failure;
             _failureMessage = failureMessage;
             _failureCause = failureCause;
 
+            Name = secretName;
             IsSuccess = false;
         }
 
@@ -119,11 +121,11 @@ namespace Arcus.Security
             ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
             ArgumentException.ThrowIfNullOrWhiteSpace(secretValue);
 
-            _secretName = secretName;
             _secretValue = secretValue;
             _secretVersion = secretVersion;
             _expirationDate = expirationDate;
 
+            Name = secretName;
             IsSuccess = true;
         }
 
@@ -133,7 +135,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> or <paramref name="secretValue"/> is blank.</exception>
         public static SecretResult Success(string secretName, string secretValue)
         {
-            return new SecretResult(secretName, secretValue, secretVersion: null, DateTimeOffset.MaxValue);
+            return Success(secretName, secretValue, secretVersion: null, DateTimeOffset.MaxValue);
         }
 
         /// <summary>
@@ -153,11 +155,12 @@ namespace Arcus.Security
         /// <remarks>
         ///     This is an expected failure when working with a secret store with multiple providers that complement each other.
         /// </remarks>
+        /// <param name="secretName">The name of the secret that failed to be retrieved.</param>
         /// <param name="failureMessage">The user message that describes the failure.</param>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="failureMessage"/> is blank.</exception>
-        public static SecretResult NotFound(string failureMessage)
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> or the <paramref name="failureMessage"/> is blank.</exception>
+        public static SecretResult NotFound(string secretName, string failureMessage)
         {
-            return new SecretResult(SecretFailure.NotFound, failureMessage, null);
+            return NotFound(secretName, failureMessage, failureCause: null);
         }
 
         /// <summary>
@@ -166,13 +169,14 @@ namespace Arcus.Security
         /// <remarks>
         ///     This is an expected failure when working with a secret store with multiple providers that complement each other.
         /// </remarks>
+        /// <param name="secretName">The name of the secret that failed to be retrieved.</param>
         /// <param name="failureMessage">The user message that describes the failure.</param>
         /// <param name="failureCause">The exception that was the cause of the current failure.</param>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="failureMessage"/> is blank.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> or the <paramref name="failureMessage"/> is blank.</exception>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="failureCause"/> is <c>null</c>.</exception>
-        public static SecretResult NotFound(string failureMessage, Exception failureCause)
+        public static SecretResult NotFound(string secretName, string failureMessage, Exception failureCause)
         {
-            return new SecretResult(SecretFailure.NotFound, failureMessage, failureCause);
+            return new SecretResult(secretName, SecretFailure.NotFound, failureMessage, failureCause);
         }
 
         /// <summary>
@@ -182,13 +186,14 @@ namespace Arcus.Security
         /// <remarks>
         ///     This is an unexpected failure that could indicate a problem with the provider's implementation.
         /// </remarks>
+        /// <param name="secretName">The name of the secret that failed to be retrieved.</param>
         /// <param name="failureMessage">The user message that describes the failure.</param>
         /// <param name="failureCause">The exception that was the cause of the current failure.</param>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="failureMessage"/> is blank.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> or the <paramref name="failureMessage"/> is blank.</exception>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="failureCause"/> is <c>null</c>.</exception>
-        public static SecretResult Interrupted(string failureMessage, Exception failureCause)
+        public static SecretResult Interrupted(string secretName, string failureMessage, Exception failureCause)
         {
-            return new SecretResult(SecretFailure.Interrupted, failureMessage, failureCause);
+            return new SecretResult(secretName, SecretFailure.Interrupted, failureMessage, failureCause);
         }
 
         /// <summary>
@@ -199,7 +204,7 @@ namespace Arcus.Security
         /// <summary>
         /// Gets the secret value that was retrieved from the secret provider.
         /// </summary>
-        public string Name => IsSuccess ? _secretName : throw new InvalidOperationException($"[Arcus] cannot get secret name as the secret retrieval failed: {_failureMessage}", _failureCause);
+        public string Name { get; }
 
         /// <summary>
         /// Gets the value of the secret that was retrieved from the secret provider.
@@ -219,17 +224,17 @@ namespace Arcus.Security
         /// <summary>
         /// Gets the type of failure that occured during the secret retrieval.
         /// </summary>
-        public SecretFailure Failure => !IsSuccess ? _failure : throw new InvalidOperationException($"[Arcus] cannot get secret failure as the secret retrieval was successful: {_secretName}");
+        public SecretFailure Failure => !IsSuccess ? _failure : throw new InvalidOperationException($"[Arcus] cannot get secret failure as the secret retrieval was successful: {Name}");
 
         /// <summary>
         /// Gets the failure message that was returned when the secret retrieval failed.
         /// </summary>
-        public string FailureMessage => !IsSuccess ? _failureMessage : throw new InvalidOperationException($"[Arcus] cannot get failure message as the secret retrieval was successful: {_secretName}");
+        public string FailureMessage => !IsSuccess ? _failureMessage : throw new InvalidOperationException($"[Arcus] cannot get failure message as the secret retrieval was successful: {Name}");
 
         /// <summary>
         /// Gets the exception that was thrown when the secret retrieval failed.
         /// </summary>
-        public Exception FailureCause => !IsSuccess ? _failureCause : throw new InvalidOperationException($"[Arcus] cannot get failure cause as the secret retrieval was successful: {_secretName}");
+        public Exception FailureCause => !IsSuccess ? _failureCause : throw new InvalidOperationException($"[Arcus] cannot get failure cause as the secret retrieval was successful: {Name}");
 
         /// <summary>
         /// Converts the <see cref="SecretResult"/> to a string representation, which is the secret value.
@@ -245,7 +250,7 @@ namespace Arcus.Security
         /// <returns>A string that represents the current object.</returns>
         public override string ToString()
         {
-            return IsSuccess ? $"[Success]: {Name}" : $"[Failure]: {FailureMessage} {FailureCause}";
+            return IsSuccess ? $"[Success]: {Name}" : $"[Failure]: {Name} {FailureMessage} {FailureCause}";
         }
     }
 

@@ -41,7 +41,7 @@ namespace Arcus.Security.Core.Providers
 
             string secretValue = _configuration[secretName];
             return secretValue is null
-                ? SecretResult.NotFound($"cannot find secret '{secretName}' in application configuration")
+                ? SecretResult.NotFound(secretName, $"cannot find secret '{secretName}' in application configuration")
                 : SecretResult.Success(secretName, secretValue);
         }
 

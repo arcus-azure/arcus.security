@@ -100,7 +100,7 @@ namespace Arcus.Security.Providers.DockerSecrets
 
             return _provider.TryGet(secretName, out string secretValue)
                 ? SecretResult.Success(secretName, secretValue)
-                : SecretResult.NotFound($"cannot found secret '{secretName}' in Docker Secrets");
+                : SecretResult.NotFound(secretName, $"cannot found secret '{secretName}' in Docker Secrets");
         }
 
         /// <summary>

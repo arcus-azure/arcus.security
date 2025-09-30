@@ -193,7 +193,7 @@ namespace Microsoft.Extensions.Hosting
                 {
                     Secret secret = syncProvider.GetSecret(secretName);
                     return secret is null
-                        ? SecretResult.NotFound($"could not find secret '{secretName}' in provider '{DeprecatedProvider.GetType().Name}'")
+                        ? SecretResult.NotFound(secretName, $"could not find secret '{secretName}' in provider '{DeprecatedProvider.GetType().Name}'")
                         : SecretResult.Success(secretName, secret.Value, secret.Version, secret.Expires ?? default);
                 }
 
@@ -206,7 +206,7 @@ namespace Microsoft.Extensions.Hosting
             {
                 Secret secret = await DeprecatedProvider.GetSecretAsync(secretName);
                 return secret is null
-                    ? SecretResult.NotFound($"could not find secret '{secretName}' in provider '{DeprecatedProvider.GetType().Name}'")
+                    ? SecretResult.NotFound(secretName, $"could not find secret '{secretName}' in provider '{DeprecatedProvider.GetType().Name}'")
                     : SecretResult.Success(secretName, secret.Value, secret.Version, secret.Expires ?? default);
             }
         }

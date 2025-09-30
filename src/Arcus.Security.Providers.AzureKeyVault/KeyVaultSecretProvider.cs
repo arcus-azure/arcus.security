@@ -146,8 +146,8 @@ namespace Arcus.Security.Providers.AzureKeyVault
         private static SecretResult SuccessOrNotFoundVersions(string secretName, RequestFailedException failureOnVersions)
         {
             return failureOnVersions?.Status is (int) HttpStatusCode.NotFound
-                ? SecretResult.NotFound($"no enabled secret versions found for '{secretName}'", failureOnVersions)
-                : SecretResult.Interrupted($"enabled secret versions cannot be retrieved for '{secretName}'", failureOnVersions);
+                ? SecretResult.NotFound(secretName, $"no enabled secret versions found for '{secretName}'", failureOnVersions)
+                : SecretResult.Interrupted(secretName, $"enabled secret versions cannot be retrieved for '{secretName}'", failureOnVersions);
         }
 
         private async Task<(string[], RequestFailedException)> DetermineEnabledVersionsAsync(string secretName)
@@ -203,7 +203,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
             catch (RequestFailedException ex) when (ex.Status is (int) HttpStatusCode.NotFound)
             {
-                return SecretResult.NotFound($"cannot find secret '{secretName}' in Azure Key Vault secrets", ex);
+                return SecretResult.NotFound(secretName, $"cannot find secret '{secretName}' in Azure Key Vault secrets", ex);
             }
         }
 

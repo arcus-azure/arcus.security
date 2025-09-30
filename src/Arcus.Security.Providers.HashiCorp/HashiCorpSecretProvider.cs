@@ -113,7 +113,7 @@ namespace Arcus.Security.Providers.HashiCorp
                 return SecretResult.Success(secretName, value.ToString(), version, default);
             }
 
-            return SecretResult.NotFound($"cannot find secret '{secretName}' in HashiCorp Vault");
+            return SecretResult.NotFound(secretName, $"cannot find secret '{secretName}' in HashiCorp Vault");
         }
 
         /// <summary>
