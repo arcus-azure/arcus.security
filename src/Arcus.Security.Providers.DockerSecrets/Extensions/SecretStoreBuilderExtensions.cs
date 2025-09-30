@@ -15,12 +15,45 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="builder">The builder to add the Docker secrets provider to.</param>
         /// <param name="directoryPath">The path inside the container where the Docker secrets are located.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
+        public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath)
+        {
+            return AddDockerSecrets(builder, directoryPath, configureOptions: null);
+        }
+
+        /// <summary>
+        /// Adds Docker secrets (mounted as files in the Docker container) to the secret store.
+        /// </summary>
+        /// <param name="builder">The builder to add the Docker secrets provider to.</param>
+        /// <param name="directoryPath">The path inside the container where the Docker secrets are located.</param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
+        public static SecretStoreBuilder AddDockerSecrets(
+            this SecretStoreBuilder builder,
+            string directoryPath,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            return builder.AddProvider(DockerSecretsSecretProvider.CreateAt(directoryPath), configureOptions);
+        }
+    }
+
+    /// <summary>
+    /// Extensions on the <see cref="SecretStoreBuilder" /> to easily provide access to Docker secrets in the secret store.
+    /// </summary>
+    public static class DeprecatedSecretStoreBuilderExtensions
+    {
+        /// <summary>
+        /// Adds Docker secrets (mounted as files in the Docker container) to the secret store.
+        /// </summary>
+        /// <param name="builder">The builder to add the Docker secrets provider to.</param>
+        /// <param name="directoryPath">The path inside the container where the Docker secrets are located.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of not using optional arguments, use the with the secret provider exposed options to mutate the secret name, or use the one without the optional argument for the default registration")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddDockerSecrets(this SecretStoreBuilder builder, string directoryPath, Func<string, string> mutateSecretName = null)
         {
             return AddDockerSecrets(builder, directoryPath, name: null, mutateSecretName: mutateSecretName);
@@ -36,9 +69,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Throw when the <paramref name="directoryPath"/> is blank or is not an absolute path.</exception>
         /// <exception cref="DirectoryNotFoundException">Thrown when the <paramref name="directoryPath"/> is not found on the system.</exception>
-#pragma warning disable S1133
         [Obsolete("Will be removed in v3.0 in favor of exposing the secret provider options directly to configure the provider")]
-#pragma warning restore S1133
         public static SecretStoreBuilder AddDockerSecrets(
             this SecretStoreBuilder builder,
             string directoryPath,
@@ -47,10 +78,17 @@ namespace Microsoft.Extensions.Hosting
         {
             ArgumentNullException.ThrowIfNull(builder);
 
-            return builder.AddProvider(DockerSecretsSecretProvider.CreateAt(directoryPath), options =>
+            return builder.AddDockerSecrets(directoryPath, options =>
             {
-                options.Name = name;
-                options.MutateSecretName = mutateSecretName;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
     }

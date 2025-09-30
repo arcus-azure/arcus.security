@@ -7,6 +7,7 @@ using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -28,6 +29,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="certificate">The certificate that is used as credential.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="tenantId"/>, or <paramref name="clientId"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -57,6 +59,7 @@ namespace Microsoft.Extensions.Hosting
         /// </param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="tenantId"/>, or <paramref name="clientId"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -76,7 +79,7 @@ namespace Microsoft.Extensions.Hosting
                 name: null,
                 mutateSecretName: null);
         }
-        
+
         /// <summary>
         /// Adds Azure Key Vault as a secret source which uses certificate authentication.
         /// </summary>
@@ -93,6 +96,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="tenantId"/>, or <paramref name="clientId"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -107,8 +111,8 @@ namespace Microsoft.Extensions.Hosting
             return AddAzureKeyVaultWithCertificate(
                 builder,
                 rawVaultUri,
-                tenantId, 
-                clientId, 
+                tenantId,
+                clientId,
                 certificate,
                 cacheConfiguration,
                 configureOptions,
@@ -134,6 +138,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configureProviderOptions"></param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="certificate"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="tenantId"/>, or <paramref name="clientId"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithCertificate(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -165,6 +170,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="rawVaultUri">The Uri of the Azure Key Vault you want to connect to.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri)
@@ -186,6 +192,7 @@ namespace Microsoft.Extensions.Hosting
         ///     More information on user assigned managed identities can be found here: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#how-a-user-assigned-managed-identity-works-with-an-azure-vm</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -209,6 +216,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done, use the <see cref="CacheConfiguration.Default"/> for default caching.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -220,7 +228,7 @@ namespace Microsoft.Extensions.Hosting
                 cacheConfiguration,
                 clientId: null);
         }
-        
+
         /// <summary>
         /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
         /// </summary>
@@ -232,6 +240,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done, use the <see cref="CacheConfiguration.Default"/> for default caching.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -247,7 +256,7 @@ namespace Microsoft.Extensions.Hosting
                 name: null,
                 mutateSecretName: null);
         }
-        
+
         /// <summary>
         /// Adds Azure Key Vault as a secret source which uses Managed Identity authentication.
         /// </summary>
@@ -259,6 +268,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -291,6 +301,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -326,6 +337,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configureProviderOptions">The optional additional options to configure the secret provider registration in the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithManagedIdentity(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -336,7 +348,7 @@ namespace Microsoft.Extensions.Hosting
         {
             return AddAzureKeyVault(
                 builder,
-                new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = clientId }), 
+                new DefaultAzureCredential(new DefaultAzureCredentialOptions { ManagedIdentityClientId = clientId }),
                 new KeyVaultConfiguration(rawVaultUri),
                 cacheConfiguration,
                 configureOptions,
@@ -353,6 +365,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="clientKey">The Secret ClientKey of the service principal, used to connect to Azure Key Vault</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -382,6 +395,7 @@ namespace Microsoft.Extensions.Hosting
         /// </param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="rawVaultUri"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -420,6 +434,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentException">
         ///     Thrown when the <paramref name="rawVaultUri"/>, <paramref name="tenantId"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.
         /// </exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -463,6 +478,7 @@ namespace Microsoft.Extensions.Hosting
         /// <exception cref="ArgumentException">
         ///     Thrown when the <paramref name="rawVaultUri"/>, <paramref name="tenantId"/>, <paramref name="clientId"/>, or <paramref name="clientKey"/> is blank.
         /// </exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVaultWithServicePrincipal(
             this SecretStoreBuilder builder,
             string rawVaultUri,
@@ -485,7 +501,7 @@ namespace Microsoft.Extensions.Hosting
 
             return AddAzureKeyVault(
                 builder,
-                new ClientSecretCredential(tenantId, clientId, clientKey), 
+                new ClientSecretCredential(tenantId, clientId, clientKey),
                 new KeyVaultConfiguration(rawVaultUri),
                 cacheConfiguration,
                 configureOptions,
@@ -500,6 +516,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
         /// <param name="cacheConfiguration">The configuration to control how the caching will be done, use the <see cref="CacheConfiguration.Default"/> for default caching.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="tokenCredential"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             TokenCredential tokenCredential,
@@ -523,6 +540,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="tokenCredential">The requested authentication type for connecting to the Azure Key Vault instance.</param>
         /// <param name="configuration">The configuration related to the Azure Key Vault instance to use.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="tokenCredential"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             TokenCredential tokenCredential,
@@ -534,7 +552,7 @@ namespace Microsoft.Extensions.Hosting
                 configuration,
                 cacheConfiguration: null);
         }
-        
+
         /// <summary>
         /// Adds Azure Key Vault as a secret source.
         /// </summary>
@@ -546,6 +564,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="name">The unique name to register this Azure Key Vault provider in the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="tokenCredential"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             TokenCredential tokenCredential,
@@ -578,6 +597,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configureOptions">The optional additional options to configure the Azure Key Vault secret source.</param>
         /// <param name="configureProviderOptions">The optional additional options to configure the secret provider registration in the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/>, <paramref name="tokenCredential"/>, or <paramref name="configuration"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of simpler overloads that does not take in caching or telemetry options")]
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             TokenCredential tokenCredential,
@@ -625,6 +645,52 @@ namespace Microsoft.Extensions.Hosting
                 var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
                 return cachedSecretProvider;
             }, configureProviderOptions);
+        }
+
+        /// <summary>
+        /// Adds an Azure Key Vault as a secret provider to the secret store.
+        /// </summary>
+        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
+        /// <param name="vaultUri">
+        ///     <para>A URI to the vault on which the client operates. Appears as "DNS Name" in the Azure portal.</para>
+        ///     <para>If you have a secret URI, use <see cref="KeyVaultSecretIdentifier" /> to parse the <see cref="KeyVaultSecretIdentifier.VaultUri" /> and other information.</para>
+        ///     <para>You should validate that this URI references a valid Key Vault resource. See <see href="https://aka.ms/azsdk/blog/vault-uri" /> for details.</para>
+        /// </param>
+        /// <param name="credential">A <see cref="T:Azure.Core.TokenCredential" /> used to authenticate requests to the vault.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="credential"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="vaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVault(this SecretStoreBuilder builder, string vaultUri, TokenCredential credential)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            ArgumentException.ThrowIfNullOrWhiteSpace(vaultUri);
+            ArgumentNullException.ThrowIfNull(credential);
+
+            return AddAzureKeyVault(builder, _ => new SecretClient(new Uri(vaultUri), credential));
+        }
+
+        /// <summary>
+        /// Adds Azure Key Vault as a provider to the secret store.
+        /// </summary>
+        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
+        /// <param name="implementationFactory">The function to create the client to interact with Azure Key Vault.</param>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown when the <paramref name="builder"/> or <paramref name="implementationFactory"/> is <c>null</c>.
+        /// </exception>
+        public static SecretStoreBuilder AddAzureKeyVault(
+            this SecretStoreBuilder builder,
+            Func<IServiceProvider, SecretClient> implementationFactory)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            ArgumentNullException.ThrowIfNull(implementationFactory);
+
+            return builder.AddProvider((serviceProvider, _) =>
+            {
+                SecretClient client = implementationFactory(serviceProvider);
+                var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
+
+                return new KeyVaultSecretProvider(client, logger);
+
+            }, configureOptions: null);
         }
     }
 }

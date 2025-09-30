@@ -11,6 +11,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents the exposed functionality of the secret store.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of a new " + nameof(Security.ISecretStore) + " interface in the 'Arcus.Security' namespace")]
     public interface ISecretStore
     {
         /// <summary>

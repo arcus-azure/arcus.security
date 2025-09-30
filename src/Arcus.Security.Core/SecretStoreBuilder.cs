@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ISecretProvider = Arcus.Security.Core.ISecretProvider;
-using ISecretStore = Arcus.Security.Core.ISecretStore;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable CS0612 // Type or member is obsolete
@@ -126,6 +125,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="createSecretProvider"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider) + " in the 'Arcus.Security' namespace")]
         public SecretStoreBuilder AddProvider(Func<IServiceProvider, ISecretProvider> createSecretProvider)
         {
             return AddProvider(createSecretProvider, configureOptions: null);
@@ -177,6 +177,7 @@ namespace Microsoft.Extensions.Hosting
             return this;
         }
 
+        [Obsolete]
         internal sealed class DeprecatedSecretProviderAdapter : Arcus.Security.ISecretProvider
         {
             internal DeprecatedSecretProviderAdapter(ISecretProvider deprecatedProvider)
@@ -367,7 +368,7 @@ namespace Microsoft.Extensions.Hosting
 
             Services.TryAddSingleton<ICachedSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
-            Services.TryAddSingleton<ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
+            Services.TryAddSingleton<Arcus.Security.Core.ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<ISyncSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
         }
 
@@ -434,7 +435,7 @@ namespace Microsoft.Extensions.Hosting
 
         /// <summary>
         /// Gets or sets the identifiable name of the <see cref="ISecretProvider"/>,
-        /// which can be used to retrieve this specific provider from the secret store (via <see cref="ISecretStore.GetProvider{TProvider}(string)"/>).
+        /// which can be used to retrieve this specific provider from the secret store (via <see cref="Arcus.Security.ISecretStore.GetProvider{TProvider}(string)"/>).
         /// </summary>
         /// <remarks>
         ///     Falls back on the type name of the <see cref="ISecretProvider"/> when none was provided during its registration.

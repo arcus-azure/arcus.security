@@ -1,12 +1,51 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Core.Providers
 {
     /// <summary>
+    /// Represents the available options to configure the registration of the <see cref="EnvironmentVariableSecretProvider"/>
+    /// </summary>
+    public class EnvironmentVariableSecretProviderOptions : SecretProviderRegistrationOptions
+    {
+        private string _prefix;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EnvironmentVariableSecretProviderOptions"/> class.
+        /// </summary>
+        public EnvironmentVariableSecretProviderOptions() : base(typeof(EnvironmentVariableSecretProvider))
+        {
+        }
+
+        /// <summary>
+        /// Gets or sets the prefix which will be prepended to the secret name when retrieving environment secret variables.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="value"/> is blank.</exception>
+        public string Prefix
+        {
+            get => _prefix;
+            set
+            {
+                ArgumentException.ThrowIfNullOrWhiteSpace(value);
+                _prefix = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the target on which the environment secret variables should be retrieved.
+        /// </summary>
+        public EnvironmentVariableTarget Target { get; set; } = EnvironmentVariableTarget.Process;
+    }
+
+    /// <summary>
     /// <see cref="ISecretProvider"/> implementation that retrieves secrets from the environment.
     /// </summary>
-    public class EnvironmentVariableSecretProvider : ISyncSecretProvider
+    public class EnvironmentVariableSecretProvider :
+#pragma warning disable CS0612 // Type or member is obsolete
+        ISyncSecretProvider,
+#pragma warning restore CS0612 // Type or member is obsolete
+        Security.ISecretProvider
     {
         internal const EnvironmentVariableTarget DefaultTarget = EnvironmentVariableTarget.Process;
 
@@ -19,6 +58,7 @@ namespace Arcus.Security.Core.Providers
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
         /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of internal constructor")]
         public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget, string prefix = null)
         {
             if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
@@ -26,8 +66,35 @@ namespace Arcus.Security.Core.Providers
                 throw new ArgumentException($"Requires an environment variable target of either '{EnvironmentVariableTarget.Process}', '{EnvironmentVariableTarget.Machine}', or '{EnvironmentVariableTarget.User}'", nameof(target));
             }
 
-            _prefix = prefix ?? String.Empty;
+            _prefix = prefix ?? string.Empty;
             _target = target;
+        }
+
+        internal EnvironmentVariableSecretProvider(EnvironmentVariableSecretProviderOptions options)
+        {
+            ArgumentNullException.ThrowIfNull(options);
+
+            _prefix = options.Prefix;
+            _target = options.Target;
+        }
+
+        /// <summary>
+        /// Gets the secret by its name from the registered provider.
+        /// </summary>
+        /// <param name="secretName">The name to identity the stored secret.</param>
+        /// <returns>
+        ///     <para>[Success] when the secret with the provided <paramref name="secretName"/> was found;</para>
+        ///     <para>[Failure] when the secret could not be retrieved via the provider.</para>
+        /// </returns>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
+        SecretResult Security.ISecretProvider.GetSecret(string secretName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
+
+            string secretValue = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
+            return secretValue is null
+                ? SecretResult.NotFound($"cannot find secret '{_prefix}{secretName} in environment variables with target '{_target}'")
+                : SecretResult.Success(secretName, secretValue);
         }
 
         /// <summary>
@@ -38,13 +105,9 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public Task<Secret> GetSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the environment secret", nameof(secretName));
-            }
-
             Secret secret = GetSecret(secretName);
             return Task.FromResult(secret);
         }
@@ -60,11 +123,6 @@ namespace Arcus.Security.Core.Providers
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public Task<string> GetRawSecretAsync(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the environment secret", nameof(secretName));
-            }
-
             string secretValue = GetRawSecret(secretName);
             return Task.FromResult(secretValue);
         }
@@ -76,20 +134,11 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public Secret GetSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the environment secret", nameof(secretName));
-            }
-
-            string secretValue = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
-            if (secretValue is null)
-            {
-                return null;
-            }
-
-            return new Secret(secretValue);
+            SecretResult result = ((Security.ISecretProvider) this).GetSecret(secretName);
+            return result.IsSuccess ? new Secret(result.Value) : null;
         }
 
         /// <summary>
@@ -102,13 +151,7 @@ namespace Arcus.Security.Core.Providers
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
         public string GetRawSecret(string secretName)
         {
-            if (string.IsNullOrWhiteSpace(secretName))
-            {
-                throw new ArgumentException("Requires a non-blank secret name to look up the environment secret", nameof(secretName));
-            }
-
-            string environmentVariable = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
-            return environmentVariable;
+            return GetSecret(secretName)?.Value;
         }
     }
 }
