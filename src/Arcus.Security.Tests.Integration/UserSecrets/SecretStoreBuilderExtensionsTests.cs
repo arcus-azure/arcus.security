@@ -99,9 +99,12 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () =>
+            {
+                Secret _ = await secretProvider.GetSecretAsync(secretKey);
+            });
         }
 
         [Fact]
@@ -126,9 +129,9 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -204,9 +207,9 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -232,7 +235,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -298,7 +301,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -369,7 +372,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             // Act
             hostBuilder.ConfigureSecretStore((config, stores) =>
             {
-                stores.AddUserSecrets(assembly, secretName => secretName.Replace(".",":"));
+                stores.AddUserSecrets(assembly, secretName => secretName.Replace(".", ":"));
             });
 
             // Assert
@@ -379,7 +382,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -466,9 +469,9 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -544,9 +547,9 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         [Fact]
@@ -570,9 +573,9 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
-            await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetSecretAsync(secretKey));
+            await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
 
         private void SetSecret(string id, string key, string value)
@@ -582,7 +585,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             Directory.CreateDirectory(secretsDirPath);
             _tempDirectories.Add(secretsDirPath);
 
-            IConfiguration config = 
+            IConfiguration config =
                 new ConfigurationBuilder()
                     .AddJsonFile(secretsFilePath, optional: true)
                     .Build();
