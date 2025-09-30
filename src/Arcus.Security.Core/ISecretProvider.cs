@@ -85,8 +85,7 @@ namespace Arcus.Security
         [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results")]
         public static async Task<Secret> GetSecretAsync(this ISecretProvider provider, string secretName)
         {
-            SecretResult result = await provider.GetSecretAsync(secretName);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw new SecretNotFoundException(secretName);
+            return await provider.GetSecretAsync(secretName);
         }
 
         /// <summary>
@@ -101,8 +100,7 @@ namespace Arcus.Security
         [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results")]
         public static Secret GetSecret(this ISecretProvider provider, string secretName)
         {
-            SecretResult result = provider.GetSecret(secretName);
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw new SecretNotFoundException(secretName);
+            return provider.GetSecret(secretName);
         }
 
         /// <summary>
