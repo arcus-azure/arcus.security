@@ -309,7 +309,16 @@ namespace Arcus.Security
         [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public static implicit operator Secret(SecretResult result)
         {
-            return result.IsSuccess ? new Secret(result.Value, result.Version, result._expirationDate) : throw new SecretNotFoundException(result.ToString());
+            if (result.IsSuccess)
+            {
+                return new Secret(result.Value, result.Version, result._expirationDate);
+            }
+
+            return result.Failure switch
+            {
+                SecretFailure.Interrupted => throw result.FailureCause,
+                _ => throw new SecretNotFoundException(result.ToString()),
+            };
         }
 
         /// <summary>

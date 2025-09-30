@@ -260,7 +260,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetSecretAsync(TestSecretName));
+            await Assert.ThrowsAsync<AuthenticationFailedException>(async () => { Secret _ = await provider.GetSecretAsync(TestSecretName); });
             await Assert.ThrowsAsync<AuthenticationFailedException>(() => provider.GetRawSecretAsync(TestSecretName));
         }
 
@@ -284,7 +284,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             using IHost host = builder.Build();
             var provider = host.Services.GetRequiredService<ISecretProvider>();
 
-            var exceptionFromSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetSecretAsync(keyName));
+            var exceptionFromSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(async () => { Secret _ = await provider.GetSecretAsync(keyName); });
             var exceptionFromRawSecretAsync = await Assert.ThrowsAsync<RequestFailedException>(() => provider.GetRawSecretAsync(keyName));
             Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromSecretAsync.Status);
             Assert.Equal((int) HttpStatusCode.Forbidden, exceptionFromRawSecretAsync.Status);
