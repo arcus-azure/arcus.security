@@ -186,6 +186,7 @@ namespace Arcus.Security
         /// </exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
+        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself")]
         public static TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(this ISecretStore store, string name) where TCachedSecretProvider : ICachedSecretProvider
         {
             var provider = store.GetProvider<ISecretProvider>(name);
