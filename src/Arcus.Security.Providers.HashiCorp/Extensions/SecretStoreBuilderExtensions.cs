@@ -213,7 +213,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
 
             return builder.AddHashiCorpVault(settings, secretPath, opt =>
             {
-                opt.KeyValueMountPoint = options.UserPassMountPoint;
+                opt.KeyValueMountPoint = options.KeyValueMountPoint;
                 opt.KeyValueVersion = options.KeyValueVersion;
                 opt.TrackDependency = options.TrackDependency;
 
