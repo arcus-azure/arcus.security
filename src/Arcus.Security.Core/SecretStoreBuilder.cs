@@ -366,6 +366,7 @@ namespace Microsoft.Extensions.Hosting
                 return new CompositeSecretProvider(registrations, CriticalExceptionFilters, _context.Cache, auditing, logger);
             });
 
+            Services.TryAddSingleton<Arcus.Security.ISecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ICachedSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<Arcus.Security.Core.ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
