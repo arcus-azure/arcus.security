@@ -53,7 +53,7 @@ namespace Arcus.Security.Providers.CommandLine
 
             return _configurationProvider.TryGet(secretName, out string secretValue)
                 ? SecretResult.Success(secretName, secretValue)
-                : SecretResult.NotFound($"no secret '{secretName}' found in command line arguments");
+                : SecretResult.NotFound(secretName, $"no secret '{secretName}' found in command line arguments");
         }
 
         /// <summary>
