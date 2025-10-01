@@ -5,6 +5,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Exception, thrown when no secret was found, using the given name.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of using secret results")]
     public class SecretNotFoundException : Exception
     {
         /// <summary>
@@ -13,7 +14,7 @@ namespace Arcus.Security.Core
         public SecretNotFoundException() : base("The secret was not found.")
         {
         }
-        
+
         /// <summary>
         /// Creates <see cref="SecretNotFoundException"/> , using the given name
         /// </summary>

@@ -449,11 +449,13 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         private static void AddHashiCorpCriticalExceptions(SecretStoreBuilder builder)
         {
             // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
+#pragma warning disable CS0618 // Type or member is obsolete
             builder.AddCriticalException<VaultApiException>(exception =>
             {
                 return exception.HttpStatusCode == HttpStatusCode.BadRequest
                        || exception.HttpStatusCode == HttpStatusCode.Forbidden;
             });
+#pragma warning restore CS0618 // Type or member is obsolete
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A <see cref="ISecretProvider"/> that will cache secrets in memory, to improve performance.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 as caching will happen directly on the secret store")]
     public class CachedSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISyncSecretProvider
     {
         private readonly ISecretProvider _secretProvider;

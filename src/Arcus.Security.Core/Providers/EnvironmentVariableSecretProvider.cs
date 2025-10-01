@@ -43,7 +43,9 @@ namespace Arcus.Security.Core.Providers
     /// </summary>
     public class EnvironmentVariableSecretProvider :
 #pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
         ISyncSecretProvider,
+#pragma warning restore CS0618 // Type or member is obsolete
 #pragma warning restore CS0612 // Type or member is obsolete
         Security.ISecretProvider
     {
