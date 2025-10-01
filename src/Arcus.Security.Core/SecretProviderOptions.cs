@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Hosting;
 
 namespace Arcus.Security.Core
 {
     /// <summary>
     /// Represents the additional options to register an <see cref="ISecretProvider"/> implementation to the secret store.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of a new " + nameof(SecretProviderRegistrationOptions) + " model")]
     public class SecretProviderOptions
     {
         private readonly IDictionary<string, int> _versionedSecretNames = new Dictionary<string, int>();
@@ -21,8 +23,8 @@ namespace Arcus.Security.Core
         /// Gets or sets the name of the <see cref="ISecretProvider"/> to be registered in the secret store.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="value"/> is blank.</exception>
-        public string Name 
-        {  
+        public string Name
+        {
             get => _name;
             set
             {

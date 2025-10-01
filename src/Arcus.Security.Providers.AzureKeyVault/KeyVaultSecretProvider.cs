@@ -21,12 +21,16 @@ namespace Arcus.Security.Providers.AzureKeyVault
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
-    public class KeyVaultSecretProvider : IVersionedSecretProvider, ISyncSecretProvider, ISecretProvider
+    public class KeyVaultSecretProvider :
+#pragma warning disable CS0618 // Type or member is obsolete
+        IVersionedSecretProvider, ISyncSecretProvider,
+#pragma warning restore CS0618 // Type or member is obsolete
+        ISecretProvider
     {
         private readonly SecretClient _secretClient;
         private readonly ILogger _logger;
 
-        [Obsolete] private readonly KeyVaultOptions _options = new();
+        [Obsolete("Will be removed in v3.0")] private readonly KeyVaultOptions _options = new();
 
         internal KeyVaultSecretProvider(SecretClient secretClient, ILogger<KeyVaultSecretProvider> logger)
         {
@@ -341,6 +345,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             throw result.FailureCause ?? new SecretNotFoundException(secretName);
         }
 
+        [Obsolete("Will be removed in v3.0")]
         private static Exception DetermineFinalException(string secretName, SecretResult result)
         {
             if (result.FailureCause is null or RequestFailedException { Status: (int) HttpStatusCode.NotFound })
