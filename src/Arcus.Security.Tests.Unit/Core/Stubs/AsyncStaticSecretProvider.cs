@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Arcus.Security.Core;
 
 namespace Arcus.Security.Tests.Unit.Core.Stubs
 {
-    internal class AsyncStaticSecretProvider : ISecretProvider
+    internal class AsyncStaticSecretProvider : ISecretProvider, Security.Core.ISecretProvider
     {
         private readonly string _secretValue;
 
@@ -17,6 +13,11 @@ namespace Arcus.Security.Tests.Unit.Core.Stubs
         public AsyncStaticSecretProvider(string secretValue)
         {
             _secretValue = secretValue;
+        }
+
+        public SecretResult GetSecret(string secretName)
+        {
+            return SecretResult.Success(secretName, _secretValue);
         }
 
         public Task<string> GetRawSecretAsync(string secretName)

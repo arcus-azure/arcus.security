@@ -67,7 +67,7 @@ namespace Arcus.Security
     /// <summary>
     /// Represents the central point of contact to retrieve secrets from registered <see cref="ISecretProvider"/>s in the user application.
     /// </summary>
-    internal interface ISecretStore : ISecretProvider, ISecretStoreContext
+    public interface ISecretStore : ISecretProvider, ISecretStoreContext
     {
         /// <summary>
         /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
@@ -75,7 +75,7 @@ namespace Arcus.Security
         /// <typeparam name="TProvider">The concrete type of the secret provider implementation.</typeparam>
         /// <param name="providerName">
         ///     The name of the concrete secret provider implementation;
-        ///     uses the FQN (fully-qualified name) of the type in case none is provided.
+        ///     uses the type name of the type in case none is provided.
         /// </param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="providerName"/> is blank.</exception>
         /// <exception cref="KeyNotFoundException">Thrown when no secret provider(s) was found with the provided <paramref name="providerName"/>.</exception>
@@ -105,6 +105,98 @@ namespace Arcus.Security
         /// </returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         SecretResult GetSecret(string secretName, Action<SecretOptions> configureOptions);
+    }
+
+    /// <summary>
+    /// Extensions on the <see cref="ISecretStore"/> to ease the migration process.
+    /// </summary>
+    public static class SecretStoreExtensions
+    {
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="store">The registered secret store to retrieve a single/subset secret provider from.</param>
+        /// <param name="providerName">
+        ///     The name of the concrete secret provider implementation;
+        ///     uses the type name of the type in case none is provided.
+        /// </param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="providerName"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when no secret provider(s) was found with the provided <paramref name="providerName"/>.</exception>
+        public static ISecretProvider GetProvider(this ISecretStore store, string providerName)
+        {
+            return store.GetProvider<ISecretProvider>(providerName);
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="store"></param>
+        /// <param name="name">The name that was used to register the <see cref="ISecretProvider"/> in the secret store.</param>
+        /// <typeparam name="TSecretProvider">The concrete <see cref="ISecretProvider"/> type.</typeparam>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
+        /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ISecretProvider"/> cannot be cast to the specific <typeparamref name="TSecretProvider"/>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ISecretProvider"/> were registered with the same name.</exception>
+        [Obsolete("Will be removed in v3.0 in favor of a new interface 'Arcus.Security.ISecretProvider'")]
+        public static TSecretProvider GetProvider<TSecretProvider>(this ISecretStore store, string name) where TSecretProvider : Core.ISecretProvider
+        {
+            var provider = store.GetProvider<ISecretProvider>(name);
+            if (provider is not TSecretProvider concrete)
+            {
+                throw new InvalidCastException($"Cannot cast the registered '{name}' secret provider to a '{nameof(TSecretProvider)}' implementation");
+            }
+
+            return concrete;
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ICachedSecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="store"></param>
+        /// <param name="name">The name that was used to register the <see cref="ICachedSecretProvider"/> in the secret store.</param>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ICachedSecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
+        /// <exception cref="NotSupportedException">
+        ///     Thrown when their was either none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
+        ///     or there was an <see cref="ISecretProvider"/> registered but not with caching.
+        /// </exception>
+        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself")]
+        public static ICachedSecretProvider GetCachedProvider(this ISecretStore store, string name)
+        {
+            var provider = store.GetProvider<ISecretProvider>(name);
+            if (provider is not ICachedSecretProvider cached)
+            {
+                throw new InvalidCastException($"Cannot cast the registered '{name}' secret provider to a '{nameof(ICachedSecretProvider)}' implementation");
+            }
+
+            return cached;
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ICachedSecretProvider"/> from the secret store.
+        /// </summary>
+        /// <param name="store"></param>
+        /// <param name="name">The name that was used to register the <see cref="ICachedSecretProvider"/> in the secret store.</param>
+        /// <typeparam name="TCachedSecretProvider">The concrete <see cref="ICachedSecretProvider"/> type.</typeparam>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ICachedSecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
+        /// <exception cref="NotSupportedException">
+        ///     Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
+        ///     or there was an <see cref="ISecretProvider"/> registered but not with caching.
+        /// </exception>
+        /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
+        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself")]
+        public static TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(this ISecretStore store, string name) where TCachedSecretProvider : ICachedSecretProvider
+        {
+            var provider = store.GetProvider<ISecretProvider>(name);
+            if (provider is not TCachedSecretProvider cached)
+            {
+                throw new InvalidCastException($"Cannot cast the registered '{name}' secret provider to a '{nameof(TCachedSecretProvider)}' implementation");
+            }
+
+            return cached;
+        }
     }
 
     /// <summary>

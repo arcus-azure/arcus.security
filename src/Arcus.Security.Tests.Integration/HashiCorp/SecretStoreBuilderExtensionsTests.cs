@@ -58,7 +58,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-                    var exceptionFromSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetSecretAsync(secretName));
+                    var exceptionFromSecret = await Assert.ThrowsAsync<VaultApiException>(async () => { Secret _ = await provider.GetSecretAsync(secretName); });
                     var exceptionFromRawSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
                     Assert.Equal(HttpStatusCode.BadRequest, exceptionFromSecret.HttpStatusCode);
                     Assert.Equal(HttpStatusCode.BadRequest, exceptionFromRawSecret.HttpStatusCode);
@@ -106,8 +106,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
                 using (IHost host = builder.Build())
                 {
                     var provider = host.Services.GetRequiredService<ISecretProvider>();
-                    
-                    var exceptionFromSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetSecretAsync(secretName));
+
+                    var exceptionFromSecret = await Assert.ThrowsAsync<VaultApiException>(async () => { Secret _ = await provider.GetSecretAsync(secretName); });
                     var exceptionFromRawSecret = await Assert.ThrowsAsync<VaultApiException>(() => provider.GetRawSecretAsync(secretName));
                     Assert.Equal(HttpStatusCode.Forbidden, exceptionFromSecret.HttpStatusCode);
                     Assert.Equal(HttpStatusCode.Forbidden, exceptionFromRawSecret.HttpStatusCode);
