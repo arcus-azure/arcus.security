@@ -13,7 +13,9 @@ namespace Arcus.Security.Providers.UserSecrets
     /// </summary>
 #pragma warning disable S3881 // Constructor will be solely internal in v3.0.
 #pragma warning disable CS0612 // Type or member is obsolete: synchronous secret provider interface will be removed in v3.0.
+#pragma warning disable CS0618 // Type or member is obsolete
     public class UserSecretsSecretProvider : ISyncSecretProvider, ISecretProvider, IDisposable
+#pragma warning restore CS0618 // Type or member is obsolete
 #pragma warning restore CS0612 // Type or member is obsolete
 #pragma warning restore S3881
     {

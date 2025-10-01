@@ -5,6 +5,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents an additional synchronous implementation on top of the <see cref="ISecretProvider"/>.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor of using the new secret provider interface which has already a synchronous variant of secret retrieval")]
     public interface ISyncSecretProvider : ISecretProvider
     {
         /// <summary>

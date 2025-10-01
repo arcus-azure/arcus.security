@@ -20,6 +20,113 @@ namespace Microsoft.Extensions.Hosting
     public static class SecretStoreBuilderExtensions
     {
         /// <summary>
+        /// Adds an Azure Key Vault as a secret provider to the secret store.
+        /// </summary>
+        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
+        /// <param name="vaultUri">
+        ///     <para>A URI to the vault on which the client operates. Appears as "DNS Name" in the Azure portal.</para>
+        ///     <para>If you have a secret URI, use <see cref="KeyVaultSecretIdentifier" /> to parse the <see cref="KeyVaultSecretIdentifier.VaultUri" /> and other information.</para>
+        ///     <para>You should validate that this URI references a valid Key Vault resource. See <see href="https://aka.ms/azsdk/blog/vault-uri" /> for details.</para>
+        /// </param>
+        /// <param name="credential">A <see cref="TokenCredential" /> used to authenticate requests to the vault.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="credential"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="vaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVault(this SecretStoreBuilder builder, string vaultUri, TokenCredential credential)
+        {
+            return AddAzureKeyVault(builder, vaultUri, credential, configureOptions: null);
+        }
+
+        /// <summary>
+        /// Adds an Azure Key Vault as a secret provider to the secret store.
+        /// </summary>
+        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
+        /// <param name="vaultUri">
+        ///     <para>A URI to the vault on which the client operates. Appears as "DNS Name" in the Azure portal.</para>
+        ///     <para>If you have a secret URI, use <see cref="KeyVaultSecretIdentifier" /> to parse the <see cref="KeyVaultSecretIdentifier.VaultUri" /> and other information.</para>
+        ///     <para>You should validate that this URI references a valid Key Vault resource. See <see href="https://aka.ms/azsdk/blog/vault-uri" /> for details.</para>
+        /// </param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <param name="credential">A <see cref="TokenCredential" /> used to authenticate requests to the vault.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="credential"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown when the <paramref name="vaultUri"/> is blank.</exception>
+        public static SecretStoreBuilder AddAzureKeyVault(
+            this SecretStoreBuilder builder,
+            string vaultUri,
+            TokenCredential credential,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            ArgumentException.ThrowIfNullOrWhiteSpace(vaultUri);
+            ArgumentNullException.ThrowIfNull(credential);
+
+            return AddAzureKeyVault(builder, _ => new SecretClient(new Uri(vaultUri), credential), configureOptions);
+        }
+
+
+        /// <summary>
+        /// Adds Azure Key Vault as a provider to the secret store.
+        /// </summary>
+        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
+        /// <param name="implementationFactory">The function to create the client to interact with Azure Key Vault.</param>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown when the <paramref name="builder"/> or <paramref name="implementationFactory"/> is <c>null</c>.
+        /// </exception>
+        public static SecretStoreBuilder AddAzureKeyVault(this SecretStoreBuilder builder, Func<IServiceProvider, SecretClient> implementationFactory)
+        {
+            return AddAzureKeyVault(builder, implementationFactory, configureOptions: null);
+        }
+
+        /// <summary>
+        /// Adds Azure Key Vault as a provider to the secret store.
+        /// </summary>
+        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
+        /// <param name="implementationFactory">The function to create the client to interact with Azure Key Vault.</param>
+        /// <param name="configureOptions">The optional function to manipulate the registration of the secret provider.</param>
+        /// <exception cref="ArgumentNullException">
+        ///     Thrown when the <paramref name="builder"/> or <paramref name="implementationFactory"/> is <c>null</c>.
+        /// </exception>
+        public static SecretStoreBuilder AddAzureKeyVault(
+            this SecretStoreBuilder builder,
+            Func<IServiceProvider, SecretClient> implementationFactory,
+            Action<SecretProviderRegistrationOptions> configureOptions)
+        {
+            ArgumentNullException.ThrowIfNull(builder);
+            ArgumentNullException.ThrowIfNull(implementationFactory);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            AddCriticalExceptions(builder);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            return builder.AddProvider((serviceProvider, _) =>
+            {
+                SecretClient client = implementationFactory(serviceProvider);
+                var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
+
+                return new KeyVaultSecretProvider(client, logger);
+
+            }, configureOptions);
+        }
+
+        [Obsolete("Will be removed in v3.0")]
+        private static void AddCriticalExceptions(SecretStoreBuilder builder)
+        {
+            // Thrown during failure with Key Vault authorization.
+            builder.AddCriticalException<RequestFailedException>(exception =>
+            {
+                return exception.Status == 403 || exception.Status == 401 || exception.Status == 400;
+            });
+
+            builder.AddCriticalException<CredentialUnavailableException>();
+            builder.AddCriticalException<AuthenticationFailedException>();
+        }
+    }
+
+    /// <summary>
+    /// Extensions on the <see cref="SecretStoreBuilder"/> to provide easy addition the Azure Key Vault secrets in the secret store.
+    /// </summary>
+    public static class DeprecatedSecretStoreBuilderExtensions
+    {
+        /// <summary>
         /// Adds Azure Key Vault as a secret source which uses certificate authentication.
         /// </summary>
         /// <param name="builder">The builder to create the secret store.</param>
@@ -645,52 +752,6 @@ namespace Microsoft.Extensions.Hosting
                 var cachedSecretProvider = new KeyVaultCachedSecretProvider(keyVaultSecretProvider, cacheConfiguration);
                 return cachedSecretProvider;
             }, configureProviderOptions);
-        }
-
-        /// <summary>
-        /// Adds an Azure Key Vault as a secret provider to the secret store.
-        /// </summary>
-        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
-        /// <param name="vaultUri">
-        ///     <para>A URI to the vault on which the client operates. Appears as "DNS Name" in the Azure portal.</para>
-        ///     <para>If you have a secret URI, use <see cref="KeyVaultSecretIdentifier" /> to parse the <see cref="KeyVaultSecretIdentifier.VaultUri" /> and other information.</para>
-        ///     <para>You should validate that this URI references a valid Key Vault resource. See <see href="https://aka.ms/azsdk/blog/vault-uri" /> for details.</para>
-        /// </param>
-        /// <param name="credential">A <see cref="T:Azure.Core.TokenCredential" /> used to authenticate requests to the vault.</param>
-        /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> or <paramref name="credential"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown when the <paramref name="vaultUri"/> is blank.</exception>
-        public static SecretStoreBuilder AddAzureKeyVault(this SecretStoreBuilder builder, string vaultUri, TokenCredential credential)
-        {
-            ArgumentNullException.ThrowIfNull(builder);
-            ArgumentException.ThrowIfNullOrWhiteSpace(vaultUri);
-            ArgumentNullException.ThrowIfNull(credential);
-
-            return AddAzureKeyVault(builder, _ => new SecretClient(new Uri(vaultUri), credential));
-        }
-
-        /// <summary>
-        /// Adds Azure Key Vault as a provider to the secret store.
-        /// </summary>
-        /// <param name="builder">The secret store builder to add the Azure Key Vault secrets to.</param>
-        /// <param name="implementationFactory">The function to create the client to interact with Azure Key Vault.</param>
-        /// <exception cref="ArgumentNullException">
-        ///     Thrown when the <paramref name="builder"/> or <paramref name="implementationFactory"/> is <c>null</c>.
-        /// </exception>
-        public static SecretStoreBuilder AddAzureKeyVault(
-            this SecretStoreBuilder builder,
-            Func<IServiceProvider, SecretClient> implementationFactory)
-        {
-            ArgumentNullException.ThrowIfNull(builder);
-            ArgumentNullException.ThrowIfNull(implementationFactory);
-
-            return builder.AddProvider((serviceProvider, _) =>
-            {
-                SecretClient client = implementationFactory(serviceProvider);
-                var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
-
-                return new KeyVaultSecretProvider(client, logger);
-
-            }, configureOptions: null);
         }
     }
 }

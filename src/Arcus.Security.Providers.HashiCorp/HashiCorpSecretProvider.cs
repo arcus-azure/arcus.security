@@ -21,7 +21,9 @@ namespace Arcus.Security.Providers.HashiCorp
     /// </summary>
     public class HashiCorpSecretProvider :
 #pragma warning disable CS0612
+#pragma warning disable CS0618 // Type or member is obsolete
         Core.ISecretProvider,
+#pragma warning restore CS0618 // Type or member is obsolete
 #pragma warning restore CS0612
         ISecretProvider
     {
