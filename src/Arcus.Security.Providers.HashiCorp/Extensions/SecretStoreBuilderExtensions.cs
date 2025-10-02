@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -34,9 +33,7 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretPath"/> is blank.</exception>
         public static SecretStoreBuilder AddHashiCorpVault(this SecretStoreBuilder builder, VaultClientSettings settings, string secretPath)
         {
-#pragma warning disable CS0618 // Type or member is obsolete
-            return builder.AddHashiCorpVault(settings, secretPath, configureOptions: null, name: null, mutateSecretName: null);
-#pragma warning restore CS0618 // Type or member is obsolete
+            return AddHashiCorpVault(builder, settings, secretPath, configureOptions: null);
         }
 
         /// <summary>
@@ -59,12 +56,27 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             ArgumentNullException.ThrowIfNull(settings);
             ArgumentException.ThrowIfNullOrWhiteSpace(secretPath);
 
+#pragma warning disable CS0618 // Type or member is obsolete
+            AddHashiCorpCriticalExceptions(builder);
+#pragma warning restore CS0618 // Type or member is obsolete
+
             return builder.AddProvider((serviceProvider, _, options) =>
             {
                 var logger = serviceProvider.GetService<ILogger<HashiCorpSecretProvider>>();
                 return new HashiCorpSecretProvider(settings, secretPath, options, logger);
 
             }, configureOptions);
+        }
+
+        [Obsolete("Will be removed in v3.0")]
+        private static void AddHashiCorpCriticalExceptions(SecretStoreBuilder builder)
+        {
+            // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
+            builder.AddCriticalException<VaultApiException>(exception =>
+            {
+                return exception.HttpStatusCode == HttpStatusCode.BadRequest
+                       || exception.HttpStatusCode == HttpStatusCode.Forbidden;
+            });
         }
     }
 
@@ -199,10 +211,21 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             IAuthMethodInfo authenticationMethod = new UserPassAuthMethodInfo(options.UserPassMountPoint, username, password);
             var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
 
-            return AddHashiCorpVault(builder, settings, secretPath, options, configureSecretProviderOptions: secretProviderOptions =>
+            return builder.AddHashiCorpVault(settings, secretPath, opt =>
             {
-                secretProviderOptions.Name = name;
-                secretProviderOptions.MutateSecretName = mutateSecretName;
+                opt.KeyValueMountPoint = options.KeyValueMountPoint;
+                opt.KeyValueVersion = options.KeyValueVersion;
+                opt.TrackDependency = options.TrackDependency;
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    opt.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    opt.MapSecretName(mutateSecretName);
+                }
             });
         }
 
@@ -303,10 +326,21 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             IAuthMethodInfo authenticationMethod = new KubernetesAuthMethodInfo(options.KubernetesMountPoint, roleName, jsonWebToken);
             var settings = new VaultClientSettings(vaultServerUriWithPort, authenticationMethod);
 
-            return AddHashiCorpVault(builder, settings, secretPath, options, configureSecretProviderOptions: secretProviderOptions =>
+            return builder.AddHashiCorpVault(settings, secretPath, opt =>
             {
-                secretProviderOptions.Name = name;
-                secretProviderOptions.MutateSecretName = mutateSecretName;
+                opt.KeyValueVersion = options.KeyValueVersion;
+                opt.KeyValueMountPoint = options.KubernetesMountPoint;
+                opt.TrackDependency = options.TrackDependency;
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    opt.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    opt.MapSecretName(mutateSecretName);
+                }
             });
         }
 
@@ -340,13 +374,19 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             string name,
             Func<string, string> mutateSecretName)
         {
-            var options = new HashiCorpVaultOptions();
-            configureOptions?.Invoke(options);
-
-            return AddHashiCorpVault(builder, settings, secretPath, options, configureSecretProviderOptions: secretProviderOptions =>
+            return builder.AddHashiCorpVault(settings, secretPath, options =>
             {
-                secretProviderOptions.Name = name;
-                secretProviderOptions.MutateSecretName = mutateSecretName;
+                configureOptions?.Invoke(options);
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    options.ProviderName = name;
+                }
+
+                if (mutateSecretName != null)
+                {
+                    options.MapSecretName(mutateSecretName);
+                }
             });
         }
 
@@ -407,53 +447,16 @@ namespace Arcus.Security.Providers.HashiCorp.Extensions
             });
         }
 
-        [Obsolete("Will be reimplemented in v3.0")]
-        private static SecretStoreBuilder AddHashiCorpVault(
-            SecretStoreBuilder builder,
-            VaultClientSettings settings,
-            string secretPath,
-            HashiCorpVaultOptions options,
-            Action<SecretProviderOptions> configureSecretProviderOptions)
-        {
-            if (settings is null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
-
-            if (settings.AuthMethodInfo is null)
-            {
-                throw new ArgumentNullException(nameof(settings), "Requires a authentication method to connect to the HashiCorp Vault");
-            }
-
-            if (string.IsNullOrWhiteSpace(settings.VaultServerUriWithPort))
-            {
-                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
-            }
-
-            if (!Uri.IsWellFormedUriString(settings.VaultServerUriWithPort, UriKind.RelativeOrAbsolute))
-            {
-                throw new ArgumentException("Requires a HashiCorp Vault server URI with HTTP port", nameof(settings));
-            }
-
-            AddHashiCorpCriticalExceptions(builder);
-
-            return builder.AddProvider(serviceProvider =>
-            {
-                var logger = serviceProvider.GetService<ILogger<HashiCorpSecretProvider>>();
-                var provider = new HashiCorpSecretProvider(settings, secretPath, options, logger);
-
-                return provider;
-            }, configureSecretProviderOptions);
-        }
-
         private static void AddHashiCorpCriticalExceptions(SecretStoreBuilder builder)
         {
             // Thrown when the HashiCorp Vault's authentication and/or authorization fails.
+#pragma warning disable CS0618 // Type or member is obsolete
             builder.AddCriticalException<VaultApiException>(exception =>
             {
                 return exception.HttpStatusCode == HttpStatusCode.BadRequest
                        || exception.HttpStatusCode == HttpStatusCode.Forbidden;
             });
+#pragma warning restore CS0618 // Type or member is obsolete
         }
     }
 }

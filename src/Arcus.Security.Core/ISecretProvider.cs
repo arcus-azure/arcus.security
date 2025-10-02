@@ -10,6 +10,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// <see cref="ISecretProvider"/> allows developers to build specific Secret key providers.
     /// </summary>
+    [Obsolete("Will be removed in v3.0 in favor a new interface 'Arcus.Security.ISecretProvider'")]
     public interface ISecretProvider
     {
         /// <summary>
