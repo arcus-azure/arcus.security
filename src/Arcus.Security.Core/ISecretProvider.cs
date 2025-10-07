@@ -306,7 +306,9 @@ namespace Arcus.Security
         /// Converts the <see cref="SecretResult"/> to its deprecated previous implementation.
         /// </summary>
         [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+#pragma warning disable CS0618
         public static implicit operator Secret(SecretResult result)
+#pragma warning restore
         {
             if (result.IsSuccess)
             {
