@@ -1,0 +1,131 @@
+---
+title: "Secret store"
+slug: /features/secret-store
+sidebar_position: 1
+---
+
+import Card from '@site/src/Components/Card';
+import CardHeader from '@site/src/Components/Card/CardHeader';
+import CardBody from '@site/src/Components/Card/CardBody';
+
+# Introducing secret store
+As alternative to the usage of placing secrets into Microsoft's [`IConfiguration`](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration) instance in your application, Arcus Security provides a alternative concept called '**secret store**'.
+
+We provide an approach similar to how `IConfiguration` is built, but with a focus on secrets. You can register one or more '**secret providers**' where you want your application secrets to be retrieved from. 
+
+<div className="row">
+<div className="col col--6">
+  <Card shadow='tl'>
+      <CardHeader>
+        <h3>⚡ Caching</h3>
+      </CardHeader>
+      <CardBody>
+       We provide caching so the secret providers will not be called upon every secret retrieval. This helps you avoiding hitting service limitations.
+      </CardBody>
+  </Card>
+</div>
+
+<div className="col col--6">
+  <Card shadow='tl'>
+      <CardHeader>
+        <h3>🔌 Plug & play</h3>
+      </CardHeader>
+      <CardBody>
+        We support using multiple and combinations of secret providers so with a single secret retrieval can query multiple secret providers (also multiple Azure Key Vaults).
+      </CardBody>
+  </Card>
+</div>
+</div>
+<br/>
+<div className="row">
+  <div className="col col--6">
+    <Card shadow='tl'>
+      <CardHeader>
+        <h3>🛡️ Security by design</h3>
+      </CardHeader>
+      <CardBody>
+        Vulnerabilities gets introduced when secrets are seen as data (logs or when expired secrets doesn't get transient handling upon retrieval).
+        The secret store provides a single place to retrieve secrets instead of scattering the integration across the application. 
+    </CardBody>
+  </Card>
+  </div>
+  <div className="col col--6">
+    <Card shadow='tl'>
+      <CardHeader>
+        <h3>🧩 Extensibility</h3>
+      </CardHeader>
+      <CardBody>
+        Arcus secret store is highly extensible and can be extended with [your own custom secret providers](./create-new-secret-provider.md).
+    </CardBody>
+  </Card>
+  </div>
+</div>
+
+## Register the secret store
+The secret store is configured during the initial application build-up with one ore more secret providers:
+
+```csharp
+using Arcus.Security;
+
+var builder = Host.CreateDefaultBuilder(args);
+
+// highlight-start
+// #1 Via the host builder.
+builder.ConfigureSecretStore((config, providers) =>
+{
+    providers.AddEnvironmentVariables(...);
+});
+// highlight-end
+
+builder.ConfigureServices(services =>
+{
+    // highlight-start
+    // #2 Via the services
+    services.AddSecretStore(providers =>
+    {
+        providers.AddAzureKeyVault(...);
+    });
+    // highlight-end
+});
+```
+
+The secret store is directly available via the `ISecretStore` interface which provides multiple secret retrieval options. Upon retrieval, the previously registered secret providers are one-by-one (in the order as they are registered) interacted with until the secret is found, or the `SecretResult` represents a failure.
+
+```csharp
+public class MySqlService
+{
+    private readonly ISecretStore _store;
+
+    public MySqlService(ISecretStore store)
+    {
+        _store = store;
+    }
+
+    public async Task ConnectAsync()
+    {
+        // #1 synchronously
+        // highlight-start
+        SecretResult result = _store.GetSecret("Contoso_Sql_ConnectionString");
+        string secretValue = result.Value;
+        // highlight-end
+
+        // #2 asynchronously
+        // highlight-start
+        SecretResult result = await _store.GetSecretAsync("Contoso_Sql_ConnectionString");
+        if (!result.IsSuccess)
+        {
+            SecretFailure failure = result.Failure; // The type of failure that occurred.
+            Exception cause = result.FailureCause; // When the failure was caused by an exception.
+        }
+        // highlight-end
+    }
+}
+```
+
+
+
+## Built-in secret providers
+Several built in secret providers available in the package.
+
+* [Configuration](./provider/configuration.md)
+* [Environment variables](./provider/environment-variables.md)
