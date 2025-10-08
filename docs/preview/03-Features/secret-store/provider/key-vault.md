@@ -19,10 +19,10 @@ After installing the package, the additional extensions becomes available when b
 var builder = Host.CreateDefaultBuilder(args);
 builder.ConfigureSecretStore((_, store) =>
 {
-    // #1. Using token credentials.
+    // #1 Using token credentials.
     store.AddAzureKeyVault("https://myvault.vault.azure.net", new ManagedIdentityCredential());
 
-    // #2. Using already registered secret client.
+    // #2 Using already registered secret client.
     store.AddAzureKeyVault((IServiceProvider provider) =>
     {
         return provider.GetRequiredService<SecretClient>();
