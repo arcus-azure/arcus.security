@@ -46,6 +46,6 @@ builder.ConfigureServices(services =>
 ## Next steps in discovering the secret store
 There is a lot more to discover on the **secret store** and how it can benefit your application development process.
 
-* See the [dedicated secret store feature documentation](./03-Features/secret-store/index.md) page to see the full functionality of the **secret store**.
+* See the [dedicated secret store feature documentation](./03-Features/secret-store/index.mdx) page to see the full functionality of the **secret store**.
 * See the sidebar to learn more about specific **secret providers** like [Azure Key Vault](./03-Features/secret-store/provider/key-vault.md) and [Docker Secrets](./03-Features/secret-store/provider/docker-secrets.md).
 * See the [custom secret provider feature documentation](./03-Features/secret-store/custom-secret-provider.md) page to create your own **secret provider**.
