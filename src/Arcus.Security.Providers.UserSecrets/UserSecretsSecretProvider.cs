@@ -87,7 +87,7 @@ namespace Arcus.Security.Providers.UserSecrets
 
             return _jsonProvider.TryGet(secretName, out string secretValue)
                 ? SecretResult.Success(secretName, secretValue)
-                : SecretResult.NotFound($"cannot found '{secretName}' in User Secrets");
+                : SecretResult.NotFound(secretName, $"cannot found '{secretName}' in User Secrets");
         }
 
         /// <summary>

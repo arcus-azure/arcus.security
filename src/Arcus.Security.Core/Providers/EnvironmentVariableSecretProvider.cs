@@ -95,7 +95,7 @@ namespace Arcus.Security.Core.Providers
 
             string secretValue = Environment.GetEnvironmentVariable(_prefix + secretName, _target);
             return secretValue is null
-                ? SecretResult.NotFound($"cannot find secret '{_prefix}{secretName} in environment variables with target '{_target}'")
+                ? SecretResult.NotFound(secretName, $"cannot find secret '{_prefix}{secretName} in environment variables with target '{_target}'")
                 : SecretResult.Success(secretName, secretValue);
         }
 

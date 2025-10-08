@@ -155,7 +155,7 @@ namespace Arcus.Security
             if (_registrations.Count is 0)
             {
                 _logger.LogSecretMissingFromStore(secretName);
-                return SecretResult.NotFound(NoProvidersRegistered);
+                return SecretResult.NotFound(secretName, NoProvidersRegistered);
             }
 
             _logger.LogSecretLookup(secretName);
@@ -194,7 +194,7 @@ namespace Arcus.Security
                 }
                 catch (Exception exception)
                 {
-                    failures.Add(SecretResult.Interrupted(ExceptionDuringLookup, exception));
+                    failures.Add(SecretResult.Interrupted(secretName, ExceptionDuringLookup, exception));
                     _logger.LogSecretMissingFromProviderException(exception, secretNameDescription, providerName);
                 }
             }
@@ -211,7 +211,7 @@ namespace Arcus.Security
             if (failureCauses.Length <= 0)
             {
                 _logger.LogSecretMissingFromStore(secretName, failures);
-                return SecretResult.NotFound(failureMessage);
+                return SecretResult.NotFound(secretName, failureMessage);
             }
 
             var failureCause = failureCauses.Length == 1
@@ -221,8 +221,8 @@ namespace Arcus.Security
             _logger.LogSecretMissingFromStore(failureCause, secretName, failures);
 
             return failures.Any(f => f.Failure is SecretFailure.Interrupted)
-                ? SecretResult.Interrupted(failureMessage, failureCause)
-                : SecretResult.NotFound(failureMessage, failureCause);
+                ? SecretResult.Interrupted(secretName, failureMessage, failureCause)
+                : SecretResult.NotFound(secretName, failureMessage, failureCause);
         }
 
         #region Deprecated code
