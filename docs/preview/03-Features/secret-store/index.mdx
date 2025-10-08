@@ -7,6 +7,8 @@ sidebar_position: 1
 import Card from '@site/src/Components/Card';
 import CardHeader from '@site/src/Components/Card/CardHeader';
 import CardBody from '@site/src/Components/Card/CardBody';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Introducing secret store
 As alternative to the usage of placing secrets into Microsoft's [`IConfiguration`](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration) instance in your application, Arcus Security provides a alternative concept called '**secret store**'.
@@ -55,7 +57,7 @@ We provide an approach similar to how `IConfiguration` is built, but with a focu
         <h3>🧩 Extensibility</h3>
       </CardHeader>
       <CardBody>
-        Arcus secret store is highly extensible and can be extended with [your own custom secret providers](./create-new-secret-provider.md).
+        Arcus secret store is highly extensible and can be extended with [your own custom secret providers](./custom-secret-provider.md).
     </CardBody>
   </Card>
   </div>
@@ -71,9 +73,9 @@ var builder = Host.CreateDefaultBuilder(args);
 
 // highlight-start
 // #1 Via the host builder.
-builder.ConfigureSecretStore((config, providers) =>
+builder.ConfigureSecretStore((config, store) =>
 {
-    providers.AddEnvironmentVariables(...);
+    store.AddEnvironmentVariables(...);
 });
 // highlight-end
 
@@ -81,9 +83,9 @@ builder.ConfigureServices(services =>
 {
     // highlight-start
     // #2 Via the services
-    services.AddSecretStore(providers =>
+    services.AddSecretStore(store =>
     {
-        providers.AddAzureKeyVault(...);
+        store.AddAzureKeyVault(...);
     });
     // highlight-end
 });
@@ -92,6 +94,8 @@ builder.ConfigureServices(services =>
 The secret store is directly available via the `ISecretStore` interface which provides multiple secret retrieval options. Upon retrieval, the previously registered secret providers are one-by-one (in the order as they are registered) interacted with until the secret is found, or the `SecretResult` represents a failure.
 
 ```csharp
+using Arcus.Security;
+
 public class MySqlService
 {
     private readonly ISecretStore _store;
@@ -122,10 +126,135 @@ public class MySqlService
 }
 ```
 
+## Customization the secret store
+<details>
+<summary><h3 style={{ margin:0 }}>⚡ Secret caching</h3></summary>
 
+To limit possible throttling during external secrets retrieval, the secret store can be customized to cache secrets for a period of time.
+
+```csharp
+builder.ConfigureServices(services =>
+{
+    services.AddSecretStore(store =>
+    {
+        store.UseCaching(TimeSpan.FromMinutes(1));
+    })
+});
+```
+
+All secrets are cached by default, but this can be ignored on a by-secret basis.
+```csharp
+using Arcus.Security;
+
+ISecretStore store = ...
+SecretResult result = store.GetSecret("Contoso_Sql_ConnectionString", options => 
+{
+    options.UseCache = false;
+});
+```
+
+Invalidating cached secrets when secrets are externally rotated also happens on the secret store itself.
+```csharp
+using Arcus.Security;
+
+ISecretStore store = ...
+await store.Cache.InvalidateSecretAsync("Contoso_Sql_ConnectionString");
+```
+</details>
+
+<details>
+<summary><h3 style={{ margin:0 }}>🔄 Secret mapping</h3></summary>
+
+In some cases, you want the application secret name to be something different than the actual name that gets stored externally. Environment variables, for example might be always upper case, but this knowledge might not be something that you want to expose directly to your application -- especially if you want to override certain secrets during development.
+
+All available secret secret providers can be given a custom secret name mapping upon registration. This mapping happens just before actually retrieving the secret (and independently from secret caching).
+
+```csharp
+builder.ConfigureServices(services =>
+{
+    services.AddSecretStore(store =>
+    {
+        store.AddEnvironmentVariables(..., options =>
+        {
+            options.MapSecretName((string name) => name.ToUpper());
+        });
+    })
+});
+```
+</details>
+
+<details>
+<summary><h3 style={{ margin:0 }}>🏷️ Naming secret providers</h3></summary>
+
+All available secret providers can be given a custom name upon registration to identify themselves.
+
+```csharp
+builder.ConfigureServices(services =>
+{
+    services.AddAzureKeyVault(..., options =>
+    {
+        options.ProviderName = "AdminSecrets";
+    });
+});
+```
+
+This name can later be used to retrieve back a secret provider in the secret store. This can be useful when you want to run a specific action that is only available on a single secret provider (ex. secret versions).
+
+```csharp
+using Arcus.Security;
+
+ISecretStore store = ...
+var provider = store.GetProvider<KeyVaultSecretProvider>("AdminSecrets");
+```
+
+:::tip[grouping secret providers]
+Multiple secret providers can be registered with the same name. Upon retrieval, the matching secret providers are returned as a 'subset'.
+```csharp
+using Arcus.Security;
+
+ISecretProvider provider = store.GetProvider("AdminSecrets");
+```
+:::
+</details>
 
 ## Built-in secret providers
-Several built in secret providers available in the package.
+The following secret providers are always available in your application, no matter which secret provider NuGet package you install.
 
-* [Configuration](./provider/configuration.md)
-* [Environment variables](./provider/environment-variables.md)
+<Tabs groupId="built-in">
+<TabItem value="app-config" label="App configuration">
+Include the application configuration ([`IConfiguration`](https://learn.microsoft.com/en-us/dotnet/core/extensions/configuration)) as a secret provider in the secret store. This is useful for development, but **SHOULD NOT** be used in production.
+
+```csharp
+builder.ConfigureSecretStore((IConfiguration config, store) =>
+{
+    #if DEBUG
+    store.AddConfiguration(config);
+    #endif
+});
+```
+
+</TabItem>
+<TabItem value="env-vars" label="Environment variables">
+Include environment variables as a secret provider in the secret store. Some additional options (besides the default ones) are available to pinpoint which variables should be included as application secrets.
+
+```csharp
+builder.ConfigureSecretStore((_, store) =>
+{
+     // Uses the environment variables associated with the current process.
+    store.AddEnvironmentVariables();
+
+    store.AddEnvironmentVariables(options =>
+    {
+        // Uses only the environment variables starting with a prefix.
+        // Upon secret retrieval, the prefix should not be included in the secret name.
+        // (default: none)
+        options.Prefix = "ARCUS_";
+
+        // Uses only the environment variables from a given target.
+        // (default: Process)
+        options.Target = EnvironmentVariableTarget.Machine;
+    });
+});
+```
+</TabItem>
+</Tabs>
