@@ -380,7 +380,7 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             var secretProvider = host.Services.GetRequiredService<ISecretProvider>();
 
             Assert.Throws<SecretNotFoundException>(() => secretProvider.GetRawSecret(secretKey));
-            Assert.Throws<SecretNotFoundException>(() => secretProvider.GetSecret(secretKey));
+            Assert.Throws<SecretNotFoundException>(() => (Secret) secretProvider.GetSecret(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(() => secretProvider.GetRawSecretAsync(secretKey));
             await Assert.ThrowsAsync<SecretNotFoundException>(async () => { Secret _ = await secretProvider.GetSecretAsync(secretKey); });
         }
