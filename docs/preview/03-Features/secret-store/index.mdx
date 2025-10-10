@@ -91,7 +91,7 @@ builder.ConfigureServices(services =>
 });
 ```
 
-The secret store is directly available via the `ISecretStore` interface which provides multiple secret retrieval options. Upon retrieval, the previously registered secret providers are one-by-one (in the order as they are registered) interacted with until the secret is found, or the `SecretResult` represents a failure.
+The secret store is directly available via the `ISecretStore` interface which provides multiple secret retrieval options. Upon retrieval, the previously registered secret providers are one-by-one (in the order as they are registered) queried. A failure is returned when no secret is found.
 
 ```csharp
 using Arcus.Security;
