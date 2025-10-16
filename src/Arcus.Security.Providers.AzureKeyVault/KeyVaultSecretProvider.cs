@@ -32,6 +32,12 @@ namespace Arcus.Security.Providers.AzureKeyVault
         }
     }
 
+    [Obsolete("Will be removed in v3, currently only here to have a non-null value")]
+    internal class EmptySecretStoreContext : ISecretStoreContext
+    {
+        public SecretStoreCaching Cache { get; } = new();
+    }
+
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
@@ -51,7 +57,6 @@ namespace Arcus.Security.Providers.AzureKeyVault
         internal KeyVaultSecretProvider(SecretClient secretClient, ISecretStoreContext context, KeyVaultSecretProviderOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
             ArgumentNullException.ThrowIfNull(secretClient);
-            ArgumentNullException.ThrowIfNull(context);
 
             _secretClient = secretClient;
             _context = context;
@@ -70,7 +75,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         [Obsolete("Will be removed in v3.0 in favor of using the secret client directly")]
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration)
-            : this(new SecretClient(vaultConfiguration?.VaultUri, tokenCredential), context: null, options: null, NullLogger<KeyVaultSecretProvider>.Instance)
+            : this(new SecretClient(vaultConfiguration?.VaultUri, tokenCredential), new EmptySecretStoreContext(), options: null, NullLogger<KeyVaultSecretProvider>.Instance)
         {
         }
 
@@ -85,7 +90,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         [Obsolete("Will be removed in v3.0 in favor of using the secret client directly")]
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
-            : this(new SecretClient(vaultConfiguration.VaultUri, tokenCredential), context: null, options: null, logger)
+            : this(new SecretClient(vaultConfiguration.VaultUri, tokenCredential), new EmptySecretStoreContext(), options: null, logger)
         {
             _deprecatedOptions = options;
         }
