@@ -184,8 +184,8 @@ namespace Arcus.Security
                     {
                         _logger.LogSecretFoundInProvider(secretNameDescription, providerName);
                         _logger.LogSecretFoundInStore(secretNameDescription, providerName, failures);
+                        Cache.UpdateSecretInCache(secretName, result, options);
 
-                        Cache.UpdateSecretInCache(secretName, result, _logger, options);
                         return result;
                     }
 
@@ -640,5 +640,8 @@ namespace Arcus.Security
 
         [LoggerMessage(LogLevel.Trace, "[Secret store] refresh secret '{SecretName}' in cache (sliding expiration={CacheDuration:t})")]
         internal static partial void LogSecretRefreshInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
+
+        [LoggerMessage(LogLevel.Trace, "[Secret store] invalidate secret '{SecretName}' in cache")]
+        internal static partial void LogSecretInvalidateInCache(this ILogger logger, string secretName);
     }
 }
