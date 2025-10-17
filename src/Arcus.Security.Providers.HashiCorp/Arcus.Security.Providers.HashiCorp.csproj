@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VaultSharp" Version="1.7.0.3" />
+    <PackageReference Include="VaultSharp" Version="[1.*,2.0.0)" />
   </ItemGroup>
 
   <ItemGroup>
