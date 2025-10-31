@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -160,7 +160,7 @@ namespace Arcus.Security
     /// <summary>
     /// Represents the result of a secret retrieval operation, which can either be successful or contain failure information.
     /// </summary>
-    [DebuggerDisplay("{IsSuccess ? \"[Success]\" + {Name} : \"[Failure] \" + {Name} + \" \" + {FailureMessage} + \" \" + {FailureCause}")]
+    [DebuggerDisplay("{IsSuccess ? \"[Success] \" + Name : \"[Failure] \" + Name + \" \" + FailureMessage + \" \" + FailureCause}")]
     public class SecretResult
     {
         private readonly string _value, _version, _failureMessage;
@@ -365,7 +365,7 @@ namespace Arcus.Security
         {
             if (IsSuccess)
             {
-                var versionPart = !string.IsNullOrWhiteSpace(_version) ? $" (v{_version})" : string.Empty;
+                var versionPart = !string.IsNullOrWhiteSpace(_version) ? $" ({_version})" : string.Empty;
                 var expirationPart = _expirationDate.HasValue ? $", expires {_expirationDate:s}" : string.Empty;
                 return $"[Success] {Name}{versionPart}{expirationPart}";
             }
@@ -390,7 +390,7 @@ namespace Arcus.Security
         private readonly string _failureMessage;
         private readonly Exception _failureCause;
 
-        private SecretsResult(SecretResult[] secrets)
+        private SecretsResult(IReadOnlyCollection<SecretResult> secrets)
         {
             _secrets = secrets;
             IsSuccess = secrets.All(secret => secret.IsSuccess);
