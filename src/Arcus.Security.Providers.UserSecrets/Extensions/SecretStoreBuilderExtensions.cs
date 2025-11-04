@@ -33,7 +33,7 @@ namespace Microsoft.Extensions.Hosting
             where T : class
         {
             Assembly assembly = typeof(T).GetTypeInfo().Assembly;
-            return AddUserSecrets(builder, assembly);
+            return AddUserSecrets(builder, assembly, configureOptions);
         }
 
         /// <summary>
