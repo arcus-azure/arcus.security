@@ -1,16 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-
-[assembly: InternalsVisibleTo("Arcus.Security.Providers.HashiCorp")]
-[assembly: InternalsVisibleTo("Arcus.Security.Providers.UserSecrets")]
-[assembly: InternalsVisibleTo("Arcus.Security.Providers.DockerSecrets")]
-[assembly: InternalsVisibleTo("Arcus.Security.Providers.CommandLine")]
-[assembly: InternalsVisibleTo("Arcus.Security.Providers.AzureKeyVault")]
+using Arcus.Security.Core;
 
 namespace Arcus.Security.Core
 {
@@ -48,7 +42,7 @@ namespace Arcus.Security
     /// <summary>
     /// Represents a provider that can retrieve secrets based on a given name.
     /// </summary>
-    internal interface ISecretProvider
+    public interface ISecretProvider
     {
         /// <summary>
         /// Gets the secret by its name from the registered provider.
@@ -77,6 +71,74 @@ namespace Arcus.Security
     }
 
     /// <summary>
+    /// Extensions on the <see cref="ISecretProvider"/> to ease the migration to the new secret retrieval operations.
+    /// </summary>
+    public static class DeprecatedSecretProviderExtensions
+    {
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results")]
+        public static async Task<Secret> GetSecretAsync(this ISecretProvider provider, string secretName)
+        {
+            return await provider.GetSecretAsync(secretName);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
+        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results")]
+        public static Secret GetSecret(this ISecretProvider provider, string secretName)
+        {
+            return provider.GetSecret(secretName);
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results")]
+        public static async Task<string> GetRawSecretAsync(this ISecretProvider provider, string secretName)
+        {
+            Secret secret = await GetSecretAsync(provider, secretName);
+            return secret.Value;
+        }
+
+        /// <summary>
+        /// Retrieves the secret value, based on the given name
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="secretName">The name of the secret key</param>
+        /// <returns>Returns the secret key.</returns>
+        /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
+        /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
+        /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results")]
+        public static string GetRawSecret(this ISecretProvider provider, string secretName)
+        {
+            Secret secret = GetSecret(provider, secretName);
+            return secret.Value;
+        }
+    }
+
+    /// <summary>
     /// Represents the possible failures in the <see cref="SecretResult"/> occured during the retrieval of secrets
     /// using the <see cref="ISecretProvider.GetSecret"/> or <see cref="ISecretProvider.GetSecretAsync"/> operations.
     /// </summary>
@@ -98,7 +160,7 @@ namespace Arcus.Security
     /// <summary>
     /// Represents the result of a secret retrieval operation, which can either be successful or contain failure information.
     /// </summary>
-    [DebuggerDisplay("{IsSuccess ? \"[Success]\" + {Name} : \"[Failure] \" + {Name} + \" \" + {FailureMessage} + \" \" + {FailureCause}")]
+    [DebuggerDisplay("{IsSuccess ? \"[Success] \" + Name : \"[Failure] \" + Name + \" \" + FailureMessage + \" \" + FailureCause}")]
     public class SecretResult
     {
         private readonly string _value, _version, _failureMessage;
@@ -276,6 +338,26 @@ namespace Arcus.Security
         }
 
         /// <summary>
+        /// Converts the <see cref="SecretResult"/> to its deprecated previous implementation.
+        /// </summary>
+        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+#pragma warning disable CS0618
+        public static implicit operator Secret(SecretResult result)
+#pragma warning restore
+        {
+            if (result.IsSuccess)
+            {
+                return new Secret(result.Value, result.Version, result._expirationDate);
+            }
+
+            return result.Failure switch
+            {
+                SecretFailure.Interrupted => throw result.FailureCause,
+                _ => throw new SecretNotFoundException(result.ToString()),
+            };
+        }
+
+        /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
         /// <returns>A string that represents the current object.</returns>
@@ -283,7 +365,7 @@ namespace Arcus.Security
         {
             if (IsSuccess)
             {
-                var versionPart = !string.IsNullOrWhiteSpace(_version) ? $" (v{_version})" : string.Empty;
+                var versionPart = !string.IsNullOrWhiteSpace(_version) ? $" ({_version})" : string.Empty;
                 var expirationPart = _expirationDate.HasValue ? $", expires {_expirationDate:s}" : string.Empty;
                 return $"[Success] {Name}{versionPart}{expirationPart}";
             }
@@ -308,7 +390,7 @@ namespace Arcus.Security
         private readonly string _failureMessage;
         private readonly Exception _failureCause;
 
-        private SecretsResult(SecretResult[] secrets)
+        private SecretsResult(IReadOnlyCollection<SecretResult> secrets)
         {
             _secrets = secrets;
             IsSuccess = secrets.All(secret => secret.IsSuccess);

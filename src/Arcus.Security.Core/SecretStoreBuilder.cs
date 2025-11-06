@@ -224,7 +224,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
-        internal SecretStoreBuilder AddProvider<TProvider>(TProvider secretProvider, Action<SecretProviderRegistrationOptions> configureOptions)
+        public SecretStoreBuilder AddProvider<TProvider>(TProvider secretProvider, Action<SecretProviderRegistrationOptions> configureOptions)
             where TProvider : Arcus.Security.ISecretProvider
         {
             ArgumentNullException.ThrowIfNull(secretProvider);
@@ -242,7 +242,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="implementationFactory"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
-        internal SecretStoreBuilder AddProvider<TProvider>(
+        public SecretStoreBuilder AddProvider<TProvider>(
             Func<IServiceProvider, ISecretStoreContext, TProvider> implementationFactory,
             Action<SecretProviderRegistrationOptions> configureOptions)
             where TProvider : Arcus.Security.ISecretProvider
@@ -271,7 +271,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="implementationFactory"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="implementationFactory"/> is <c>null</c>.</exception>
-        internal SecretStoreBuilder AddProvider<TProvider, TOptions>(
+        public SecretStoreBuilder AddProvider<TProvider, TOptions>(
             Func<IServiceProvider, ISecretStoreContext, TOptions, TProvider> implementationFactory,
             Action<TOptions> configureOptions)
             where TProvider : Arcus.Security.ISecretProvider
@@ -371,6 +371,7 @@ namespace Microsoft.Extensions.Hosting
                 return new CompositeSecretProvider(registrations, CriticalExceptionFilters, _context.Cache, auditing, logger);
             });
 
+            Services.TryAddSingleton<Arcus.Security.ISecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ICachedSecretProvider>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<Arcus.Security.ISecretStore>());
             Services.TryAddSingleton<ISecretProvider>(serviceProvider => serviceProvider.GetRequiredService<ICachedSecretProvider>());
             Services.TryAddSingleton<Arcus.Security.Core.ISecretStore>(serviceProvider => (CompositeSecretProvider) serviceProvider.GetRequiredService<ICachedSecretProvider>());
