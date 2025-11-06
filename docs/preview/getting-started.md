@@ -29,14 +29,14 @@ builder.ConfigureServices(services =>
     {
         store.AddAzureKeyVault(...);
     });
-    // highlight-stop
+    // highlight-end
 
     services.AddDbContext<ContosoDbContext>((serviceProvider, options) =>
     {
         // highlight-start
         var store = serviceProvider.GetRequiredService<ISecretStore>();
         var connectionString = store.GetSecret("Contoso_Sql_ConnectionString");
-        // highlight-stop
+        // highlight-end
 
         options.UseAzureSql(connectionString);
     });
