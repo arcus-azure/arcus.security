@@ -53,7 +53,7 @@ namespace Microsoft.Extensions.Hosting
             this SecretStoreBuilder builder,
             string vaultUri,
             TokenCredential credential,
-            Action<SecretProviderRegistrationOptions> configureOptions)
+            Action<KeyVaultSecretProviderOptions> configureOptions)
         {
             ArgumentNullException.ThrowIfNull(builder);
             ArgumentException.ThrowIfNullOrWhiteSpace(vaultUri);
@@ -88,7 +88,7 @@ namespace Microsoft.Extensions.Hosting
         public static SecretStoreBuilder AddAzureKeyVault(
             this SecretStoreBuilder builder,
             Func<IServiceProvider, SecretClient> implementationFactory,
-            Action<SecretProviderRegistrationOptions> configureOptions)
+            Action<KeyVaultSecretProviderOptions> configureOptions)
         {
             ArgumentNullException.ThrowIfNull(builder);
             ArgumentNullException.ThrowIfNull(implementationFactory);
@@ -97,12 +97,12 @@ namespace Microsoft.Extensions.Hosting
             AddCriticalExceptions(builder);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            return builder.AddProvider((serviceProvider, _) =>
+            return builder.AddProvider((serviceProvider, context, options) =>
             {
                 SecretClient client = implementationFactory(serviceProvider);
                 var logger = serviceProvider.GetService<ILogger<KeyVaultSecretProvider>>();
 
-                return new KeyVaultSecretProvider(client, logger);
+                return new KeyVaultSecretProvider(client, context, options, logger);
 
             }, configureOptions);
         }

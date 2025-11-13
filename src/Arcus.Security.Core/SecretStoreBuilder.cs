@@ -294,7 +294,7 @@ namespace Microsoft.Extensions.Hosting
         /// Configures the secret provider to use caching with a sliding expiration <paramref name="duration"/>.
         /// </summary>
         /// <param name="duration">The expiration time when the secret should be invalidated in the cache.</param>
-        internal void UseCaching(TimeSpan duration)
+        public void UseCaching(TimeSpan duration)
         {
             _context.Cache.SetDuration(duration);
         }
@@ -367,6 +367,7 @@ namespace Microsoft.Extensions.Hosting
 
                 var registrations = serviceProvider.GetServices<SecretProviderRegistration>().ToArray();
                 var logger = serviceProvider.GetService<ILoggerFactory>()?.CreateLogger("secret store") ?? NullLogger.Instance;
+                _context.Cache.SetLogger(logger);
 
                 return new CompositeSecretProvider(registrations, CriticalExceptionFilters, _context.Cache, auditing, logger);
             });

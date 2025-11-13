@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Primitives;
 
 namespace Arcus.Security.Core
@@ -125,6 +126,17 @@ namespace Arcus.Security
         public static ISecretProvider GetProvider(this ISecretStore store, string providerName)
         {
             return store.GetProvider<ISecretProvider>(providerName);
+        }
+
+        /// <summary>
+        /// Gets the registered named <see cref="ISecretProvider"/> from the secret store.
+        /// </summary>
+        /// <typeparam name="TProvider">The concrete type of the secret provider implementation -- type name is used as the provider name.</typeparam>
+        /// <param name="store">The registered secret store to retrieve a single/subset secret provider from.</param>
+        /// <exception cref="KeyNotFoundException">Thrown when no secret provider(s) was found with the provided <typeparamref name="TProvider"/>.</exception>
+        public static TProvider GetProvider<TProvider>(this ISecretStore store) where TProvider : ISecretProvider
+        {
+            return store.GetProvider<TProvider>(typeof(TProvider).Name);
         }
 
         /// <summary>
@@ -253,11 +265,17 @@ namespace Arcus.Security
     {
         private IMemoryCache _cache = new NullMemoryCache();
         private MemoryCacheEntryOptions _cacheEntry = new();
+        private ILogger _logger = NullLogger.Instance;
 
         internal void SetDuration(TimeSpan duration)
         {
             _cache = new MemoryCache(new MemoryCacheOptions());
             _cacheEntry = new MemoryCacheEntryOptions().SetSlidingExpiration(duration);
+        }
+
+        internal void SetLogger(ILogger logger)
+        {
+            _logger = logger ?? NullLogger.Instance;
         }
 
         internal bool TryGetCachedSecret(string secretName, SecretOptions secretOptions, ILogger logger, out SecretResult secret)
@@ -272,13 +290,13 @@ namespace Arcus.Security
             return false;
         }
 
-        internal void UpdateSecretInCache(string secretName, SecretResult result, ILogger logger, SecretOptions options = null)
+        internal void UpdateSecretInCache(string secretName, SecretResult result, SecretOptions options = null)
         {
             if (result.IsSuccess && (options is null || options.UseCache))
             {
                 if (_cache is not NullMemoryCache)
                 {
-                    logger.LogSecretRefreshInCache(secretName, _cacheEntry.SlidingExpiration);
+                    _logger.LogSecretRefreshInCache(secretName, _cacheEntry.SlidingExpiration);
                 }
 
                 _cache.Set(secretName, result, _cacheEntry);
@@ -291,7 +309,9 @@ namespace Arcus.Security
         /// </summary>
         public Task InvalidateSecretAsync(string secretName)
         {
+            _logger.LogSecretInvalidateInCache(secretName);
             _cache.Remove(secretName);
+
             return Task.CompletedTask;
         }
 
