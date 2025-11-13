@@ -5,7 +5,7 @@ sidebar_position: 3
 ---
 
 # Create a custom secret provider
-The secret store allows custom secret provider implementations if you want to retrieve secrets from an external source that is not yet available or if you want to fully control how secrets are retrieved.
+The secret store allows you to create custom secret provider implementations for external source for which no implementation exists yet, or if you want to fully control how secrets are retrieved.
 
 This page describes how you develop, configure and finally register your custom secret provider implementation into the secret store. In this example, a new secret provider is developed for the Windows Registry.
 
