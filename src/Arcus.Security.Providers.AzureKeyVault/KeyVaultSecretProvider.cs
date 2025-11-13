@@ -10,6 +10,7 @@ using Arcus.Security.Providers.AzureKeyVault.Configuration;
 using Azure;
 using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Polly;
@@ -18,6 +19,25 @@ using SecretProperties = Azure.Security.KeyVault.Secrets.SecretProperties;
 
 namespace Arcus.Security.Providers.AzureKeyVault
 {
+    /// <summary>
+    /// Represents the available options in the <see cref="KeyVaultSecretProvider"/>.
+    /// </summary>
+    public class KeyVaultSecretProviderOptions : SecretProviderRegistrationOptions
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultSecretProviderOptions"/> class.
+        /// </summary>
+        public KeyVaultSecretProviderOptions() : base(typeof(KeyVaultSecretProvider))
+        {
+        }
+    }
+
+    [Obsolete("Will be removed in v3, currently only here to have a non-null value")]
+    internal class EmptySecretStoreContext : ISecretStoreContext
+    {
+        public SecretStoreCaching Cache { get; } = new();
+    }
+
     /// <summary>
     ///     Secret key provider that connects to Azure Key Vault
     /// </summary>
@@ -28,14 +48,19 @@ namespace Arcus.Security.Providers.AzureKeyVault
         ISecretProvider
     {
         private readonly SecretClient _secretClient;
+        private readonly ISecretStoreContext _context;
+        private readonly KeyVaultSecretProviderOptions _options;
         private readonly ILogger _logger;
 
-        [Obsolete("Will be removed in v3.0")] private readonly KeyVaultOptions _options = new();
+        [Obsolete("Will be removed in v3.0")] private readonly KeyVaultOptions _deprecatedOptions = new();
 
-        internal KeyVaultSecretProvider(SecretClient secretClient, ILogger<KeyVaultSecretProvider> logger)
+        internal KeyVaultSecretProvider(SecretClient secretClient, ISecretStoreContext context, KeyVaultSecretProviderOptions options, ILogger<KeyVaultSecretProvider> logger)
         {
             ArgumentNullException.ThrowIfNull(secretClient);
+
             _secretClient = secretClient;
+            _context = context;
+            _options = options ?? new KeyVaultSecretProviderOptions();
             _logger = logger ?? NullLogger<KeyVaultSecretProvider>.Instance;
 
             VaultUri = secretClient.VaultUri.ToString();
@@ -50,7 +75,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         [Obsolete("Will be removed in v3.0 in favor of using the secret client directly")]
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration)
-            : this(new SecretClient(vaultConfiguration?.VaultUri, tokenCredential), NullLogger<KeyVaultSecretProvider>.Instance)
+            : this(new SecretClient(vaultConfiguration?.VaultUri, tokenCredential), new EmptySecretStoreContext(), options: null, NullLogger<KeyVaultSecretProvider>.Instance)
         {
         }
 
@@ -65,9 +90,9 @@ namespace Arcus.Security.Providers.AzureKeyVault
         /// <exception cref="ArgumentNullException">The <paramref name="vaultConfiguration"/> cannot be <c>null</c>.</exception>
         [Obsolete("Will be removed in v3.0 in favor of using the secret client directly")]
         public KeyVaultSecretProvider(TokenCredential tokenCredential, IKeyVaultConfiguration vaultConfiguration, KeyVaultOptions options, ILogger<KeyVaultSecretProvider> logger)
-            : this(new SecretClient(vaultConfiguration.VaultUri, tokenCredential), logger)
+            : this(new SecretClient(vaultConfiguration.VaultUri, tokenCredential), new EmptySecretStoreContext(), options: null, logger)
         {
-            _options = options;
+            _deprecatedOptions = options;
         }
 
         /// <summary>
@@ -192,7 +217,15 @@ namespace Arcus.Security.Providers.AzureKeyVault
             ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
             ArgumentException.ThrowIfNullOrWhiteSpace(secretValue);
 
-            return SuccessOrNotFoundAsync(secretName, name => _secretClient.SetSecretAsync(name, secretValue));
+            return SuccessOrNotFoundAsync(secretName, async name =>
+            {
+                _logger.LogSecretStored(name, _options.ProviderName);
+
+                var result = await _secretClient.SetSecretAsync(name, secretValue);
+                await _context.Cache.InvalidateSecretAsync(name);
+
+                return result;
+            });
         }
 
         private async Task<SecretResult> SuccessOrNotFoundAsync(string secretName, Func<string, Task<Response<KeyVaultSecret>>> getSecretAsync)
@@ -227,7 +260,7 @@ namespace Arcus.Security.Providers.AzureKeyVault
             }
             finally
             {
-                if (_options.TrackDependency)
+                if (_deprecatedOptions.TrackDependency)
                 {
                     Logger.LogAzureKeyVaultDependency(VaultUri, secretName, isSuccessful, measurement);
                 }
@@ -432,5 +465,11 @@ namespace Arcus.Security.Providers.AzureKeyVault
             return Policy.Handle(exceptionPredicate)
                          .WaitAndRetry(5, attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt - 1)));
         }
+    }
+
+    internal static partial class KeyVaultSecretProviderILoggerExtensions
+    {
+        [LoggerMessage(LogLevel.Debug, "Secret '{SecretName}' [Stored via] '{SecretProviderName}' secret provider")]
+        internal static partial void LogSecretStored(this ILogger logger, string secretName, string secretProviderName);
     }
 }

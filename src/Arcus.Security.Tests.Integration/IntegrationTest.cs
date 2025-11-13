@@ -20,6 +20,7 @@ namespace Arcus.Security.Tests.Integration
 
         protected IntegrationTest(ITestOutputHelper testOutput)
         {
+            TestOutput = testOutput;
             Configuration = TestConfig.Create();
             Logger = new XunitTestLogger(testOutput);
 
@@ -42,6 +43,7 @@ namespace Arcus.Security.Tests.Integration
                 name => name.Replace("-", string.Empty),
                 name => name.ToUpperInvariant()));
 
+        protected ITestOutputHelper TestOutput { get; }
         protected TestConfig Configuration { get; }
         protected ILogger Logger { get; }
         protected Logger SerilogLogger { get; }
