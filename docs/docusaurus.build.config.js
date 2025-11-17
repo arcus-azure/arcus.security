@@ -2,17 +2,15 @@ const buildConfig = require('./docusaurus.config');
 
 module.exports = {
   ...buildConfig,
-  themeConfig: {
-    ...buildConfig.themeConfig,
-    algolia: {
-      appId: process.env.ALGOLIA_APP_ID,
-      apiKey: process.env.ALGOLIA_API_KEY,
-      indexName: 'arcus-azure',
-      // Set `contextualSearch` to `true` when having multiple versions!!!
-      contextualSearch: true,
-      searchParameters: {
-        facetFilters: ["tags:security"]
-      },
-    },
-  }
-}
+  themes: [
+    [
+      require.resolve("@easyops-cn/docusaurus-search-local"),
+      /** @type {import("@easyops-cn/docusaurus-search-local").PluginOptions} */
+      ({
+        // `hashed` is recommended as long-term-cache of index file is possible.
+        hashed: true,
+        docsRouteBasePath: '/'
+      }),
+    ]
+  ]
+};

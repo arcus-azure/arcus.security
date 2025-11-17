@@ -1,80 +1,90 @@
 ---
-title: "Azure Key Vault secret provider"
-layout: default
+title: "Azure Key Vault"
 ---
 
 # Azure Key Vault secret provider
 Azure Key Vault secret provider brings secrets from Azure Key Vault to your application.
 
-⚡ Supports [synchronous secret retrieval](../../secrets/general.md).
-
 ## Installation
 Adding secrets from Azure Key Vault into the secret store requires following package:
 
-```shell
+```powershell
 PM > Install-Package Arcus.Security.Providers.AzureKeyVault
 ```
 
 ## Configuration
-After installing the package, the additional extensions becomes available when building the secret store.
-
-[Managed Identity](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview) authentication is the recommended approach to interact with Azure Key Vault.
-
-See [Service-to-service authentication to Azure Key Vault using .NET - Connection String Support](https://docs.microsoft.com/en-us/azure/key-vault/service-to-service-authentication#connection-string-support) for supported connection strings and [National clouds - Azure AD authentication endpoints](https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-national-cloud#azure-ad-authentication-endpoints) for valid azure AD instances. 
+After installing the package, the additional extensions become available when building the secret store.
 
 ```csharp
-using Arcus.Security.Core.Caching.Configuration;
-using Microsoft.Extensions.Hosting;
-
-public class Program
+var builder = Host.CreateDefaultBuilder(args);
+builder.ConfigureSecretStore((_, store) =>
 {
-    public static void Main(string[] args)
+    // #1 Using token credentials.
+    store.AddAzureKeyVault("https://myvault.vault.azure.net", new ManagedIdentityCredential());
+
+    // #2 Using already registered secret client.
+    store.AddAzureKeyVault((IServiceProvider provider) =>
     {
-        CreateHostBuilder(args).Build().Run();
-    }
+        return provider.GetRequiredService<SecretClient>();
+    })
+});
 
-    public static IHostBuilder CreateHostBuilder(string[] args)
-    {    
-        return Host.CreateDefaultBuilder(args)
-                   .ConfigureSecretStore((context, config, builder) =>
-                   {
-                         // Adding the Azure Key Vault secret provider with the built-in overloads
-                         // `keyVaultUri`: the URI where the Azure Key Vault is located.
-                         builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri);
+builder.ConfigureServices(services =>
+{
+    services.AddAzureClients(clients =>
+    {
+        clients.AddSecretClient(new Uri("https://myvault.vault.azure.net"));
+        clients.UseCredential(new ManagedIdentityCredential());
+    })
+});
+```
 
-                        // Several other built-in overloads are available too:
-                        // `AddAzureKeyVaultWithServicePrincipal`
-                        // `AddAzureKeyVaultWithCertificate`
+## Additional functionality
+The following functionality is only available on the Azure Key Vault secret provider. First, retrieve the specific secret provider instance from the secret store to interact with it directly.
 
-                        // Or, alternatively using the fully customizable approach.
-                        // `clientId`: The client id to authenticate for a user assigned managed identity.
-                        // More information on user assigned managed identities can be found here: https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview#how-a-user-assigned-managed-identity-works-with-an-azure-vm</param>
-                        var vaultAuthentication = new ChainedTokenCredential(new ManagedIdentityCredential(clientId), new EnvironmentCredential());
-                        var vaultConfiguration = new KeyVaultConfiguration(keyVaultUri);
+```csharp
+using Arcus.Security;
 
-                        builder.AddAzureKeyVault(vaultAuthentication, vaultConfiguration);
+ISecretStore store = ...
 
-                        // Adding a default cached variant of the Azure Key Vault provider (default: 5 min caching).
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration: CacheConfiguration.Default);
+var provider = store.GetProvider<KeyVaultSecretProvider>("MySecrets");
+```
 
-                        // Assign a configurable cached variant of the Azure Key Vault provider.
-                        var cacheConfiguration = new CacheConfiguration(TimeSpan.FromMinutes(1));
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, cacheConfiguration);
+> 🔗 See the [secret store](../index.mdx) feature documentation for more information on naming secret providers during registration.
 
-                        // Tracking the Azure Key Vault dependency which works well together with Application Insights (default: `false`).
-                        // See https://observability.arcus-azure.net/features/writing-different-telemetry-types#measuring-custom-dependencies for more information.
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, configureOptions: options => options.TrackDependency = true);
+<details>
+<summary><h3 style={{ margin:0 }}>🔢 Versioned secrets</h3></summary>
 
-                        // Adding the Azure Key Vault secret provider, using `-` instead of `:` when looking up secrets.
-                        // Example - When looking up `ServicePrincipal:ClientKey` it will be changed to `ServicePrincipal-ClientKey`.
-                        builder.AddAzureKeyVaultWithManagedIdentity(keyVaultUri, mutateSecretName: secretName => secretName.Replace(":", "-"));
+Azure Key Vault secrets can have multiple versions. Upon rotation, there are situations that the application should accept multiple versions of a single secret. The secret provider implementation provides a way to retrieve a subset of Azure Key Vault secrets, wrapped into a single `SecretsResult`, representing the success/failure state of the entire subset.
 
-                        // Providing an unique name to this secret provider so it can be looked up later.
-                       // See: "Retrieve a specific secret provider from the secret store"
-                       builder.AddAzureKeyVaultWithManagedIdentity(..., name: "AzureKeyVault.ManagedIdentity");
-                    })
-                    .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
-    }
+```csharp
+using Arcus.Security;
+
+KeyVaultSecretProvider provider = ...
+
+SecretsResult result = await provider.GetVersionedSecretsAsync("<secret-name>", amountOfVersions: 2);
+if (result.IsSuccess)
+{
+    // SecretsResult implements `IEnumerable<SecretResult>`
+    SecretResults[] secrets = result.ToArray();
 }
 ```
 
+:::note
+The `amountOfVersions` represents the number of most recent versions of the secret, starting from the currently enabled one.
+:::
+
+</details>
+
+<details>
+<summary><h3 style={{ margin:0 }}>💾 Storing secrets</h3></summary>
+
+The secret provider implementation supports storing of secrets as well. 
+```csharp
+using Arcus.Security;
+
+KeyVaultSecretProvider provider = ...
+
+SecretResult result = await provider.SetSecretAsync("<secret-name>", "<secret-value>");
+```
+</details>
