@@ -13,7 +13,7 @@ Welcome to the Arcus Security site! 🎉
 Arcus Security is an umbrella term for a set of NuGet packages `Arcus.Security.*` that help with the interaction of secrets in your application. It provides caching, secret name mapping and registration system to include one or more secret sources (Azure Key Vault, HashiCorp Vault, etc.).
 
 ## Why should I use Arcus Security?
-Secrets should never be logged or stored in plain text, should be cached to handle throttling. While the Microsoft application configuration system is a way to provide secrets in your application, it does not make the distinction between a configuration value and a secret. Making it the sole responsibility of the developer to remember they are dealing with a secret.
+Secrets should never be logged or stored in plain text and should be cached to prevent throttling. While the Microsoft application configuration system is a way to provide secrets in your application, it does not make the distinction between a configuration value and a secret. Making it the sole responsibility of the developer to remember they are dealing with a secret.
 
 Arcus Security makes this distinction explicit by removing the secrets from the application configuration and placing them in something called a 'secret store'. [Read more about this idea](https://www.codit.eu/blog/introducing-secret-store-net-core/).
 
