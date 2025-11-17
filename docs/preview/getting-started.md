@@ -6,7 +6,7 @@ sidebar_position: 2
 # Getting started with Arcus Security
 **Welcome to Arcus Security! 🎉**
 
-This page is dedicated to be used as a walkthrough on how to integrate Arcus Security in new an existing projects. Arcus Security is an umbrella term for a set of `Arcus.Security.*` NuGet packages that makes your application development more secure.
+This page is dedicated to be used as a walkthrough on how to integrate Arcus Security in new and existing projects. Arcus Security is an umbrella term for a set of `Arcus.Security.*` NuGet packages that makes your application development more secure.
 
 :::note[Used terms]
 * **Secret store:** an alternative on Microsoft's application configuration (`IConfiguration`) that acts as a central place in your application to retrieve secrets.
