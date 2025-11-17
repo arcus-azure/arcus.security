@@ -14,13 +14,36 @@ module.exports = {
   themeConfig: {
     image: 'img/arcus.jpg',
     navbar: {
-      title: 'Security',
+      title: '',
       logo: {
         alt: 'Arcus',
         src: 'img/arcus.png',
         srcDark: 'img/arcus_for_dark.png',
       },
       items: [
+        {
+          type: 'dropdown',
+          label: '🛡️ Arcus Security',
+          position: 'left',
+          items: [
+            {
+              label: '📨 Arcus Messaging',
+              href: 'https://messaging.arcus-azure.net/',
+            },
+            {
+              label: '📊 Arcus Observability',
+              href: 'https://observability.arcus-azure.net/'
+            },
+            {
+              label: '🧪 Arcus Testing',
+              href: 'https://testing.arcus-azure.net/'
+            },
+            {
+              label: '📜 Arcus Scripting',
+              href: 'https://scripting.arcus-azure.net/'
+            }
+          ]
+        },
         {
           type: 'docsVersionDropdown',
 
@@ -61,7 +84,7 @@ module.exports = {
     prism: {
       theme: lightCodeTheme,
       darkTheme: darkCodeTheme,
-      additionalLanguages: ['csharp'],
+      additionalLanguages: ['csharp', 'powershell'],
     },
   },
   presets: [

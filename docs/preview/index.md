@@ -7,29 +7,18 @@ sidebar_position: 1
 ---
 
 # Introduction
+Welcome to the Arcus Security site! 🎉
 
-Arcus Security allows you to work easily with secrets. Instead of retrieving sensitive information from your application's configuration, Arcus Security allows you to retrieve secrets from a configured **Secret Store**. The secret store supports multiple secret providers to get its secrets from, like Azure Key Vault, HashiCorp, etc. and allows you to write your own secret provider.
+## What is Arcus Security?
+Arcus Security is an umbrella term for a set of NuGet packages `Arcus.Security.*` that help with the interaction of secrets in your application. It provides caching, secret name mapping and registration system to include one or more secret sources (Azure Key Vault, HashiCorp Vault, etc.).
 
-Additionally, Arcus Security makes sure that retrieved secrets are cached for a while so to avoid multiple calls to the backing secret provider, which prevents throttling.
+## Why should I use Arcus Security?
+Secrets should never be logged or stored in plain text and should be cached to prevent throttling. While the Microsoft application configuration system is a way to provide secrets in your application, it does not make the distinction between a configuration value and a secret. Making it the sole responsibility of the developer to remember they are dealing with a secret.
 
-![Arcus secret store integration example](/img/arcus-secret-store-diagram.png)
+Arcus Security makes this distinction explicit by removing the secrets from the application configuration and placing them in something called a 'secret store'. [Read more about this idea](https://www.codit.eu/blog/introducing-secret-store-net-core/).
 
-# Guidance
-* [Add Arcus secret store with Azure Key vault integration](02-Guides/add-secret-store-with-keyvault-integration.md)
-
-# Installation
-
-We provide a NuGet package per provider and area.
-
-Here is how you install all Arcus Security packages
-```shell
-PM > Install-Package Arcus.Security.All
-```
-
-Here is how you consume secrets for Azure Key Vault:
-```shell
-PM > Install-Package Arcus.Security.Providers.AzureKeyVault
-```
+## How to to use Arcus Security?
+See our dedicated [getting started](./getting-started.md) page to take your first steps with Arcus Security.
 
 # License
 This is licensed under The MIT License (MIT). Which means that you can use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the web application. But you always need to state that Codit is the original author of this web application.
