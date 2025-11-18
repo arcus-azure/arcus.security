@@ -21,10 +21,10 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_Succeeds()
         {
             // Arrange
-            using var _ = UseTemporaryManagedIdentityConnection();
+            using var conn = UseTemporaryManagedIdentityConnection();
             {
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                        tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential()),
+                        tokenCredential: new DefaultAzureCredential(),
                         vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
                 // Act / Assert
@@ -39,11 +39,11 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task KeyVaultSecretProvider_WithUserAssignedManagedIdentity_GetSecret_NonExistingSecret_ThrowsSecretNotFoundException()
         {
             // Arrange
-            using var _ = UseTemporaryManagedIdentityConnection();
+            using var conn = UseTemporaryManagedIdentityConnection();
             {
                 var notExistingSecretName = $"secret-{Guid.NewGuid():N}";
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
-                    tokenCredential: new ChainedTokenCredential(new ManagedIdentityCredential(ClientId), new EnvironmentCredential()),
+                    tokenCredential: new DefaultAzureCredential(),
                     vaultConfiguration: new KeyVaultConfiguration(VaultUri));
 
                 // Assert
@@ -64,7 +64,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault
 
             using TemporaryManagedIdentityConnection connection = UseTemporaryManagedIdentityConnection();
             {
-                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(connection.ClientId), new EnvironmentCredential());
+                var tokenCredential = new DefaultAzureCredential();
                 try
                 {
                     var keyVaultSecretProvider = new KeyVaultSecretProvider(
