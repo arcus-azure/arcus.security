@@ -1,48 +1,80 @@
-﻿using System.Linq;
-using Arcus.Security.Core;
+﻿using System;
+using System.Threading.Tasks;
+using Arcus.Security.Providers.AzureKeyVault;
 using Arcus.Security.Tests.Integration.KeyVault.Fixture;
-using Arcus.Testing;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Arcus.Security.Tests.Integration.KeyVault
 {
-    [Trait(name: "Category", value: "Integration")]
-    public partial class KeyVaultSecretProviderTests : IntegrationTest
+    public class KeyVaultSecretProviderTests : IntegrationTest
     {
-        public KeyVaultSecretProviderTests(ITestOutputHelper testOutput) : base(testOutput)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KeyVaultSecretProviderTests"/> class.
+        /// </summary>
+        public KeyVaultSecretProviderTests(ITestOutputHelper outputWriter) : base(outputWriter)
         {
         }
 
-        private string TenantId => Configuration.GetTenantId();
-        private string ClientId => Configuration.GetServicePrincipalClientId();
-        private string ClientSecret => Configuration.GetServicePrincipalClientSecret();
-        private string VaultUri => $"https://{Configuration.GetRequiredValue("Arcus:KeyVault:Name")}.vault.azure.net/";
-        private string TestSecretName => Configuration.GetSecretName();
-        private string TestSecretValue => Configuration.GetSecretValue();
-        private string TestSecretVersion => Configuration.GetSecretVersion();
-
-        private TemporaryManagedIdentityConnection UseTemporaryManagedIdentityConnection()
+        [Fact]
+        public async Task GetSecret_WithAvailableKeyVaultSecret_SucceedsByFindingSecret()
         {
-            return TemporaryManagedIdentityConnection.Create(TenantId, ClientId, ClientSecret);
+            // Arrange
+            await using var secret = await GivenNewKeyVaultSecretAsync();
+            await using var store = GivenSecretStore(store =>
+            {
+                // Act
+                WhenAzureKeyVaultFor(store, secret);
+            });
+
+            // Assert
+            store.ShouldFindProvider<KeyVaultSecretProvider>();
+            await store.ShouldFindSecretAsync(secret.SecretName, secret.SecretValue);
         }
 
-        private void AssertTrackedAzureKeyVaultDependency(int expectedTrackedDependencyCount)
+        [Fact]
+        public async Task StoreSecret_WithCachedSecret_InvalidatesSecretInStore()
         {
-            int actualTrackedDependencyCount = InMemoryLogSink.CurrentLogEmits.Count(ev => ev.MessageTemplate.Text.Contains("Dependency"));
+            // Arrange
+            await using var secret = await GivenNewKeyVaultSecretAsync();
+            await using var store = GivenSecretStore(store =>
+            {
+                WhenAzureKeyVaultFor(store, secret);
+                WhenCaching(store);
+            });
 
-            Assert.Equal(expectedTrackedDependencyCount, actualTrackedDependencyCount);
+            var provider = store.ShouldFindProvider<KeyVaultSecretProvider>();
+            string newSecretValue = $"new{Bogus.Random.Guid():N}";
+
+            // Act
+            await provider.SetSecretAsync(secret.SecretName, newSecretValue);
+
+            // Assert
+            await store.ShouldFindSecretAsync(secret.SecretName, newSecretValue);
         }
 
-        private void AssertSecret(Secret secret)
+        private async Task<TemporaryKeyVaultSecret> GivenNewKeyVaultSecretAsync()
         {
-            Assert.NotNull(secret);
-            AssertSecretValue(secret.Value);
-            Assert.NotNull(secret.Version);
+            string secretName = $"name{Bogus.Random.Guid():N}";
+            string secretValue = $"value{Bogus.Random.Guid()}";
+            return await TemporaryKeyVaultSecret.CreateIfNotExistsAsync(secretName, secretValue, Configuration, Logger);
         }
 
-        private void AssertSecretValue(string secretValue)
+        private void WhenAzureKeyVaultFor(SecretStoreBuilder store, TemporaryKeyVaultSecret secret)
         {
-            Assert.Equal(TestSecretValue, secretValue);
+            if (Bogus.Random.Bool())
+            {
+                store.AddAzureKeyVault(_ => secret.Client, ConfigureOptions);
+            }
+            else
+            {
+                store.AddAzureKeyVault(secret.Client.VaultUri.ToString(), secret.Credential, ConfigureOptions);
+            }
+        }
+
+        private void WhenCaching(SecretStoreBuilder store)
+        {
+            store.UseCaching(TimeSpan.FromHours(1));
         }
     }
 }

@@ -18,7 +18,7 @@ using Xunit;
 namespace Arcus.Security.Tests.Integration.KeyVault
 {
     [Trait(name: "Category", value: "Integration")]
-    public partial class KeyVaultSecretProviderTests
+    public partial class DeprecatedKeyVaultSecretProviderTests
     {
         [Fact]
         public async Task KeyVaultSecretProvider_WithServicePrincipalWithTenant_GetSecret_Succeeds()
