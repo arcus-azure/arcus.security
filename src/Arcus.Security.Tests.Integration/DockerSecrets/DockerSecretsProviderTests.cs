@@ -1,22 +1,47 @@
-﻿using Arcus.Security.Providers.DockerSecrets;
-using System;
-using System.IO;
+﻿using System.Threading.Tasks;
+using Arcus.Security.Providers.DockerSecrets;
+using Arcus.Security.Tests.Integration.DockerSecrets.Fixture;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Arcus.Security.Tests.Integration.DockerSecrets
 {
-    public class DockerSecretsProviderTests
+    public class DockerSecretsProviderTests : IntegrationTest
     {
-        [Fact]
-        public void Instantiate_WithRelativePath_Throws()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DockerSecretsProviderTests"/> class.
+        /// </summary>
+        public DockerSecretsProviderTests(ITestOutputHelper outputWriter) : base(outputWriter)
         {
-            Assert.Throws<ArgumentException>(() => new DockerSecretsSecretProvider("./foo"));
         }
 
         [Fact]
-        public void Instantiate_WithNonExistingSecretLocation_Throws()
+        public async Task GetSecret_WithAvailableDockerSecret_SucceedsByFindingSecret()
         {
-            Assert.Throws<DirectoryNotFoundException>(() => new DockerSecretsSecretProvider("/foo/bar"));
+            // Arrange
+            string secretName = Bogus.Random.Guid().ToString();
+            string secretValue = Bogus.Random.Guid().ToString();
+
+            using var dockerSecret = await GivenNewDockerSecretAsync(secretName, secretValue);
+            await using var store = GivenSecretStore(store =>
+            {
+                // Act
+                WhenDockerSecretsFor(store, dockerSecret);
+            });
+
+            // Assert
+            store.ShouldFindProvider<DockerSecretsSecretProvider>();
+            await store.ShouldFindSecretAsync(secretName, secretValue);
+        }
+
+        private void WhenDockerSecretsFor(SecretStoreBuilder store, TemporaryDockerSecret dockerSecret)
+        {
+            store.AddDockerSecrets(dockerSecret.Location, ConfigureOptions);
+        }
+
+        private Task<TemporaryDockerSecret> GivenNewDockerSecretAsync(string secretName, string secretValue)
+        {
+            return TemporaryDockerSecret.CreateNewAsync(MapSecretName?.Invoke(secretName) ?? secretName, secretValue, Logger);
         }
     }
 }
