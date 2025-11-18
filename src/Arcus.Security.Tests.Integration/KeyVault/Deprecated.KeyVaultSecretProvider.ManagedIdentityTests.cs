@@ -389,13 +389,12 @@ namespace Arcus.Security.Tests.Integration.KeyVault
         public async Task CachedKeyVaultSecretProvider_StoreSecret_Succeeds()
         {
             // Arrange
-
             var secretName = $"Test-Secret-{Guid.NewGuid()}";
             var secretValue = Guid.NewGuid().ToString();
 
             using TemporaryManagedIdentityConnection connection = UseTemporaryManagedIdentityConnection();
             {
-                var tokenCredential = new ChainedTokenCredential(new ManagedIdentityCredential(connection.ClientId), new EnvironmentCredential());
+                var tokenCredential = new DefaultAzureCredential();
                 var keyVaultSecretProvider = new KeyVaultSecretProvider(
                     tokenCredential: tokenCredential,
                     vaultConfiguration: new KeyVaultConfiguration(VaultUri));
