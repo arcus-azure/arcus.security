@@ -25,7 +25,7 @@ namespace Arcus.Security.Tests.Integration.Core
             await using var store = GivenSecretStore(
                 host => host.ConfigureAppConfiguration((_, config) =>
                 {
-                    config.AddInMemoryCollection([configSecret]);
+                    WhenAppConfiguration(config, configSecret);
                 }),
                 (config, store) =>
                 {
@@ -38,14 +38,20 @@ namespace Arcus.Security.Tests.Integration.Core
             await store.ShouldFindSecretAsync(configSecret.Key, configSecret.Value);
         }
 
-        private static KeyValuePair<string, string> GivenNewAppConfigSecret()
+        private void WhenAppConfiguration(IConfigurationBuilder config, KeyValuePair<string, string> configSecret)
         {
-            return new KeyValuePair<string, string>(Bogus.Random.Guid().ToString(), Bogus.Random.Guid().ToString());
+            string secretName = MapSecretName?.Invoke(configSecret.Key) ?? configSecret.Key;
+            config.AddInMemoryCollection([new KeyValuePair<string, string>(secretName, configSecret.Value)]);
         }
 
         private void WhenConfigurationFor(SecretStoreBuilder store, IConfiguration config)
         {
             store.AddConfiguration(config, ConfigureOptions);
+        }
+
+        private KeyValuePair<string, string> GivenNewAppConfigSecret()
+        {
+            return new KeyValuePair<string, string>(Bogus.Random.Guid().ToString(), Bogus.Random.Guid().ToString());
         }
     }
 }

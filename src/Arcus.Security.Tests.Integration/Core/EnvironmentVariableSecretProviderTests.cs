@@ -36,7 +36,8 @@ namespace Arcus.Security.Tests.Integration.Core
 
         private TemporaryEnvironmentVariable GivenEnvironmentVariable(string secretName, string secretValue)
         {
-            return TemporaryEnvironmentVariable.SetSecretIfNotExists(secretName, secretValue, Logger);
+            var mappedSecretName = MapSecretName?.Invoke(secretName) ?? secretName;
+            return TemporaryEnvironmentVariable.SetSecretIfNotExists(mappedSecretName, secretValue, Logger);
         }
     }
 }
