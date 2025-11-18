@@ -35,7 +35,11 @@ namespace Arcus.Security.Tests.Integration.Fixture
         /// <summary>
         /// Creates a new instance of the <see cref="SecretStoreTestContext"/> class.
         /// </summary>
-        internal static SecretStoreTestContext GivenSecretStore(string providerName, Action<IConfiguration, SecretStoreBuilder> configureSecretStore, ILogger logger)
+        internal static SecretStoreTestContext GivenSecretStore(
+            string providerName,
+            Action<IHostBuilder> configureHost,
+            Action<IConfiguration, SecretStoreBuilder> configureSecretStore,
+            ILogger logger)
         {
             var builder =
                 Host.CreateDefaultBuilder()
@@ -52,6 +56,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
                                .AddProvider(new DelegateLoggerProvider(logger));
                     });
 
+            configureHost?.Invoke(builder);
             return new SecretStoreTestContext(providerName, builder, logger);
         }
 
