@@ -189,7 +189,7 @@ namespace Arcus.Security
                         return result;
                     }
 
-                    _logger.LogSecretMissingFromProviderFailure(providerName, result);
+                    _logger.LogSecretMissingFromProviderFailure(secretNameDescription, providerName, result);
                     failures.Add(result);
                 }
                 catch (Exception exception)
@@ -601,9 +601,9 @@ namespace Arcus.Security
         [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned 'null' upon querying provider")]
         internal static partial void LogSecretMissingFromProviderReturnsNull(this ILogger logger, string secretName, string providerName);
 
-        internal static void LogSecretMissingFromProviderFailure(this ILogger logger, string providerName, SecretResult result)
+        internal static void LogSecretMissingFromProviderFailure(this ILogger logger, string secretName, string providerName, SecretResult result)
         {
-            LogSecretMissingFromProviderFailure(logger, result.FailureCause, result.Name, providerName, result.Failure, result.FailureMessage);
+            LogSecretMissingFromProviderFailure(logger, result.FailureCause, secretName, providerName, result.Failure, result.FailureMessage);
         }
 
         [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Missing from] '{ProviderName}' => ✗ returned {Failure} {ErrorMessage}")]
