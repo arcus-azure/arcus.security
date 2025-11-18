@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DockerSecrets\NewFolder\**" />
+    <EmbeddedResource Remove="DockerSecrets\NewFolder\**" />
+    <None Remove="DockerSecrets\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Arcus.Testing.Core" Version="2.1.0" />
     <PackageReference Include="Arcus.Observability.Telemetry.Serilog.Sinks.ApplicationInsights" Version="3.0.0" />
