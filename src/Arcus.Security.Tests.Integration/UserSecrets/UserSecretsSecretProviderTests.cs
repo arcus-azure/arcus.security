@@ -19,12 +19,11 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
         public async Task GetSecret_WithAvailableUserSecret_SucceedsByFindingSecret()
         {
             // Arrange
-            await using var userSecret = await CreateNewUserSecretAsync();
-
-            // Act
-            await using var store = WhenSecretStore(store =>
+            await using var userSecret = await GivenNewUserSecretAsync();
+            await using var store = GivenSecretStore(store =>
             {
-                AddUserSecretsFor(store, userSecret);
+                // Act
+                WhenUserSecretsFor(store, userSecret);
             });
 
             // Assert
@@ -32,12 +31,12 @@ namespace Arcus.Security.Tests.Integration.UserSecrets
             await store.ShouldFindSecretAsync(userSecret.SecretName, userSecret.SecretValue);
         }
 
-        private Task<TemporaryUserSecret> CreateNewUserSecretAsync()
+        private Task<TemporaryUserSecret> GivenNewUserSecretAsync()
         {
             return TemporaryUserSecret.CreateNewAsync(Logger, MapSecretName);
         }
 
-        private void AddUserSecretsFor(SecretStoreBuilder builder, TemporaryUserSecret userSecret)
+        private void WhenUserSecretsFor(SecretStoreBuilder builder, TemporaryUserSecret userSecret)
         {
             switch (Bogus.Random.Int(1, 3))
             {

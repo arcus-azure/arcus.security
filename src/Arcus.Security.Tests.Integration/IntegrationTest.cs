@@ -52,15 +52,15 @@ namespace Arcus.Security.Tests.Integration
         /// <summary>
         /// Creates a new instance of the <see cref="SecretStoreTestContext"/> class.
         /// </summary>
-        protected SecretStoreTestContext WhenSecretStore(Action<SecretStoreBuilder> configureSecretStore)
+        protected SecretStoreTestContext GivenSecretStore(Action<SecretStoreBuilder> configureSecretStore)
         {
-            return WhenSecretStore((_, store) => configureSecretStore(store));
+            return GivenSecretStore((_, store) => configureSecretStore(store));
         }
 
         /// <summary>
         /// Creates a new instance of the <see cref="SecretStoreTestContext"/> class.
         /// </summary>
-        protected SecretStoreTestContext WhenSecretStore(Action<IConfiguration, SecretStoreBuilder> configureSecretStore)
+        protected SecretStoreTestContext GivenSecretStore(Action<IConfiguration, SecretStoreBuilder> configureSecretStore)
         {
             return SecretStoreTestContext.GivenSecretStore(ProviderName, configureSecretStore, Logger);
         }
