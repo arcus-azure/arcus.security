@@ -33,7 +33,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
     {
         private readonly Process _process;
         private readonly string _rootToken;
-        private readonly VaultSharp.VaultClient _apiClient;
         private readonly ISysEndpoint _systemEndpoint;
         private readonly IEndpoint _authenticationEndpoint;
         private readonly ILogger _logger;
@@ -72,8 +71,13 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             _authenticationEndpoint = client.Auth;
 
             var settings = new VaultClientSettings(ListenAddress.ToString(), new TokenAuthMethodInfo(rootToken));
-            _apiClient = new VaultSharp.VaultClient(settings);
+            Client = new VaultSharp.VaultClient(settings);
         }
+
+        /// <summary>
+        /// Gets the root client to interact with the test-hosted HashiCorp Vault.
+        /// </summary>
+        public VaultSharp.VaultClient Client { get; }
 
         /// <summary>
         /// Gets the URI where the HashiCorp Vault test server is listening on.
@@ -83,12 +87,12 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
         /// <summary>
         /// Gets the KeyValue V2 secret engine to control the secret store in the HashiCorp Vault.
         /// </summary>
-        public IKeyValueSecretsEngineV1 KeyValueV1 => _apiClient.V1.Secrets.KeyValue.V1;
+        public IKeyValueSecretsEngineV1 KeyValueV1 => Client.V1.Secrets.KeyValue.V1;
 
         /// <summary>
         /// Gets the KeyValue V2 secret engine to control the secret store in the HashiCorp Vault.
         /// </summary>
-        public IKeyValueSecretsEngineV2 KeyValueV2 => _apiClient.V1.Secrets.KeyValue.V2;
+        public IKeyValueSecretsEngineV2 KeyValueV2 => Client.V1.Secrets.KeyValue.V2;
 
         /// <summary>
         /// Starts a new instance of the <see cref="HashiCorpVaultTestServer"/> using the 'dev server' settings, meaning the Vault will run fully in-memory.
@@ -140,7 +144,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
             {
                 var message = "An unexpected problem occurred while trying to start the HashiCorp Vault";
                 logger.LogError(exception, message);
-                
+
                 throw new CouldNotStartHashiCorpVaultException(message, exception);
             }
             finally
@@ -259,7 +263,7 @@ namespace Arcus.Security.Tests.Integration.HashiCorp.Hosting
 
             string joinedCapabilities = String.Join(", ", capabilities.Select(c => $"\"{c}\""));
             string rules = $"path \"{path}/*\" {{  capabilities = [ {joinedCapabilities} ]}}";
-            
+
             await _systemEndpoint.PutPolicy(name, rules);
         }
 
