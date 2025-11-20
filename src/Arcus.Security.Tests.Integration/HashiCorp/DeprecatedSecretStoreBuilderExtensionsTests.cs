@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp
 {
-    public partial class HashiCorpSecretProviderTests
+    public partial class DeprecatedHashiCorpSecretProviderTests
     {
         [Theory]
         [InlineData(false, 0)]

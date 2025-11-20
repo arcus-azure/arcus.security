@@ -1,25 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Arcus.Security.Core;
 using Arcus.Security.Providers.HashiCorp;
-using Arcus.Security.Providers.HashiCorp.Configuration;
 using Arcus.Security.Providers.HashiCorp.Extensions;
+using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.HashiCorp.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging.Abstractions;
-using VaultSharp;
-using VaultSharp.V1.AuthMethods;
-using VaultSharp.V1.AuthMethods.UserPass;
 using Xunit;
 
 namespace Arcus.Security.Tests.Integration.HashiCorp
 {
-    [Trait(name: "Category", value: "Integration")]
-    public partial class HashiCorpSecretProviderTests : IntegrationTest
+    public class HashiCorpSecretProviderTests : IntegrationTest
     {
-        private const string DefaultDevMountPoint = "secret";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="HashiCorpSecretProviderTests"/> class.
         /// </summary>
@@ -27,294 +19,81 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
         {
         }
 
-        private string UserPassUserName => Configuration["Arcus:HashiCorp:UserPass:UserName"];
-        private string UserPassPassword => Configuration["Arcus:HashiCorp:UserPass:Password"];
-
-        [Fact]
-        public async Task AuthenticateWithUserPassKeyValueV2_GetSecret_Succeeds()
+        [Theory]
+        [InlineData(VaultKeyValueSecretEngineVersion.V1)]
+        [InlineData(VaultKeyValueSecretEngineVersion.V2)]
+        public async Task GetSecret_WithAvailableHashiCorpVaultSecret_SucceedsByFindingSecret(VaultKeyValueSecretEngineVersion version)
         {
             // Arrange
-            string secretPath = "mysecret";
-            string secretName = "my-value";
-            string expected = "s3cr3t";
+            string secretPath = Bogus.Lorem.Word().ToLowerInvariant();
+            string secretName = Bogus.Lorem.Word().ToLowerInvariant();
+            string secretValue = Bogus.Random.Guid().ToString();
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
+            using var vault = await GivenNewHashiCorpVaultSecretAsync(secretName, secretValue, secretPath, version);
+
+            await using var store = GivenSecretStore(store =>
             {
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { [secretName] = expected });
-
-                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
-                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions 
-                {
-                    KeyValueMountPoint = DefaultDevMountPoint, 
-                    KeyValueVersion = VaultKeyValueSecretEngineVersion.V2
-                }, NullLogger<HashiCorpSecretProvider>.Instance);
-
                 // Act
-                string actual = await provider.GetRawSecretAsync(secretName);
-
-                // Assert
-                Assert.Equal(expected, actual);
-            }
-        }
-
-        [Fact]
-        public async Task AuthenticateWithUserPassKeyValueV2_GetNotFoundSecret_Fails()
-        {
-            // Arrange
-            string secretPath = "mysecret";
-            string secretName = "my-value";
-            string expected = "s3cr3t";
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
-            {
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { ["unknown-prefix-" + secretName] = expected });
-
-                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
-                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions
+                store.AddHashiCorpVault(vault.Client.Settings, secretPath, options =>
                 {
-                    KeyValueMountPoint = DefaultDevMountPoint,
-                    KeyValueVersion = VaultKeyValueSecretEngineVersion.V2
-                },  NullLogger<HashiCorpSecretProvider>.Instance);
+                    options.KeyValueMountPoint = GetMountPoint(version);
+                    options.KeyValueVersion = version;
 
-                // Act
-                string actual = await provider.GetRawSecretAsync(secretName);
-
-                // Assert
-                Assert.Null(actual);
-            }
-        }
-
-        [Fact]
-        public async Task AddHashiCorpVaultWithUserPass_WithMutationToRemovePrefix_Succeeds()
-        {
-            // Arrange
-            string secretPath = "secretpath";
-            string secretKey = "my-value", expected = "s3cr3t";
-            const string secretNamePrefix = "Test-";
-            
-            var builder = new HostBuilder();
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
-            {
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { [secretKey] = expected });
-
-                // Act
-                builder.ConfigureSecretStore((config, stores) =>
-                {
-                    stores.AddHashiCorpVaultWithUserPass(
-                        server.ListenAddress.ToString(), UserPassUserName, UserPassPassword, secretPath,
-                        configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint, 
-                        mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length),
-                        name: null);
+                    ConfigureOptions(options);
                 });
+            });
 
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-                string actual = await provider.GetRawSecretAsync(secretNamePrefix + secretKey);
-
-                Assert.Equal(expected, actual);
-            }
+            // Assert
+            store.ShouldFindProvider<HashiCorpSecretProvider>();
+            await store.ShouldFindSecretAsync(secretName, secretValue);
         }
 
-        [Fact]
-        public async Task AddHashiCorpVaultWithUserPass_WithWrongMutation_Fails()
+        private new SecretStoreTestContext GivenSecretStore(Action<SecretStoreBuilder> configureStore)
         {
-            // Arrange
-            string secretPath = "secretpath";
-            string secretKey = "my-value", expected = "s3cr3t";
+            var context = base.GivenSecretStore(configureStore);
+            context.SupportSynchronous = false;
 
-            var builder = new HostBuilder();
+            return context;
+        }
 
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
+        private async Task<HashiCorpVaultTestServer> GivenNewHashiCorpVaultSecretAsync(
+            string secretName,
+            string secretValue,
+            string secretPath,
+            VaultKeyValueSecretEngineVersion version)
+        {
+            var vault = await HashiCorpVaultTestServer.StartServerAsync(Configuration, Logger);
+            string mountPoint = GetMountPoint(version);
+
+            switch (version)
             {
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { [secretKey] = expected });
+                case VaultKeyValueSecretEngineVersion.V1:
+                    await vault.MountKeyValueAsync(mountPoint, version);
+                    await vault.KeyValueV1.WriteSecretAsync(
+                        mountPoint: mountPoint,
+                        path: secretPath,
+                        values: new Dictionary<string, object> { [secretName] = secretValue });
+                    break;
 
-                // Act
-                builder.ConfigureSecretStore((config, stores) =>
-                {
-                    stores.AddHashiCorpVaultWithUserPass(
-                        server.ListenAddress.ToString(), UserPassUserName, UserPassPassword, secretPath,
-                        configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint,
-                        mutateSecretName: secretName =>  "Test-" + secretName,
-                        name: null);
-                });
-
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretKey));
+                case VaultKeyValueSecretEngineVersion.V2:
+                    await vault.AddPolicyAsync(Bogus.Lorem.Word().ToLowerInvariant(), mountPoint, ["read"]);
+                    await vault.KeyValueV2.WriteSecretAsync(
+                        mountPoint: mountPoint,
+                        path: secretPath,
+                        data: new Dictionary<string, object> { [secretName] = secretValue });
+                    break;
             }
+
+            return vault;
         }
 
-        [Fact]
-        public async Task AddHashiCorpVault_WithMutationToRemovePrefix_Succeeds()
+        private static string GetMountPoint(VaultKeyValueSecretEngineVersion version)
         {
-            // Arrange
-            string secretPath = "secretpath";
-            string secretKey = "my-value", expected = "s3cr3t";
-            const string secretNamePrefix = "Test-";
-            
-            var builder = new HostBuilder();
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
+            return version switch
             {
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { [secretKey] = expected });
-
-                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
-                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-
-                // Act
-                builder.ConfigureSecretStore((config, stores) =>
-                {
-                    stores.AddHashiCorpVault(settings, secretPath,
-                        options => options.KeyValueMountPoint = DefaultDevMountPoint, 
-                        mutateSecretName: secretName => secretName.Remove(0, secretNamePrefix.Length),
-                        name: null);
-                });
-
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-                string actual = await provider.GetRawSecretAsync(secretNamePrefix + secretKey);
-
-                Assert.Equal(expected, actual);
-            }
+                VaultKeyValueSecretEngineVersion.V1 => "secret-v1",
+                VaultKeyValueSecretEngineVersion.V2 => "secret"
+            };
         }
-
-        [Fact]
-        public async Task AddHashiCorpVault_WithWrongMutation_Fails()
-        {
-            // Arrange
-            string secretPath = "secretpath";
-            string secretKey = "my-value", expected = "s3cr3t";
-
-            var builder = new HostBuilder();
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(DefaultDevMountPoint))
-            {
-                await server.KeyValueV2.WriteSecretAsync(
-                    mountPoint: DefaultDevMountPoint,
-                    path: secretPath,
-                    data: new Dictionary<string, object> { [secretKey] = expected });
-
-                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
-                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-
-                // Act
-                builder.ConfigureSecretStore((config, stores) =>
-                {
-                    stores.AddHashiCorpVault(settings, secretPath, 
-                        configureOptions: options => options.KeyValueMountPoint = DefaultDevMountPoint,
-                        mutateSecretName: secretName => "Test-" + secretName,
-                        name: null);
-                });
-
-                // Assert
-                IHost host = builder.Build();
-                var provider = host.Services.GetRequiredService<ISecretProvider>();
-                await Assert.ThrowsAsync<SecretNotFoundException>(() => provider.GetRawSecretAsync(secretKey));
-            }
-        }
-
-        [Fact]
-        public async Task AuthenticateWithUserPassKeyValueV1_GetSecret_Succeeds()
-        {
-            // Arrange
-            string secretPath = "mysecret";
-            string secretName = "my-value";
-            string expected = "s3cr3t";
-
-            const string mountPoint = "secret-v1";
-            const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(mountPoint))
-            {
-                await server.MountKeyValueAsync(mountPoint, keyValueVersion);
-                await server.KeyValueV1.WriteSecretAsync(
-                    mountPoint: mountPoint,
-                    path: secretPath,
-                    values: new Dictionary<string, object> { [secretName] = expected });
-
-                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
-                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions
-                {
-                    KeyValueMountPoint = mountPoint, 
-                    KeyValueVersion = keyValueVersion
-                }, NullLogger<HashiCorpSecretProvider>.Instance);
-
-                // Act
-                string actual = await provider.GetRawSecretAsync(secretName);
-
-                // Assert
-                Assert.Equal(expected, actual);
-            }
-        }
-
-        [Fact]
-        public async Task AuthenticateWithUserPassKeyValueV1_GetNotFoundSecret_Fails()
-        {
-            // Arrange
-            string secretPath = "mysecret";
-            string secretName = "my-value";
-            string expected = "s3cr3t";
-
-            const string mountPoint = "secret-v1";
-            const VaultKeyValueSecretEngineVersion keyValueVersion = VaultKeyValueSecretEngineVersion.V1;
-
-            using (HashiCorpVaultTestServer server = await StartServerWithUserPassAsync(mountPoint))
-            {
-                await server.MountKeyValueAsync(mountPoint, keyValueVersion);
-                await server.KeyValueV1.WriteSecretAsync(
-                    mountPoint: mountPoint,
-                    path: secretPath,
-                    values: new Dictionary<string, object> { ["unknown-prefix-" + secretName] = expected });
-
-                var authentication = new UserPassAuthMethodInfo(UserPassUserName, UserPassPassword);
-                var settings = new VaultClientSettings(server.ListenAddress.ToString(), authentication);
-                var provider = new HashiCorpSecretProvider(settings, secretPath, new HashiCorpVaultOptions{
-                    KeyValueMountPoint = mountPoint, 
-                    KeyValueVersion = keyValueVersion
-                }, NullLogger<HashiCorpSecretProvider>.Instance);
-
-                // Act
-                string actual = await provider.GetRawSecretAsync(secretName);
-
-                // Assert
-                Assert.Null(actual);
-            }
-        }
-
-        private async Task<HashiCorpVaultTestServer> StartServerWithUserPassAsync(string availableSecretMountPoint)
-        {
-            const string policyName = "my-policy";
-
-            var server = await HashiCorpVaultTestServer.StartServerAsync(Configuration, Logger);
-            await server.AddPolicyAsync(policyName, availableSecretMountPoint, new[] { "read" });
-            await server.EnableAuthenticationTypeAsync(AuthMethodDefaultPaths.UserPass, "Authenticating with username and password");
-            await server.AddUserPassUserAsync(UserPassUserName, UserPassPassword, policyName);
-
-            return server;
-        }
-
-
     }
 }
