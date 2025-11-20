@@ -30,7 +30,6 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretValue = Bogus.Random.Guid().ToString();
 
             using var vault = await GivenNewHashiCorpVaultSecretAsync(secretName, secretValue, secretPath, version);
-
             await using var store = GivenSecretStore(store =>
             {
                 // Act
