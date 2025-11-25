@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Arcus.Security.Tests.Integration.Configuration;
 using Arcus.Security.Tests.Integration.KeyVault.Configuration;
 using Arcus.Testing;
+using Azure.Core;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,18 +13,24 @@ namespace Arcus.Security.Tests.Integration.KeyVault.Fixture
     /// <summary>
     /// Represents a temporary set secret in Azure Key Vault
     /// </summary>
-    internal class TemporaryKeyVaultSecret : IAsyncDisposable
+    internal sealed class TemporaryKeyVaultSecret : IAsyncDisposable
     {
-        private readonly string _secretName;
-        private readonly SecretClient _client;
         private readonly ILogger _logger;
 
-        private TemporaryKeyVaultSecret(string secretName, SecretClient client, ILogger logger)
+        private TemporaryKeyVaultSecret(string secretName, string secretValue, SecretClient client, TokenCredential credential, ILogger logger)
         {
-            _secretName = secretName;
-            _client = client;
             _logger = logger;
+
+            SecretName = secretName;
+            SecretValue = secretValue;
+            Client = client;
+            Credential = credential;
         }
+
+        public SecretClient Client { get; }
+        public TokenCredential Credential { get; }
+        public string SecretName { get; }
+        public string SecretValue { get; }
 
         /// <summary>
         /// Creates a new or updates an existing Azure Key Vault secret (with a new version).
@@ -32,6 +40,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault.Fixture
             ArgumentNullException.ThrowIfNull(config);
             logger ??= NullLogger.Instance;
 
+            TokenCredential credential = config.GetServicePrincipal().GetCredential();
             SecretClient client = config.GetKeyVault().GetClient();
 
             string truncated = secretValue[..5] + "...";
@@ -40,7 +49,7 @@ namespace Arcus.Security.Tests.Integration.KeyVault.Fixture
 
             await Poll.UntilAvailableAsync(() => client.GetSecretAsync(secretName));
 
-            return new TemporaryKeyVaultSecret(secretName, client, logger);
+            return new TemporaryKeyVaultSecret(secretName, secretValue, client, credential, logger);
         }
 
         /// <summary>
@@ -49,8 +58,8 @@ namespace Arcus.Security.Tests.Integration.KeyVault.Fixture
         /// <returns>A task that represents the asynchronous dispose operation.</returns>
         public async ValueTask DisposeAsync()
         {
-            _logger.LogDebug("[Test:Teardown] remove Azure Key Vault secret '{SecretName}' from vault '{VaultUri}'", _secretName, _client.VaultUri);
-            await _client.StartDeleteSecretAsync(_secretName);
+            _logger.LogDebug("[Test:Teardown] remove Azure Key Vault secret '{SecretName}' from vault '{VaultUri}'", SecretName, Client.VaultUri);
+            await Client.StartDeleteSecretAsync(SecretName);
         }
     }
 }
