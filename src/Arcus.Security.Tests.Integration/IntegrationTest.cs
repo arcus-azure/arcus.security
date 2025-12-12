@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.Serilog;
 using Arcus.Testing;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Core;
+using Serilog.Events;
 using Xunit;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -106,6 +109,18 @@ namespace Arcus.Security.Tests.Integration
         protected virtual void Dispose(bool disposing)
         {
             SerilogLogger.Dispose();
+        }
+    }
+
+    [Obsolete("Will be removed once the Arcus Observability reference is removed")]
+    public class InMemoryLogSink : ILogEventSink
+    {
+        private readonly Collection<LogEvent> _emits = [];
+        public IReadOnlyCollection<LogEvent> CurrentLogEmits => _emits;
+
+        public void Emit(LogEvent logEvent)
+        {
+            _emits.Add(logEvent);
         }
     }
 }

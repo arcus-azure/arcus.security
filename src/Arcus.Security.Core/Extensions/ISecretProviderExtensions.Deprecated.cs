@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using GuardNet;
 
 namespace Arcus.Security.Core.Extensions
 {
@@ -29,7 +28,7 @@ namespace Arcus.Security.Core.Extensions
         [Obsolete("Use the " + nameof(Core.ISecretProviderExtensions.GetRawSecretsAsync) + " extension instead")]
         public static async Task<IEnumerable<string>> GetRawSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
 
             if (secretProvider is CompositeSecretProvider composite)
             {
@@ -56,7 +55,7 @@ namespace Arcus.Security.Core.Extensions
         [Obsolete("Use the " + nameof(Core.ISecretProviderExtensions.GetSecretsAsync) + " extension instead")]
         public static async Task<IEnumerable<Secret>> GetSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
-            Guard.NotNullOrWhitespace(secretName, nameof(secretName), "Requires a non-blank secret name to look up the secret");
+            ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
 
             if (secretProvider is CompositeSecretProvider composite)
             {

@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Arcus.Observability.Telemetry.Core" Version="[3.0.0,4.0.0)" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="[8.*,11.0.0)" />
+    <PackageReference Include="Arcus.Observability.Telemetry.Core" Version="[3.*,4.0.0)" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="[9.*,11.0.0)" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="[8.*,11.0.0)" />
   </ItemGroup>
 
