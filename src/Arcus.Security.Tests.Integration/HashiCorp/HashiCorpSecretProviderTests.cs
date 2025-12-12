@@ -61,6 +61,8 @@ namespace Arcus.Security.Tests.Integration.HashiCorp
             string secretPath,
             VaultKeyValueSecretEngineVersion version)
         {
+            secretName = MapSecretName?.Invoke(secretName) ?? secretName;
+
             var vault = await HashiCorpVaultTestServer.StartServerAsync(Configuration, Logger);
             string mountPoint = GetMountPoint(version);
 
