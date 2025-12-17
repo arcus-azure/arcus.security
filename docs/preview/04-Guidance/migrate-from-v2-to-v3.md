@@ -63,7 +63,7 @@ This also means that there is no need for 'critical exceptions' that users could
 Custom secret providers can use the `SecretResult` model in case of interrupted/non-transient failures.
 
 ### 🚛 Move caching from providers to store
-Caching is centralized on the secret store instead of spread across secret providers. Just as before v3, caching happens internally, only now custom secret provider are registered without any mentioning of secret caching.
+Caching is centralized on the secret store instead of spread across secret providers. Just as before v3, caching happens internally, only now custom secret providers are registered without any mentioning of secret caching.
 
 This affects the existing caching-types and (extension) members, which are removed/unavailable in v3:
 * 🗑️ `(I)CachedSecretProvider`
