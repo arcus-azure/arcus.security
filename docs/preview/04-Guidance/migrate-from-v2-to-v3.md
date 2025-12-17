@@ -176,7 +176,7 @@ By default, any secret provider registered in the secret store gets a provider n
 :::
 
 ## 🧩 Implementing a custom secret provider differently
-The v3 uses a different `ISecretProvider` interface in the `Arcus.Security` namespace. Different than the previous `Arcus.Security.Core.ISecretProvider`, is that it now always support synchronous/asynchronous operations (previously, there existed an `ISyncSecretProvider` to do synchronous secret operations). Implementing a custom secret provider should therefore take this into account.
+The v3 uses a different `ISecretProvider` interface in the `Arcus.Security` namespace. Different than the previous `Arcus.Security.Core.ISecretProvider`, is that it now always supports synchronous/asynchronous operations (previously, there existed an `ISyncSecretProvider` to do synchronous secret operations). Implementing a custom secret provider should therefore take this into account.
 
 ```diff
 - using Arcus.Security.Core;
