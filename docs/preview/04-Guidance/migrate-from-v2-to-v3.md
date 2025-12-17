@@ -33,7 +33,7 @@ Starting from v3, accessing the secret store now happens via the `Arcus.Security
 ```
 
 ### `Secret` ➡️ `SecretResult`
-Below v3, failures in the secret store were communicated via exceptions. Starting from v3, the secret store returns a result type that represents a successful/failed interaction with the store.
+Before v3, failures in the secret store were communicated via exceptions. Starting from v3, the secret store returns a result type that represents a successful/failed interaction with the store.
 
 ```diff
 - try
