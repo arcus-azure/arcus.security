@@ -5,20 +5,20 @@ This guide will walk you through the process of migrating your application from 
 * 🗑️ .NET 6 support is removed. All Arcus.Security.* packages support .NET 8 and stop supporting .NET 6. (.NET 10 support starts from v2.1.)
 * 🗑️ Transient GuardNET dependency is replaced by built-in argument checking.
 * 🗑️ Transient Arcus.Observability dependency for auditing is removed.
-* ✏️ The new main core types are now under the `Arcus.Security` namespace, instead of previously the `Arcus.Security.Core` namespace. Following types in the old namespace are removed:
-  * `ISecretProvider` (in favor of `Arcus.Security.ISecretProvider`)
-  * `ISecretStore` (in favor of `Arcus.Security.ISecretStore`)
-  * `IVersionedSecretProvider`
-  * `ISyncSecretProvider`
-  * `(I)CachedSecretProvider`
-  * `(I)CacheConfiguration`
-  * `CriticalExceptionFilter`
-  * `SecretAuditingOptions`
-  * `SecretStoreSource`
-  * `SecretProviderOptions`
-  * `SecretNotFoundException`
-  * `MutatedSecretNameSecretProvider`
-  * `MutatedSecretNameCachedSecretProvider`
+* ✏️ The new main core types are now under the `Arcus.Security` namespace. Following types are removed:
+  * `Arcus.Security.Core.ISecretProvider` (in favor of `Arcus.Security.ISecretProvider`)
+  * `Arcus.Security.Core.ISecretStore` (in favor of `Arcus.Security.ISecretStore`)
+  * `Arcus.Security.Core.IVersionedSecretProvider`
+  * `Arcus.Security.Core.ISyncSecretProvider`
+  * `Arcus.Security.Core.Caching.(I)CachedSecretProvider`
+  * `Arcus.Security.Core.Caching.Configuration.(I)CacheConfiguration`
+  * `Arcus.Security.Core.CriticalExceptionFilter`
+  * `Arcus.Security.Core.SecretAuditingOptions`
+  * `Arcus.Security.Core.SecretStoreSource`
+  * `Arcus.Security.Core.SecretProviderOptions`
+  * `Arcus.Security.Core.SecretNotFoundException`
+  * `Arcus.Security.Core.Providers.MutatedSecretNameSecretProvider`
+  * `Arcus.Security.Core.Providers.MutatedSecretNameCachedSecretProvider`
 
 ## 🎯 Use `ISecretStore` instead of `ISecretProvider` as the secret store's main point of contact
 Starting from v3, accessing the secret store now happens via the `Arcus.Security.ISecretStore` interface (in new namespace), instead of previously using the same `Arcus.Security.Core.ISecretProvider` interface as for the external secret provider implementations.
@@ -66,10 +66,10 @@ Custom secret providers can use the `SecretResult` model in case of interrupted/
 Caching is centralized on the secret store instead of spread across secret providers. Just as before v3, caching happens internally, only now custom secret providers are registered without any mentioning of secret caching.
 
 This affects the existing caching-types and (extension) members, which are removed/unavailable in v3:
-* 🗑️ `(I)CachedSecretProvider`
-* 🗑️ `(I)CacheConfiguration`
-* 🗑️ `.WithCaching(...)` on secret provider
-* 🗑️ `.GetCachedProvider(...)` on secret store.
+* 🗑️ `Arcus.Security.Core.Caching.(I)CachedSecretProvider`
+* 🗑️ `Arcus.Security.Core.Caching.Configuration.(I)CacheConfiguration`
+* 🗑️ `Arcus.Security.Core.ISecretProvider.WithCaching(...)` (extension)
+* 🗑️ `Arcus.Security.Core.ISecretStore.GetCachedProvider(...)`
 
 ```diff
 services.AddSecretStore(store =>
@@ -132,7 +132,7 @@ Just be aware that in case of a failure, an exception will still be thrown.
 ### 🗑️ Removed `GetVersionedSecrets*` overloads
 Starting from v3, there is no general way of retrieving versioned secrets via the secret store anymore. Secret versioning is highly dependent on the secret provider implementation, which makes a general way of contacting rather troublesome.
 
-Our Azure Key Vault secret provider is the only provider that supports secret versioning, that is why we introduced a new `GetVersionedSecretsAsync` operation on the `KeyVaultSecretProvider` that can be used as alternative.
+Our Azure Key Vault secret provider is the only provider that supports secret versioning, that is why we introduced a new `KeyVaultSecretProvider.GetVersionedSecretsAsync` operation that can be used as alternative.
 
 ```diff
 var provider = store.GetProvider<KeyVaultSecretProvider>("Admin secrets");
