@@ -23,23 +23,23 @@ module.exports = {
       items: [
         {
           type: 'dropdown',
-          label: '🛡️ Arcus Security',
+          label: 'Arcus Security',
           position: 'left',
           items: [
             {
-              label: '📨 Arcus Messaging',
+              label: 'Arcus Messaging',
               href: 'https://messaging.arcus-azure.net/',
             },
             {
-              label: '📊 Arcus Observability',
+              label: 'Arcus Observability',
               href: 'https://observability.arcus-azure.net/'
             },
             {
-              label: '🧪 Arcus Testing',
+              label: 'Arcus Testing',
               href: 'https://testing.arcus-azure.net/'
             },
             {
-              label: '📜 Arcus Scripting',
+              label: 'Arcus Scripting',
               href: 'https://scripting.arcus-azure.net/'
             }
           ]
