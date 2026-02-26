@@ -73,13 +73,51 @@ module.exports = {
           title: 'Community',
           items: [
             {
-              label: 'Arcus Azure Github',
-              href: 'https://github.com/arcus-azure',
+              label: 'Github',
+              href: 'https://github.com/arcus-azure/arcus.security',
             },
+            {
+              label: 'Contribution guide',
+              href: 'https://github.com/arcus-azure/.github/blob/main/CONTRIBUTING.md'
+            },
+            {
+              label: 'Report an issue',
+              href: 'https://github.com/arcus-azure/arcus.security/issues/new/choose'
+            },
+            {
+              label: 'Discuss an idea',
+              href: 'https://github.com/arcus-azure/arcus.security/discussions/new/choose'
+            }
           ],
         },
+        {
+          title: 'Features',
+          items: [
+            {
+              label: 'Secret store',
+              to: 'features/secret-store'
+            },
+            {
+              label: 'Custom secret provider',
+              to: 'Features/secret-store/custom-secret-provider'
+            }
+          ]
+        },
+        {
+          title: 'Support',
+          items: [
+            {
+              label: 'Getting started',
+              to: 'getting-started'
+            },
+            {
+              label: 'Migrate v2 to v3',
+              to: 'Guidance/migrate-from-v2-to-v3'
+            }
+          ]
+        }
       ],
-      copyright: `Copyright © ${new Date().getFullYear()}, Arcus - Security maintained by arcus-azure`,
+      copyright: `Copyright © ${new Date().getFullYear()}, Arcus - Security maintained by Codit`,
     },
     prism: {
       theme: lightCodeTheme,
