@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Arcus.Security.Core.Caching;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Primitives;
@@ -221,7 +222,36 @@ namespace Arcus.Security
         /// if <c>false</c>, the secret provider will always retrieve the fresh secret from the underlying store.
         /// (Default: <c>true</c>)
         /// </summary>
+        [Obsolete("Will be removed in v3, use the " + nameof(EnableCaching) + " for fine-grained cache duration control and " + nameof(DisableCaching) + " to ignore the cache during this secret retrieval all together")]
         public bool UseCache { get; set; } = true;
+
+        internal bool CachingAllowed { get; set; } = true;
+        internal TimeSpan? CachingDuration { get; set; }
+
+        /// <summary>
+        /// Configures the secret retrieval to ignore the cache on the secret store and always retrieve a fresh secret.
+        /// </summary>
+        public void DisableCaching()
+        {
+            CachingAllowed = false;
+        }
+
+        /// <summary>
+        /// Configures the secret retrieval to use the cache on the secret store.
+        /// </summary>
+        /// <remarks>
+        ///     If the secret store was registered with a different caching duration via <see cref="SecretStoreBuilder.UseCaching"/>,
+        ///     then the provided <paramref name="duration"/> will overwrite this.
+        /// </remarks>
+        /// <param name="duration">The specific cache duration used solely for this secret retrieval.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="duration"/> is less than or equal to <see cref="TimeSpan.Zero"/>.</exception>
+        public void EnableCaching(TimeSpan duration)
+        {
+            ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(duration, TimeSpan.Zero);
+
+            CachingAllowed = true;
+            CachingDuration = duration;
+        }
     }
 
     /// <summary>
@@ -280,9 +310,9 @@ namespace Arcus.Security
 
         internal bool TryGetCachedSecret(string secretName, SecretOptions secretOptions, ILogger logger, out SecretResult secret)
         {
-            if (secretOptions.UseCache && _cache.TryGetValue(secretName, out secret))
+            if (secretOptions.CachingAllowed && _cache.TryGetValue(secretName, out secret))
             {
-                logger.LogSecretFoundInCache(secretName, _cacheEntry.SlidingExpiration);
+                logger.LogSecretFoundInCache(secretName);
                 return true;
             }
 
@@ -290,16 +320,20 @@ namespace Arcus.Security
             return false;
         }
 
-        internal void UpdateSecretInCache(string secretName, SecretResult result, SecretOptions options = null)
+        internal void UpdateSecretInCache(string secretName, SecretResult result, SecretOptions options)
         {
-            if (result.IsSuccess && (options is null || options.UseCache))
+            if (result.IsSuccess && options.CachingAllowed)
             {
                 if (_cache is not NullMemoryCache)
                 {
-                    _logger.LogSecretRefreshInCache(secretName, _cacheEntry.SlidingExpiration);
+                    _logger.LogSecretRefreshInCache(secretName);
                 }
 
-                _cache.Set(secretName, result, _cacheEntry);
+                var entry = options.CachingDuration.HasValue
+                    ? new MemoryCacheEntryOptions().SetSlidingExpiration(options.CachingDuration.Value)
+                    : _cacheEntry;
+
+                _cache.Set(secretName, result, entry);
             }
         }
 

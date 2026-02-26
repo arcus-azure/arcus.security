@@ -131,7 +131,6 @@ public class MySqlService
 <summary><h3 style={{ margin:0 }}>⚡ Secret caching</h3></summary>
 
 To limit possible throttling during external secrets retrieval, the secret store can be customized to cache secrets for a period of time.
-
 ```csharp
 builder.ConfigureServices(services =>
 {
@@ -142,14 +141,18 @@ builder.ConfigureServices(services =>
 });
 ```
 
-All secrets are cached by default, but this can be ignored on a by-secret basis.
+All secrets are cached by default upon registering the cache duration, but this can be ignored on a by-secret basis.
 ```csharp
 using Arcus.Security;
 
 ISecretStore store = ...
 SecretResult result = store.GetSecret("Contoso_Sql_ConnectionString", options => 
 {
-    options.UseCache = false;
+    // Prevent secret caching on this secret retrieval.
+    options.DisableCaching();
+
+    // Overwrite (if already registered)/Enable (if not already registered) secret caching duration on this secret retrieval.
+    options.EnableCaching(TimeSpan.FromMinutes(2));
 });
 ```
 

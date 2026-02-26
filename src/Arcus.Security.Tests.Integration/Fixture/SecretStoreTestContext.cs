@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Arcus.Testing;
 using Bogus;
@@ -16,6 +18,7 @@ namespace Arcus.Security.Tests.Integration.Fixture
     public class SecretStoreTestContext : IAsyncDisposable
     {
         private readonly string _providerName;
+        private readonly Collection<Action<SecretOptions>> _configuresSecretOptions = [];
         private readonly IHostBuilder _builder;
         private readonly ILogger _logger;
         private IHost _host;
@@ -101,6 +104,18 @@ namespace Arcus.Security.Tests.Integration.Fixture
             _builder.ConfigureSecretStore(configureSecretStore);
         }
 
+        /// <summary>
+        /// Configures the secret options during the secret retrieval on the registered secret store.
+        /// </summary>
+        public void WhenSecretOptions(Action<SecretOptions> configureOptions)
+        {
+            ArgumentNullException.ThrowIfNull(configureOptions);
+            _configuresSecretOptions.Add(configureOptions);
+        }
+
+        /// <summary>
+        /// Verifies if a secret with a given <paramref name="secretName"/> and <paramref name="secretValue"/> is located in the registered secret store.
+        /// </summary>
         public async Task<SecretResult> ShouldFindSecretAsync(string secretName, string secretValue)
         {
             SecretResult result = await ShouldFindSecretAsync(secretName);
@@ -121,7 +136,13 @@ namespace Arcus.Security.Tests.Integration.Fixture
                 using (_logger.BeginScope("synchronous secrets"))
                 {
 #pragma warning disable S6966 // Should call synchronous method here to verify if both synchronous and asynchronous methods return the same result.
-                    SecretResult syncResult = store.GetSecret(secretName);
+                    SecretResult syncResult =
+                        _configuresSecretOptions.Count is 0
+                            // ReSharper disable MethodHasAsyncOverload
+                            ? store.GetSecret(secretName)
+                            : store.GetSecret(secretName, AggregateSecretOptions(_configuresSecretOptions));
+                    // ReSharper restore MethodHasAsyncOverload
+
                     Assert.True(syncResult.IsSuccess, $"synchronously retrieving secret '{secretName}' from secret store should result in a successful result, but wasn't: {syncResult}");
 #pragma warning restore S6966
                 }
@@ -130,17 +151,29 @@ namespace Arcus.Security.Tests.Integration.Fixture
             SecretResult asyncResult;
             using (_logger.BeginScope("asynchronous secrets"))
             {
-                asyncResult = await store.GetSecretAsync(secretName);
+                asyncResult = _configuresSecretOptions.Count is 0
+                    ? await store.GetSecretAsync(secretName)
+                    : await store.GetSecretAsync(secretName, AggregateSecretOptions(_configuresSecretOptions));
+
                 Assert.True(asyncResult.IsSuccess, $"asynchronously retrieving secret '{secretName}' from secret store should result in a successful result, but wasn't: {asyncResult}");
             }
 
+            await VerifyStoreInfrastructureAsync(store);
+            return asyncResult;
+        }
+
+        private async Task VerifyStoreInfrastructureAsync(ISecretStore store)
+        {
             _logger.LogDebug("-----------------------------------------------------------------------------------------------------------------------------------");
             _logger.LogDebug("[Test] verifying secret store infrastructure");
+
             if (SupportSynchronous && Bogus.Random.Bool())
             {
 #pragma warning disable S6966 // Should call synchronous method here to verify if both synchronous and asynchronous methods return the same result.
+                // ReSharper disable once MethodHasAsyncOverload
                 SecretResult syncNotFoundResult = store.GetSecret("always-not-found-sync-secret" + Guid.NewGuid());
 #pragma warning restore S6966
+
                 Assert.False(syncNotFoundResult.IsSuccess, $"synchronously retrieving a secret that is not available in the secret store should return a failed result, but wasn't: {syncNotFoundResult}");
             }
             else
@@ -148,10 +181,16 @@ namespace Arcus.Security.Tests.Integration.Fixture
                 SecretResult asyncNotFoundResult = await store.GetSecretAsync("always-not-found-async-secret" + Guid.NewGuid());
                 Assert.False(asyncNotFoundResult.IsSuccess, $"asynchronously retrieving a secret that is not available in the secret store should return a failed result, but wasn't: {asyncNotFoundResult}");
             }
-
-            return asyncResult;
         }
 
+        private Action<SecretOptions> AggregateSecretOptions(IEnumerable<Action<SecretOptions>> configuresSecretOptions)
+        {
+            return options => Assert.All(configuresSecretOptions, configure => configure(options));
+        }
+
+        /// <summary>
+        /// Verifies if a secret provider is available in the registered secret store.
+        /// </summary>
         public TProvider ShouldFindProvider<TProvider>(string providerName = null) where TProvider : ISecretProvider
         {
             var store = GetStore();

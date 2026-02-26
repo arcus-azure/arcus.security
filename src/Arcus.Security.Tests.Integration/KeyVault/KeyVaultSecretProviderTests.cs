@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Arcus.Security.Providers.AzureKeyVault;
+using Arcus.Security.Tests.Integration.Fixture;
 using Arcus.Security.Tests.Integration.KeyVault.Fixture;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Arcus.Security.Tests.Integration.KeyVault
@@ -40,14 +42,35 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             await using var store = GivenSecretStore(store =>
             {
                 WhenAzureKeyVaultFor(store, secret);
-                WhenCaching(store);
             });
+            WhenCaching(store);
 
             var provider = store.ShouldFindProvider<KeyVaultSecretProvider>();
             string newSecretValue = $"new{Bogus.Random.Guid():N}";
 
             // Act
             await provider.SetSecretAsync(secret.SecretName, newSecretValue);
+
+            // Assert
+            await store.ShouldFindSecretAsync(secret.SecretName, newSecretValue);
+        }
+
+        [Fact]
+        public async Task GetCachedSecret_WithDisabledCaching_RetrievesFreshSecret()
+        {
+            // Arrange
+            await using var secret = await GivenNewKeyVaultSecretAsync();
+            await using var store = GivenSecretStore(store =>
+            {
+                WhenAzureKeyVaultFor(store, secret);
+                WhenCaching(store);
+            });
+
+            string newSecretValue = $"new{Bogus.Random.Guid():N}";
+            await secret.RefreshSecretAsync(newSecretValue);
+
+            // Act
+            store.WhenSecretOptions(options => options.DisableCaching());
 
             // Assert
             await store.ShouldFindSecretAsync(secret.SecretName, newSecretValue);
@@ -72,7 +95,25 @@ namespace Arcus.Security.Tests.Integration.KeyVault
             }
         }
 
-        private void WhenCaching(SecretStoreBuilder store)
+        private void WhenCaching(SecretStoreTestContext context)
+        {
+            if (Bogus.Random.Bool())
+            {
+                WhenCaching(context);
+                Logger.LogDebug("[Test:Setup] use secret caching duration at secret store level");
+
+                context.WhenSecretStore(WhenCaching);
+            }
+            else
+            {
+                TimeSpan duration = TimeSpan.FromHours(1);
+
+                Logger.LogDebug("[Test:Setup] use secret caching duration at secret options level");
+                context.WhenSecretOptions(options => options.EnableCaching(duration));
+            }
+        }
+
+        private static void WhenCaching(SecretStoreBuilder store)
         {
             store.UseCaching(TimeSpan.FromHours(1));
         }

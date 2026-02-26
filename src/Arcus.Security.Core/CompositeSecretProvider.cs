@@ -538,7 +538,14 @@ namespace Arcus.Security
         [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
-            SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
+            SecretResult result = await GetSecretAsync(secretName, options =>
+            {
+                if (ignoreCache)
+                {
+                    options.DisableCaching();
+                }
+            });
+
             return result.IsSuccess ? result.Value : throw NotFoundOrCritical(secretName, result);
         }
 
@@ -555,7 +562,14 @@ namespace Arcus.Security
         [Obsolete("Will be removed in v3.0 in favor of using secret results")]
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
-            SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
+            SecretResult result = await GetSecretAsync(secretName, options =>
+            {
+                if (ignoreCache)
+                {
+                    options.DisableCaching();
+                }
+            });
+
             return result.IsSuccess ? new Secret(result.Value, result.Version, result.Expiration) : throw NotFoundOrCritical(secretName, result);
         }
 
@@ -592,8 +606,8 @@ namespace Arcus.Security
         [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in provider '{ProviderName}' | skipped by {SkippedProvidersDescription}")]
         internal static partial void LogSecretFoundInStore(this ILogger logger, string secretName, string providerName, string skippedProvidersDescription);
 
-        [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in cache (sliding expiration={CacheDuration:t}) | skipped all providers")]
-        internal static partial void LogSecretFoundInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
+        [LoggerMessage(LogLevel.Information, "Secret store found secret '{SecretName}' in cache | skipped all providers")]
+        internal static partial void LogSecretFoundInCache(this ILogger logger, string secretName);
 
         [LoggerMessage(LogLevel.Debug, "Secret {SecretName} [Found in] '{ProviderName}'")]
         internal static partial void LogSecretFoundInProvider(this ILogger logger, string secretName, string providerName);
@@ -638,8 +652,8 @@ namespace Arcus.Security
         [LoggerMessage(LogLevel.Trace, "[Secret store] looking up secret '{SecretName}' in registered providers")]
         internal static partial void LogSecretLookup(this ILogger logger, string secretName);
 
-        [LoggerMessage(LogLevel.Trace, "[Secret store] refresh secret '{SecretName}' in cache (sliding expiration={CacheDuration:t})")]
-        internal static partial void LogSecretRefreshInCache(this ILogger logger, string secretName, TimeSpan? cacheDuration);
+        [LoggerMessage(LogLevel.Trace, "[Secret store] refresh secret '{SecretName}' in cache")]
+        internal static partial void LogSecretRefreshInCache(this ILogger logger, string secretName);
 
         [LoggerMessage(LogLevel.Trace, "[Secret store] invalidate secret '{SecretName}' in cache")]
         internal static partial void LogSecretInvalidateInCache(this ILogger logger, string secretName);

@@ -43,13 +43,30 @@ namespace Arcus.Security.Tests.Integration.KeyVault.Fixture
             TokenCredential credential = config.GetServicePrincipal().GetCredential();
             SecretClient client = config.GetKeyVault().GetClient();
 
-            string truncated = secretValue[..5] + "...";
+            string truncated = TruncatedSecretValue(secretValue);
             logger.LogDebug("[Test:Setup] add Azure Key Vault secret '{SecretName}' with '{SecretValue}' to vault '{VaultUri}'", secretName, truncated, client.VaultUri);
             await client.SetSecretAsync(secretName, secretValue);
 
             await Poll.UntilAvailableAsync(() => client.GetSecretAsync(secretName));
 
             return new TemporaryKeyVaultSecret(secretName, secretValue, client, credential, logger);
+        }
+
+        /// <summary>
+        /// Sets a new version of the Azure Key Vault secret value.
+        /// </summary>
+        public async Task RefreshSecretAsync(string newSecretValue)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(newSecretValue);
+
+            string truncated = TruncatedSecretValue(newSecretValue);
+            _logger.LogDebug("[Test] refresh Azure Key Vault secret '{SecretName}' with new value '{SecretValue}' in vault '{VaultUri}'", SecretName, truncated, Client.VaultUri);
+            await Client.SetSecretAsync(SecretName, newSecretValue);
+        }
+
+        private static string TruncatedSecretValue(string secretValue)
+        {
+            return secretValue[..5] + "...";
         }
 
         /// <summary>
