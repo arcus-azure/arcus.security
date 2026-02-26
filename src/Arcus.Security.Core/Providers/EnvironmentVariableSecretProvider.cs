@@ -60,7 +60,7 @@ namespace Arcus.Security.Core.Providers
         /// <param name="target">The target on which the environment variables should be retrieved.</param>
         /// <param name="prefix">The optional prefix which will be prepended to the secret name when retrieving environment variables.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of internal constructor")]
+        [Obsolete("Will be removed in v3.0 in favor of internal constructor", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public EnvironmentVariableSecretProvider(EnvironmentVariableTarget target = DefaultTarget, string prefix = null)
         {
             if (!Enum.IsDefined(typeof(EnvironmentVariableTarget), target))
@@ -107,7 +107,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Task<Secret> GetSecretAsync(string secretName)
         {
             Secret secret = GetSecret(secretName);
@@ -122,7 +122,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="T:System.ArgumentException">The <paramref name="secretName" /> must not be empty</exception>
         /// <exception cref="T:System.ArgumentNullException">The <paramref name="secretName" /> must not be null</exception>
         /// <exception cref="T:Arcus.Security.Core.SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Task<string> GetRawSecretAsync(string secretName)
         {
             string secretValue = GetRawSecret(secretName);
@@ -136,7 +136,7 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Secret GetSecret(string secretName)
         {
             SecretResult result = ((Security.ISecretProvider) this).GetSecret(secretName);
@@ -150,7 +150,7 @@ namespace Arcus.Security.Core.Providers
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public string GetRawSecret(string secretName)
         {
             return GetSecret(secretName)?.Value;

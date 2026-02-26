@@ -11,7 +11,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// <see cref="ISecretProvider"/> allows developers to build specific Secret key providers.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor a new interface 'Arcus.Security.ISecretProvider'")]
+    [Obsolete("Will be removed in v3.0 in favor a new interface 'Arcus.Security.ISecretProvider'", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public interface ISecretProvider
     {
         /// <summary>
@@ -22,7 +22,7 @@ namespace Arcus.Security.Core
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         Task<string> GetRawSecretAsync(string secretName);
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results")]
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static async Task<Secret> GetSecretAsync(this ISecretProvider provider, string secretName)
         {
             return await provider.GetSecretAsync(secretName);
@@ -99,7 +99,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results")]
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static Secret GetSecret(this ISecretProvider provider, string secretName)
         {
             return provider.GetSecret(secretName);
@@ -114,7 +114,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results")]
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecretAsync) + " overloads with secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static async Task<string> GetRawSecretAsync(this ISecretProvider provider, string secretName)
         {
             Secret secret = await GetSecretAsync(provider, secretName);
@@ -130,7 +130,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results")]
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider.GetSecret) + " overloads with secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static string GetRawSecret(this ISecretProvider provider, string secretName)
         {
             Secret secret = GetSecret(provider, secretName);
@@ -340,7 +340,7 @@ namespace Arcus.Security
         /// <summary>
         /// Converts the <see cref="SecretResult"/> to its deprecated previous implementation.
         /// </summary>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
 #pragma warning disable CS0618
         public static implicit operator Secret(SecretResult result)
 #pragma warning restore

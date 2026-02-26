@@ -7,13 +7,13 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// <see cref="ICachedSecretProvider"/> allows developers to build specific Secret key providers with caching.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself")]
+    [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public interface ICachedSecretProvider : ISecretProvider
     {
         /// <summary>
         /// Gets the cache-configuration for this instance.
         /// </summary>
-        [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         ICacheConfiguration Configuration { get; }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         Task<string> GetRawSecretAsync(string secretName, bool ignoreCache);
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         Task<Secret> GetSecretAsync(string secretName, bool ignoreCache);
 
 
@@ -46,7 +46,7 @@ namespace Arcus.Security.Core.Caching
         /// so the next time <see cref="CachedSecretProvider.GetSecretAsync(string)"/> is called, a new version of the secret will be added back to the cache.
         /// </summary>
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
-        [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         Task InvalidateSecretAsync(string secretName);
     }
 }

@@ -11,7 +11,7 @@ namespace Arcus.Security.Core.Caching
     /// <summary>
     /// A <see cref="ISecretProvider"/> that will cache secrets in memory, to improve performance.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 as caching will happen directly on the secret store")]
+    [Obsolete("Will be removed in v3.0 as caching will happen directly on the secret store", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class CachedSecretProvider : ICachedSecretProvider, IVersionedSecretProvider, ISyncSecretProvider
     {
         private readonly ISecretProvider _secretProvider;
@@ -92,7 +92,7 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Task<string> GetRawSecretAsync(string secretName)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -130,7 +130,7 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
             if (string.IsNullOrWhiteSpace(secretName))
@@ -190,7 +190,7 @@ namespace Arcus.Security.Core.Caching
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecret) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
             if (string.IsNullOrWhiteSpace(secretName))

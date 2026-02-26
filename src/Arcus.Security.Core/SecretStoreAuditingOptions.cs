@@ -5,7 +5,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents configurable options related to auditing during the lifetime of the secret store.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 as the hard-link to Arcus.Observability will be removed")]
+    [Obsolete("Will be removed in v3.0 as the hard-link to Arcus.Observability will be removed", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class SecretStoreAuditingOptions
     {
         /// <summary>

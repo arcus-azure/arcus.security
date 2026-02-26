@@ -1,4 +1,5 @@
 ﻿using System;
+using Arcus.Security;
 using Arcus.Security.Core.Providers;
 using Microsoft.Extensions.Configuration;
 
@@ -74,7 +75,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options")]
+        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static SecretStoreBuilder AddEnvironmentVariables(
             this SecretStoreBuilder builder,
             EnvironmentVariableTarget target = EnvironmentVariableSecretProvider.DefaultTarget,
@@ -95,7 +96,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="target"/> is outside the bounds of the enumeration.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options")]
+        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static SecretStoreBuilder AddEnvironmentVariables(
             this SecretStoreBuilder builder,
             EnvironmentVariableTarget target,
@@ -135,7 +136,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="configuration">The configuration of the application, containing secrets.</param>
         /// <param name="mutateSecretName">The function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options")]
+        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static SecretStoreBuilder AddConfiguration(
             this SecretStoreBuilder builder,
             IConfiguration configuration,
@@ -153,7 +154,7 @@ namespace Microsoft.Extensions.Hosting
         /// <param name="name">The unique name to register this Configuration provider in the secret store.</param>
         /// <param name="mutateSecretName">The optional function to mutate the secret name before looking it up.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options")]
+        [Obsolete("Will be removed in v3.0 in favor of configuring the secret provider registration with options", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static SecretStoreBuilder AddConfiguration(
             this SecretStoreBuilder builder,
             IConfiguration configuration,

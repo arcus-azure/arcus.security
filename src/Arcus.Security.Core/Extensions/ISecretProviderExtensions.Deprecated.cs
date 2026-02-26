@@ -25,7 +25,7 @@ namespace Arcus.Security.Core.Extensions
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(Core.ISecretProviderExtensions.GetRawSecretsAsync) + " extension instead")]
+        [Obsolete("Use the " + nameof(Core.ISecretProviderExtensions.GetRawSecretsAsync) + " extension instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static async Task<IEnumerable<string>> GetRawSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(secretName);
@@ -52,7 +52,7 @@ namespace Arcus.Security.Core.Extensions
         /// <exception cref="ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Use the " + nameof(Core.ISecretProviderExtensions.GetSecretsAsync) + " extension instead")]
+        [Obsolete("Use the " + nameof(Core.ISecretProviderExtensions.GetSecretsAsync) + " extension instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static async Task<IEnumerable<Secret>> GetSecretsAsync(this ISecretProvider secretProvider, string secretName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(secretName);

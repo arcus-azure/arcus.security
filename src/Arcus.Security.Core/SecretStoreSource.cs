@@ -10,7 +10,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents an entry for an <see cref="ISecretProvider"/> implementation.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of internal secret provider registration")]
+    [Obsolete("Will be removed in v3.0 in favor of internal secret provider registration", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class SecretStoreSource
     {
         private readonly Func<IServiceProvider, ISecretProvider> _createSecretProvider;

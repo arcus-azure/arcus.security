@@ -237,7 +237,7 @@ namespace Arcus.Security
         /// <exception cref="NotSupportedException">
         ///     Thrown every time because the <see cref="CompositeSecretProvider"/> cannot determine the caching configuration from the different registered <see cref="ICachedSecretProvider"/>s.
         /// </exception>
-        [Obsolete("Will be removed in v3.0 as caching will be handled by the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as caching will be handled by the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public ICacheConfiguration Configuration =>
             throw new NotSupportedException(
                 "Getting the cache configuration directly from the secret store is not supported, "
@@ -252,7 +252,7 @@ namespace Arcus.Security
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ISecretProvider"/> cannot be cast to the specific <typeparamref name="TSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ISecretProvider"/> were registered with the same name.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using a new interface")]
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public TSecretProvider GetProvider<TSecretProvider>(string name) where TSecretProvider : Core.ISecretProvider
         {
             var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
@@ -280,7 +280,7 @@ namespace Arcus.Security
         /// <param name="name">The name that was used to register the <see cref="ISecretProvider"/> in the secret store.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="name"/> is blank.</exception>
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using a new interface")]
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Core.ISecretProvider GetProvider(string name)
         {
             var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
@@ -314,7 +314,7 @@ namespace Arcus.Security
         /// </exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
-        [Obsolete("Will be removed in v3.0 as caching is handled by the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as caching is handled by the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(string name) where TCachedSecretProvider : ICachedSecretProvider
         {
             var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
@@ -345,7 +345,7 @@ namespace Arcus.Security
         ///     Thrown when their was either none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
         ///     or there was an <see cref="ISecretProvider"/> registered but not with caching.
         /// </exception>
-        [Obsolete("Will be removed in v3.0 as caching is handled via the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as caching is handled via the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public ICachedSecretProvider GetCachedProvider(string name)
         {
             var provider = ((ISecretStore) this).GetProvider<ISecretProvider>(name);
@@ -373,7 +373,7 @@ namespace Arcus.Security
         /// <returns>Returns the secret key.</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public string GetRawSecret(string secretName)
         {
             SecretResult result = GetSecret(secretName, configureOptions: null);
@@ -387,7 +387,7 @@ namespace Arcus.Security
         /// <returns>Returns a <see cref="Secret"/> that contains the secret key</returns>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when the secret was not found, using the given name.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Secret GetSecret(string secretName)
         {
             SecretResult result = GetSecret(secretName, configureOptions: null);
@@ -441,7 +441,7 @@ namespace Arcus.Security
         /// <param name="secretName">The name of the secret.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        [Obsolete("Will be removed in v3.0 as versioned secrets will be moved to concrete implementations")]
+        [Obsolete("Will be removed in v3.0 as versioned secrets will be moved to concrete implementations", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         internal Task<IEnumerable<Secret>> GetSecretsAsync(string secretName)
         {
             throw new NotSupportedException(
@@ -455,7 +455,7 @@ namespace Arcus.Security
         /// <param name="secretName">The name of the secret.</param>
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         internal Task<IEnumerable<string>> GetRawSecretsAsync(string secretName)
         {
             throw new NotSupportedException(
@@ -471,7 +471,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretsAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Task<IEnumerable<string>> GetRawSecretsAsync(string secretName, int amountOfVersions)
         {
             throw new NotSupportedException(
@@ -487,7 +487,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentException">Thrown when the <paramref name="secretName"/> is blank.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Thrown when the <paramref name="amountOfVersions"/> is less than zero.</exception>
         /// <exception cref="SecretNotFoundException">Thrown when no secret was not found, using the given <paramref name="secretName"/>.</exception>
-        [Obsolete("Will be removed in v3.0 as versioned secrets will be moved to concrete implementations")]
+        [Obsolete("Will be removed in v3.0 as versioned secrets will be moved to concrete implementations", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public Task<IEnumerable<Secret>> GetSecretsAsync(string secretName, int amountOfVersions)
         {
             throw new NotSupportedException(
@@ -503,7 +503,7 @@ namespace Arcus.Security
         /// <exception cref="System.ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<string> GetRawSecretAsync(string secretName)
         {
             SecretResult result = await GetSecretAsync(secretName, configureOptions: null);
@@ -518,7 +518,7 @@ namespace Arcus.Security
         /// <exception cref="System.ArgumentException">The <paramref name="secretName"/> must not be empty</exception>
         /// <exception cref="System.ArgumentNullException">The <paramref name="secretName"/> must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<Secret> GetSecretAsync(string secretName)
         {
             SecretResult result = await GetSecretAsync(secretName, configureOptions: null);
@@ -535,7 +535,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="NotSupportedException">Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances.</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
             SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
@@ -552,7 +552,7 @@ namespace Arcus.Security
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
         /// <exception cref="NotSupportedException">Thrown when none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<Secret> GetSecretAsync(string secretName, bool ignoreCache)
         {
             SecretResult result = await GetSecretAsync(secretName, options => options.UseCache = !ignoreCache);
@@ -564,7 +564,7 @@ namespace Arcus.Security
         /// so the next time <see cref="CachedSecretProvider.GetSecretAsync(string)"/> is called, a new version of the secret will be added back to the cache.
         /// </summary>
         /// <param name="secretName">The name of the secret that should be removed from the cache.</param>
-        [Obsolete("Will be removed in v3.0 as invalidating secrets should happen via the " + nameof(ISecretStoreContext))]
+        [Obsolete("Will be removed in v3.0 as invalidating secrets should happen via the " + nameof(ISecretStoreContext), DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task InvalidateSecretAsync(string secretName)
         {
             await Cache.InvalidateSecretAsync(secretName);

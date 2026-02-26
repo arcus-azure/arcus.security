@@ -12,7 +12,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents the exposed functionality of the secret store.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of a new " + nameof(Security.ISecretStore) + " interface in the 'Arcus.Security' namespace")]
+    [Obsolete("Will be removed in v3.0 in favor of a new " + nameof(Security.ISecretStore) + " interface in the 'Arcus.Security' namespace", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public interface ISecretStore
     {
         /// <summary>
@@ -149,7 +149,7 @@ namespace Arcus.Security
         /// <exception cref="KeyNotFoundException">Thrown when there was no <see cref="ISecretProvider"/> found in the secret store with the given <paramref name="name"/>.</exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ISecretProvider"/> cannot be cast to the specific <typeparamref name="TSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ISecretProvider"/> were registered with the same name.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of a new interface 'Arcus.Security.ISecretProvider'")]
+        [Obsolete("Will be removed in v3.0 in favor of a new interface 'Arcus.Security.ISecretProvider'", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static TSecretProvider GetProvider<TSecretProvider>(this ISecretStore store, string name) where TSecretProvider : Core.ISecretProvider
         {
             var provider = store.GetProvider<ISecretProvider>(name);
@@ -172,7 +172,7 @@ namespace Arcus.Security
         ///     Thrown when their was either none of the registered secret providers are registered as <see cref="ICachedSecretProvider"/> instances
         ///     or there was an <see cref="ISecretProvider"/> registered but not with caching.
         /// </exception>
-        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static ICachedSecretProvider GetCachedProvider(this ISecretStore store, string name)
         {
             var provider = store.GetProvider<ISecretProvider>(name);
@@ -198,7 +198,7 @@ namespace Arcus.Security
         /// </exception>
         /// <exception cref="InvalidCastException">Thrown when the registered <see cref="ICachedSecretProvider"/> cannot be cast to the specific <typeparamref name="TCachedSecretProvider"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when multiple <see cref="ICachedSecretProvider"/> were registered with the same name.</exception>
-        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself")]
+        [Obsolete("Will be removed in v3.0 as secret caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public static TCachedSecretProvider GetCachedProvider<TCachedSecretProvider>(this ISecretStore store, string name) where TCachedSecretProvider : ICachedSecretProvider
         {
             var provider = store.GetProvider<ISecretProvider>(name);

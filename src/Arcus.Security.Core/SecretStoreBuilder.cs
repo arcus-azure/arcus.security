@@ -51,7 +51,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The series of secret stores is directly publicly available, including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
         ///     Though, for almost all use-cases, the <see cref="AddProvider(ISecretProvider)"/> and the <see cref="AddProvider(Func{IServiceProvider,ISecretProvider},Action{SecretProviderOptions})"/> should be sufficient.
         /// </remarks>
-        [Obsolete("Will be removed in v3.0 as secret providers are registered internally")]
+        [Obsolete("Will be removed in v3.0 as secret providers are registered internally", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public IList<SecretStoreSource> SecretStoreSources { get; } = new List<SecretStoreSource>();
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The series of exception filters is directly publicly available including the operations so future (consumer) extensions can easily low-level manipulate this series during build-up.
         ///     Though, for almost all use-cases, the <see cref="AddCriticalException{TException}()"/> and <see cref="AddCriticalException{TException}(Func{TException,bool})"/> should be sufficient.
         /// </remarks>
-        [Obsolete("Will be removed in v3.0 as secret results are capturing failures")]
+        [Obsolete("Will be removed in v3.0 as secret results are capturing failures", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public IList<CriticalExceptionFilter> CriticalExceptionFilters { get; } = new List<CriticalExceptionFilter>();
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'")]
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder AddProvider(ISecretProvider secretProvider)
         {
             return AddProvider(secretProvider ?? throw new ArgumentNullException(nameof(secretProvider)), configureOptions: null);
@@ -88,7 +88,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="secretProvider"/>.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="secretProvider"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'")]
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder AddProvider(
             ISecretProvider secretProvider,
             Action<SecretProviderOptions> configureOptions)
@@ -127,7 +127,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="createSecretProvider"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider) + " in the 'Arcus.Security' namespace")]
+        [Obsolete("Will be removed in v3.0, please use the new " + nameof(ISecretProvider) + " in the 'Arcus.Security' namespace", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder AddProvider(Func<IServiceProvider, ISecretProvider> createSecretProvider)
         {
             return AddProvider(createSecretProvider, configureOptions: null);
@@ -142,7 +142,7 @@ namespace Microsoft.Extensions.Hosting
         ///     The extended secret store with the given <paramref name="createSecretProvider"/> as lazy initialization.
         /// </returns>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="createSecretProvider"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'")]
+        [Obsolete("Will be removed in v3.0 in favor of using a new interface 'Arcus.Security.ISecretProvider'", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder AddProvider(
             Func<IServiceProvider, ISecretProvider> createSecretProvider,
             Action<SecretProviderOptions> configureOptions)
@@ -304,7 +304,7 @@ namespace Microsoft.Extensions.Hosting
         /// which makes sure that the secret store handles all exceptions of type <typeparamref name="TException"/> differently.
         /// </summary>
         /// <typeparam name="TException">The type of the <see cref="Exception"/> to add as critical exception.</typeparam>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder AddCriticalException<TException>() where TException : Exception
         {
             CriticalExceptionFilters.Add(new CriticalExceptionFilter(typeof(TException), exception => exception is TException));
@@ -318,7 +318,7 @@ namespace Microsoft.Extensions.Hosting
         /// <typeparam name="TException">The type of the <see cref="Exception"/> to add as critical exception.</typeparam>
         /// <param name="exceptionFilter">The filter that makes sure that only specific <typeparamref name="TException"/>'s are considered critical exceptions.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="exceptionFilter"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+        [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder AddCriticalException<TException>(Func<TException, bool> exceptionFilter) where TException : Exception
         {
             if (exceptionFilter is null)
@@ -344,7 +344,7 @@ namespace Microsoft.Extensions.Hosting
         /// </summary>
         /// <param name="configureOptions">The function to customize the auditing options of the secret store.</param>
         /// <exception cref="ArgumentNullException">Thrown when the <paramref name="configureOptions"/> is <c>null</c>.</exception>
-        [Obsolete("Will be removed in v3.0 as the hard-link to Arcus.Observability will be removed")]
+        [Obsolete("Will be removed in v3.0 as the hard-link to Arcus.Observability will be removed", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public SecretStoreBuilder WithAuditing(Action<SecretStoreAuditingOptions> configureOptions)
         {
             _configureAuditingOptions.Add(configureOptions ?? throw new ArgumentNullException(nameof(configureOptions)));

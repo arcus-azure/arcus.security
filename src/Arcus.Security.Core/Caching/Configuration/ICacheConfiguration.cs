@@ -5,7 +5,7 @@ namespace Arcus.Security.Core.Caching.Configuration
     /// <summary>
     /// Collected configuration values to control the caching when interacting with Azure Key Vault.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself")]
+    [Obsolete("Will be removed in v3.0 as caching will happen on the secret store itself", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public interface ICacheConfiguration
     {
         /// <summary>

@@ -7,7 +7,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents an <see cref="ISecretProvider"/> implementation that supports multiple versions of a secret.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of accessing versioned secrets on the concrete secret provider implementations")]
+    [Obsolete("Will be removed in v3.0 in favor of accessing versioned secrets on the concrete secret provider implementations", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public interface IVersionedSecretProvider : ISecretProvider
     {
         /// <summary>

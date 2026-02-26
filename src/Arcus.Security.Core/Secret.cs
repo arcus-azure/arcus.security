@@ -5,7 +5,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents the secret returned from the <see cref="ISecretProvider"/> implementation.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+    [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class Secret
     {
         /// <summary>

@@ -7,7 +7,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Represents the additional options to register an <see cref="ISecretProvider"/> implementation to the secret store.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of a new " + nameof(SecretProviderRegistrationOptions) + " model")]
+    [Obsolete("Will be removed in v3.0 in favor of a new " + nameof(SecretProviderRegistrationOptions) + " model", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class SecretProviderOptions
     {
         private readonly IDictionary<string, int> _versionedSecretNames = new Dictionary<string, int>();

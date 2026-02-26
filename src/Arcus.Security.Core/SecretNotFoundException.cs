@@ -5,7 +5,7 @@ namespace Arcus.Security.Core
     /// <summary>
     /// Exception, thrown when no secret was found, using the given name.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of using secret results")]
+    [Obsolete("Will be removed in v3.0 in favor of using secret results", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class SecretNotFoundException : Exception
     {
         /// <summary>

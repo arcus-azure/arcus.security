@@ -9,7 +9,7 @@ namespace Arcus.Security.Core.Providers
     /// <summary>
     /// Represents an <see cref="ICachedSecretProvider"/> that can mutate the secret name provided before looking up the secret.
     /// </summary>
-    [Obsolete("Will be removed in v3.0 in favor of moving secret name mutation solely in secret provider registration options")]
+    [Obsolete("Will be removed in v3.0 in favor of moving secret name mutation solely in secret provider registration options", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
     public class MutatedSecretNameCachedSecretProvider : MutatedSecretNameSecretProvider, ICachedSecretProvider
     {
         private readonly ICachedSecretProvider _implementation;
@@ -51,7 +51,7 @@ namespace Arcus.Security.Core.Providers
         /// <exception cref="ArgumentException">The name must not be empty</exception>
         /// <exception cref="ArgumentNullException">The name must not be null</exception>
         /// <exception cref="SecretNotFoundException">The secret was not found, using the given name</exception>
-        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead")]
+        [Obsolete("Will be removed in v3 in favor of solely using " + nameof(GetSecretAsync) + " instead", DiagnosticId = ObsoleteDefaults.DiagnosticId)]
         public async Task<string> GetRawSecretAsync(string secretName, bool ignoreCache)
         {
             if (string.IsNullOrWhiteSpace(secretName))
